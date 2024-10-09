@@ -12,8 +12,7 @@ run: $(patsubst $(TESTCASE_DIR)/%.tea,$(TESTCASE_DIR)/%.ast,$(TESTCASES))
 $(TESTCASE_DIR)/%.ast: $(TESTCASE_DIR)/%.tea $(TESTCASE_DIR)/%.refast compiler
 	@./compiler $< $@
 	@diff $@ $(word 2,$^)
-	@echo PASS $*
-	@echo
+	@echo "\033[0;32mPASS\033[0m $*"
 
 compiler: y.tab.o lex.yy.o TeaplAst.o TeaplaAst.o PrintTeaplaAst.o compiler.o 
 	$(CXX) $(CXXFLAGS) -o compiler $^ 
