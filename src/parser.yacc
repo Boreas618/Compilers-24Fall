@@ -467,6 +467,10 @@ BoolUnit_: LP ExprUnit LT ExprUnit RP
 {
   $$ = A_ComExprUnit($1, A_ComExpr($2->pos, A_lt, $2, $4));
 }
+| LP ExprUnit LE ExprUnit RP
+{
+  $$ = A_ComExprUnit($1, A_ComExpr($2->pos, A_le, $2, $4));
+}
 | LP ExprUnit GT ExprUnit RP
 {
   $$ = A_ComExprUnit($1, A_ComExpr($2->pos, A_gt, $2, $4));
@@ -475,25 +479,17 @@ BoolUnit_: LP ExprUnit LT ExprUnit RP
 {
   $$ = A_ComExprUnit($1, A_ComExpr($2->pos, A_ge, $2, $4));
 }
-| LP ExprUnit LE ExprUnit RP
-{
-  $$ = A_ComExprUnit($1, A_ComExpr($2->pos, A_le, $2, $4));
-}
 | LP ExprUnit EQ ExprUnit RP
 {
   $$ = A_ComExprUnit($1, A_ComExpr($2->pos, A_eq, $2, $4));
 }
 | LP ExprUnit NE ExprUnit RP
 {
-  $$ = A_ComExprUnit($1, A_ComExpr($2->pos, A_ne, $2, $4));
+  $$ = A_ComExprUnit($1,  A_ComExpr($2->pos, A_ne, $2, $4));
 }
 | LP BoolExpr RP
 {
   $$ = A_BoolExprUnit($1, $2);
-}
-| LP NOT BoolUnit RP
-{
-  $$ = A_BoolUOpExprUnit($1, A_BoolUOpExpr($2, A_not, $3));
 }
 ;
 
@@ -523,6 +519,10 @@ BoolUnit: LP ExprUnit LT ExprUnit RP
 {
   $$ = A_ComExprUnit($1, A_ComExpr($2->pos, A_lt, $2, $4));
 }
+| LP ExprUnit LE ExprUnit RP
+{
+  $$ = A_ComExprUnit($1, A_ComExpr($2->pos, A_le, $2, $4));
+}
 | LP ExprUnit GT ExprUnit RP
 {
   $$ = A_ComExprUnit($1, A_ComExpr($2->pos, A_gt, $2, $4));
@@ -530,10 +530,6 @@ BoolUnit: LP ExprUnit LT ExprUnit RP
 | LP ExprUnit GE ExprUnit RP
 {
   $$ = A_ComExprUnit($1, A_ComExpr($2->pos, A_ge, $2, $4));
-}
-| LP ExprUnit LE ExprUnit RP
-{
-  $$ = A_ComExprUnit($1, A_ComExpr($2->pos, A_le, $2, $4));
 }
 | LP ExprUnit EQ ExprUnit RP
 {
@@ -549,7 +545,7 @@ BoolUnit: LP ExprUnit LT ExprUnit RP
 }
 | NOT BoolUnit
 {
-  $$ = A_BoolUOpExprUnit($1, A_BoolUOpExpr($2->pos, A_not, $2));
+  $$ = A_BoolUOpExprUnit($1, A_BoolUOpExpr($1, A_not, $2));
 }
 ;
 
