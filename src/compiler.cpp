@@ -19,21 +19,22 @@ int line, col;
 A_program root;
 aA_program aroot;
 
-int main(int argc, char * argv[]) {
+int main(int argc, char *argv[])
+{
 
-    #if YACCDEBUG
-        yydebug = 1;
-    #endif
+#if YACCDEBUG
+    yydebug = 1;
+#endif
 
     line = 1;
     col = 1;
-    
-    freopen(argv[1], "r", stdin);  
+
+    freopen(argv[1], "r", stdin);
     ofstream ASTStream;
     ASTStream.open(argv[2]);
 
     yyparse();
-    
+
     aroot = aA_Program(root);
     print_aA_Program(aroot, ASTStream);
     ASTStream.close();
@@ -42,4 +43,3 @@ int main(int argc, char * argv[]) {
 
     return 0;
 }
-
