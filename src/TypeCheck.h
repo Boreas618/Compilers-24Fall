@@ -10,6 +10,8 @@
 #include "TeaplAst.h"
 #include "TeaplaAst.h"
 
+struct IdentifierType;
+
 /* Token id to token type, including function name to return type. */
 typedef std::unordered_map<string, IdentifierType *> TypeMap;
 
@@ -45,7 +47,7 @@ enum class ConstructType {
 /**
  * @todo: Move this to somewhere else.
  */
-bool comp_aA_type(aA_type target, aA_type t) {
+static bool comp_aA_type(aA_type target, aA_type t) {
     if (!target || !t) return false;
     if (target->type != t->type) return false;
     if (target->type == A_dataType::A_nativeTypeKind)
@@ -66,6 +68,13 @@ struct IdentifierType {
                   : vd->u.declArray->type,
               (vd->kind == A_varDeclType::A_varDeclScalarKind) ? 0 : 1) {}
 
+    IdentifierType(aA_varDef vdef)
+        : IdentifierType(
+              (vdef->kind == A_varDefType::A_varDefScalarKind)
+                  ? vdef->u.defScalar->type
+                  : vdef->u.defArray->type,
+              (vdef->kind == A_varDefType::A_varDefScalarKind) ? 0 : 1) {}
+
     bool operator==(const IdentifierType &other) const {
         if (construct_type != other.construct_type) return false;
         return comp_aA_type(type, other.type);
@@ -77,6 +86,7 @@ struct IdentifierType {
 
 class TypeChecker {
    public:
+    TypeChecker() = delete;
     TypeChecker(std::ostream &out) : out_(out) {}
 
     void CheckProgram(aA_program p);
@@ -107,6 +117,7 @@ class TypeChecker {
     friend void PrintTypeMaps(TypeChecker &checker);
 
     std::ostream &out_;
+    size_t level_;
     TypeMap global_type_map_;      // Global token ids to type.
     TypeMap func_param_type_map_;  // Local token ids to type, since func
                                    // param can override global param.

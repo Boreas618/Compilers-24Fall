@@ -1,8 +1,9 @@
 #include <fstream>
 #include <iostream>
+
+#include "PrintTeaplaAst.h"
 #include "TeaplAst.h"
 #include "TeaplaAst.h"
-#include "PrintTeaplaAst.h"
 #include "TypeCheck.h"
 #include "y.tab.hpp"
 
@@ -19,9 +20,7 @@ int line, col;
 A_program root;
 aA_program aroot;
 
-int main(int argc, char *argv[])
-{
-
+int main(int argc, char *argv[]) {
 #if YACCDEBUG
     yydebug = 1;
 #endif
@@ -39,7 +38,7 @@ int main(int argc, char *argv[])
     print_aA_Program(aroot, ASTStream);
     ASTStream.close();
 
-    check_Prog(std::cout, aroot);
-
+    TypeChecker checker(std::cout);
+    checker.CheckProgram(aroot);
     return 0;
 }

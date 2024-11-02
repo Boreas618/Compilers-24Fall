@@ -1,8 +1,10 @@
 #include "TypeCheck.h"
 
+#include <cassert>
+
 bool TypeChecker::ExistFuncParamConflicts(string &name) {
     auto map = func_param_type_map_;
-    return (map.find(name) == map.end());
+    return !(map.find(name) == map.end());
 }
 
 bool TypeChecker::ExistLocalVarConflicts(string &name) {
@@ -25,8 +27,10 @@ void TypeChecker::CheckSymbolConficts(string &name, A_pos pos) {
 void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
     if (!vd) return;
     string name;
+    IdentifierType *id_type = nullptr;
     if (vd->kind == A_varDeclStmtType::A_varDeclKind) {
         aA_varDecl vdecl = vd->u.varDecl;
+
         if (vdecl->kind == A_varDeclType::A_varDeclScalarKind) {
             name = *vdecl->u.declScalar->id;
 
@@ -39,19 +43,93 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
             /* Fill code here. */
             CheckSymbolConficts(name, vdecl->pos);
         }
+
+        /* @todo: RAII. */
+        id_type = new IdentifierType(vdecl);
+
     } else if (vd->kind == A_varDeclStmtType::A_varDefKind) {
         aA_varDef vdef = vd->u.varDef;
         if (vdef->kind == A_varDefType::A_varDefScalarKind) {
             name = *vdef->u.defScalar->id;
 
-            /* fill code here, allow omited type */
+            /* Fill code here. Type can be omited. */
             CheckSymbolConficts(name, vdef->pos);
 
+            if (vdef->u.defScalar->val->kind == A_boolExprValKind) {
+                CheckBoolExpr(vdef->u.defScalar->val->u.boolExpr);
+
+                /* Perform type inference. */
+                if (vdef->u.defScalar->type == nullptr) {
+                    id_type = new IdentifierType(
+                        new aA_type_{vdef->pos, A_dataType::A_nativeTypeKind,
+                                     A_nativeType::A_intTypeKind},
+                        0);
+                } else {
+                    id_type = new IdentifierType(vdef);
+                }
+
+            } else {
+                id_type = CheckArithExpr(vdef->u.defScalar->val->u.arithExpr);
+                if (vdef->u.defScalar->type == nullptr) {
+                    // Do nothing.
+                } else {
+                    if (id_type->construct_type == ConstructType::ARRAY)
+                        PrintError(*this, vdef->pos,
+                                   "Cannot assign array to scalar.");
+                    else if (id_type->construct_type ==
+                             ConstructType::FUNCTION) {
+                        if (id_type->type != vdef->u.defScalar->type) {
+                            PrintError(*this, vdef->pos,
+                                       "The return type doesn't match the "
+                                       "given left type.");
+                        }
+                    } else {
+                        if (id_type->type->type != vdef->u.defScalar->type->type) {
+                            PrintError(
+                                *this, vdef->pos,
+                                "Cannot assign between struct and primitive.");
+                        }
+                    }
+                }
+            }
         } else if (vdef->kind == A_varDefType::A_varDefArrayKind) {
             name = *vdef->u.defArray->id;
-            /* fill code here, allow omited type */
+
+            /* Fill code here. Type can be omited. */
+            CheckSymbolConficts(name, vdef->pos);
+
+            if (vdef->u.defArray->type == nullptr) {
+                /**
+                 * Perform type inference. However, only int[] is allowed.
+                 */
+                id_type = new IdentifierType(
+                    new aA_type_{vdef->pos, A_dataType::A_nativeTypeKind,
+                                 A_nativeType::A_intTypeKind},
+                    1);
+            } else {
+                id_type = new IdentifierType(vdef->u.defArray->type, 1);
+            }
+
+            /**
+             * Ensure the lengths of `leftval` and `rightval` match when
+             * initializing an array. If the element count differs, print an
+             * error message.
+             */
+            if (vdef->u.defArray->len != vdef->u.defArray->vals.size()) {
+                PrintError(
+                    *this, vdef->pos,
+                    "Array element count does not match the specified length.");
+            }
         }
     }
+
+    assert(id_type != nullptr);
+
+    if (local_type_map_.size() <= level_) {
+        local_type_map_.push_back(new TypeMap);
+    }
+
+    local_type_map_[level_]->insert(std::make_pair(name, id_type));
     return;
 }
 
@@ -272,14 +350,14 @@ IdentifierType *TypeChecker::CheckArithExpr(aA_arithExpr ae) {
     switch (ae->kind) {
         case A_arithExprType::A_arithBiOpExprKind: {
             ret = CheckArithExpr(ae->u.arithBiOpExpr->left);
-            IdentifierType *rightTyep =
+            IdentifierType *rightType =
                 CheckArithExpr(ae->u.arithBiOpExpr->right);
             if (ret->type->type > 0 ||
                 ret->type->type != A_dataType::A_nativeTypeKind ||
                 ret->type->u.nativeType != A_nativeType::A_intTypeKind ||
-                rightTyep->type->type > 0 ||
-                rightTyep->type->type != A_dataType::A_nativeTypeKind ||
-                rightTyep->type->u.nativeType != A_nativeType::A_intTypeKind)
+                rightType->type->type > 0 ||
+                rightType->type->type != A_dataType::A_nativeTypeKind ||
+                rightType->type->u.nativeType != A_nativeType::A_intTypeKind)
                 PrintError(
                     *this, ae->pos,
                     "Only int can be arithmetic expression operation values!");
@@ -376,14 +454,14 @@ void PrintTypeMap(TypeMap *map) {
             default:
                 break;
         }
-        switch (it->second->isVarArrFunc) {
-            case 0:
+        switch (it->second->construct_type) {
+            case ConstructType::SCALAR:
                 std::cout << " scalar";
                 break;
-            case 1:
+            case ConstructType::ARRAY:
                 std::cout << " array";
                 break;
-            case 2:
+            case ConstructType::FUNCTION:
                 std::cout << " function";
                 break;
         }
@@ -396,7 +474,9 @@ void PrintTypeMaps(TypeChecker &checker) {
     std::cout << "[Global]" << std::endl;
     PrintTypeMap(&checker.global_type_map_);
     std::cout << "[Local]" << std::endl;
-    PrintTypeMap(&checker.local_type_map_);
+    for (const auto &i : checker.local_type_map_) {
+        PrintTypeMap(i);
+    }
 }
 
 void PrintError(TypeChecker &checker, A_pos p, string info) {
