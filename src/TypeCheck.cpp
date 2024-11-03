@@ -2,6 +2,23 @@
 
 #include <cassert>
 
+void TypeChecker::EnterBlock() {
+    TypeMap *tm = new TypeMap();
+    local_type_map_.push_back(tm);
+    level_ += 1;
+}
+
+void TypeChecker::LeaveBlock() {
+    if (level_ < 1) {
+        std::cout << "[Fatal] Invalid level. " << std::endl;
+    } else {
+        TypeMap *tm = local_type_map_.back();
+        local_type_map_.pop_back();
+        delete tm;
+        level_ -= 1;
+    }
+}
+
 bool TypeChecker::ExistFuncParamConflicts(string &name) {
     auto map = func_param_type_map_;
     return !(map.find(name) == map.end());
@@ -84,7 +101,8 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
                                        "given left type.");
                         }
                     } else {
-                        if (id_type->type->type != vdef->u.defScalar->type->type) {
+                        if (id_type->type->type !=
+                            vdef->u.defScalar->type->type) {
                             PrintError(
                                 *this, vdef->pos,
                                 "Cannot assign between struct and primitive.");
@@ -125,37 +143,70 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
 
     assert(id_type != nullptr);
 
-    if (local_type_map_.size() <= level_) {
-        local_type_map_.push_back(new TypeMap);
-    }
-
     local_type_map_[level_]->insert(std::make_pair(name, id_type));
     return;
 }
 
 void TypeChecker::CheckStructDef(aA_structDef sd) {
+    EnterBlock();
+
     if (!sd) return;
     string name = *sd->id;
     if (struct_members_map_.find(name) != struct_members_map_.end())
         PrintError(*this, sd->pos, "This id is already defined!");
     struct_members_map_[name] = &(sd->varDecls);
+
+    LeaveBlock();
+
     return;
 }
 
 void TypeChecker::CheckFnDecl(aA_fnDecl fd) {
     if (!fd) return;
     string name = *fd->id;
-    auto map = func_params_map_;
+    auto &map = func_params_map_;
 
-    // If already declared, should match.
     if (map.find(name) != map.end()) {
-        // is function ret val matches
-        /* fill code here */
-        // is function params matches decl
-        /* fill code here */
+        auto ret_type = global_type_map_[name];
+
+        /**
+         * Check if the function name conflicts with a previously defined
+         * identifier.
+         */
+        if (ret_type->construct_type != ConstructType::FUNCTION) {
+            PrintError(*this, fd->pos,
+                       "Function name conflicts with a previously defined "
+                       "identifier.");
+        }
+
+        /**
+         * Check if the return type of the function matches the previous
+         * declaration.
+         */
+        if (ret_type->type != fd->type) {
+            PrintError(*this, fd->pos, "Mismatched function return type.");
+        }
+
+        /**
+         * Check if the parameters in the function signature match the previous
+         * declaration.
+         */
+        auto prev_params = map[name];
+        for (size_t i = 0; i < fd->paramDecl->varDecls.size(); i++) {
+            if (fd->paramDecl->varDecls[i] != (*prev_params)[i]) {
+                PrintError(*this, fd->pos, "Mismatched function parameters.");
+            }
+        }
+
     } else {
-        // if not defined
-        /* fill code here */
+        // Register in the global identifier map.
+        global_type_map_[name] = new IdentifierType(fd->type, 2);
+
+        // Register in the function parameter map.
+        map[name] = new vector<aA_varDecl>();
+        for (size_t i = 0; i < fd->paramDecl->varDecls.size(); i++) {
+            map[name]->push_back(fd->paramDecl->varDecls[i]);
+        }
     }
     return;
 }
@@ -251,13 +302,33 @@ void TypeChecker::CheckWhileStmt(aA_whileStmt ws) {
 
 void TypeChecker::CheckFuncCall(aA_fnCall fc) {
     if (!fc) return;
-    // check if function defined
     string func_name = *fc->fn;
-    /* fill code here */
+    auto &map = func_params_map_;
 
-    // check if parameter list matches
-    for (int i = 0; i < fc->vals.size(); i++) {
-        /* fill code here */
+    /**
+     * Check if the function is defined.
+     */
+    if (map.find(func_name) == map.end()) {
+        PrintError(*this, fc->pos, "The function is not defined.");
+    }
+
+    auto param_list = *map[func_name];
+    for (size_t i = 0; i < fc->vals.size(); i++) {
+        auto param_feed = fc->vals[i];
+        IdentifierType *param_feed_type = nullptr;
+        if (param_feed->kind == A_boolExprValKind) {
+            CheckBoolExpr(param_feed->u.boolExpr);
+            param_feed_type = new IdentifierType(
+                new aA_type_{param_feed->pos, A_dataType::A_nativeTypeKind,
+                             A_nativeType::A_intTypeKind},
+                0);
+        } else {
+            param_feed_type = CheckArithExpr(param_feed->u.arithExpr);
+        }
+        if (!comp_aA_type(param_feed_type->type,
+                          param_list[i]->u.declScalar->type)) {
+            PrintError(*this, param_feed->pos, "Mismatched parameter type.");
+        }
     }
     return;
 }
@@ -275,7 +346,9 @@ void TypeChecker::CheckReturnStmt(aA_returnStmt rs) {
 
 void TypeChecker::CheckCodeblockStmt(aA_codeBlockStmt cs) {
     if (!cs) return;
-    // variables declared in a code block should not duplicate with outer ones.
+
+    EnterBlock();
+
     switch (cs->kind) {
         case A_codeBlockStmtType::A_varDeclStmtKind:
             CheckVarDecl(cs->u.varDeclStmt);
@@ -298,24 +371,35 @@ void TypeChecker::CheckCodeblockStmt(aA_codeBlockStmt cs) {
         default:
             break;
     }
+
+    LeaveBlock();
+
     return;
 }
 
 void TypeChecker::CheckFnDef(aA_fnDef fd) {
     if (!fd) return;
-    // should match if declared
+    /**
+     * If the function was declared, the signature should be matched.
+     */
     CheckFnDecl(fd->fnDecl);
-    // add params to local tokenmap, func params override global ones
-    for (aA_varDecl vd : fd->fnDecl->paramDecl->varDecls) {
-        /* fill code here */
+
+    func_param_type_map_.clear();
+    for (auto vd : fd->fnDecl->paramDecl->varDecls) {
+        // For now, we assume that the functions don't accept arrays.
+        func_param_type_map_.insert(
+            std::make_pair(*(vd->u.declScalar->id), new IdentifierType(vd)));
     }
 
-    /* fill code here */
+    EnterBlock();
     for (aA_codeBlockStmt stmt : fd->stmts) {
         CheckCodeblockStmt(stmt);
-        // return value type should match
-        /* fill code here */
+
+        /**
+         * Check return type.
+         */
     }
+    LeaveBlock();
 
     return;
 }
@@ -386,8 +470,17 @@ IdentifierType *TypeChecker::CheckExprUnit(aA_exprUnit eu) {
         } break;
         case A_exprUnitType::A_fnCallKind: {
             CheckFuncCall(eu->u.callExpr);
-            // check_FuncCall will check if the function is defined
-            /* fill code here */
+            aA_type t = new aA_type_;
+            t->pos = eu->pos;
+            auto func_name = eu->u.callExpr->fn;
+            auto ret_type = global_type_map_[*func_name]->type;
+            t->type = ret_type->type;
+            if (t->type == A_nativeTypeKind) {
+                t->u.nativeType = A_nativeType::A_intTypeKind;
+            } else {
+                t->u.structType = ret_type->u.structType;
+            }
+            ret = new IdentifierType(t, 0);
         } break;
         case A_exprUnitType::A_arrayExprKind: {
             CheckArrayExpr(eu->u.arrayExpr);

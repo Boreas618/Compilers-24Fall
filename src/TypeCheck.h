@@ -1,10 +1,7 @@
 #pragma once
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 
 #include <iostream>
+#include <memory>
 #include <unordered_map>
 
 #include "TeaplAst.h"
@@ -15,28 +12,8 @@ struct IdentifierType;
 /* Token id to token type, including function name to return type. */
 typedef std::unordered_map<string, IdentifierType *> TypeMap;
 
-// func name to params
+/* Function name to params. */
 typedef std::unordered_map<string, vector<aA_varDecl> *> ParamMemberMap;
-
-/*void check_Prog(std::ostream &out, aA_program p);
-void check_VarDecl(std::ostream &out, aA_varDeclStmt vd);
-void check_StructDef(std::ostream &out, aA_structDef sd);
-void check_FnDecl(std::ostream &out, aA_fnDecl fd);
-void check_FnDeclStmt(std::ostream &out, aA_fnDeclStmt fd);
-void check_FnDef(std::ostream &out, aA_fnDef fd);
-void check_CodeblockStmt(std::ostream &out, aA_codeBlockStmt cs);
-void check_AssignStmt(std::ostream &out, aA_assignStmt as);
-void check_ArrayExpr(std::ostream &out, aA_arrayExpr ae);
-IdentifierType *check_MemberExpr(std::ostream &out, aA_memberExpr me);
-void check_IfStmt(std::ostream &out, aA_ifStmt is);
-void check_BoolExpr(std::ostream &out, aA_boolExpr be);
-void check_BoolUnit(std::ostream &out, aA_boolUnit bu);
-IdentifierType *check_ExprUnit(std::ostream &out, aA_exprUnit eu);
-IdentifierType *check_ArithExpr(std::ostream &out, aA_arithExpr ae);
-void check_FuncCall(std::ostream &out, aA_fnCall fc);
-void check_WhileStmt(std::ostream &out, aA_whileStmt ws);
-void check_CallStmt(std::ostream &out, aA_callStmt cs);
-void check_ReturnStmt(std::ostream &out, aA_returnStmt rs);*/
 
 enum class ConstructType {
     SCALAR = 0,
@@ -87,7 +64,8 @@ struct IdentifierType {
 class TypeChecker {
    public:
     TypeChecker() = delete;
-    TypeChecker(std::ostream &out) : out_(out) {}
+    TypeChecker(std::ostream &out)
+        : out_(out), local_type_map_(vector{new TypeMap()}) {}
 
     void CheckProgram(aA_program p);
     void CheckVarDecl(aA_varDeclStmt vd);
@@ -113,6 +91,8 @@ class TypeChecker {
    private:
     bool ExistFuncParamConflicts(string &name);
     bool ExistLocalVarConflicts(string &name);
+    void EnterBlock();
+    void LeaveBlock();
     friend void PrintError(TypeChecker &checker, A_pos p, string info);
     friend void PrintTypeMaps(TypeChecker &checker);
 
