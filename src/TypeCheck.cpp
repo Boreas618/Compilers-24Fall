@@ -2,6 +2,21 @@
 
 #include <cassert>
 
+void TypeChecker::Reset() {
+    level_ = 0;
+
+    /**
+     * @todo: A lot of memory leak here!
+     */
+    global_type_map_.clear();
+    func_param_type_map_.clear();
+    local_type_map_.clear();
+    TypeMap *tm = new TypeMap();
+    local_type_map_.push_back(tm);
+    func_params_map_.clear();
+    struct_members_map_.clear();
+}
+
 void TypeChecker::EnterBlock() {
     TypeMap *tm = new TypeMap();
     local_type_map_.push_back(tm);
@@ -35,7 +50,8 @@ bool TypeChecker::ExistLocalVarConflicts(string &name) {
 void TypeChecker::CheckSymbolConficts(string &name, A_pos pos) {
     if (ExistFuncParamConflicts(name)) {
         PrintError(*this, pos,
-                   "Local variables dplicates with function params.");
+                   "Duplicate definition of identifier (local variable and "
+                   "function parameter).");
     } else if (ExistLocalVarConflicts(name)) {
         PrintError(*this, pos, "This id is already defined!");
     }
@@ -183,7 +199,7 @@ void TypeChecker::CheckFnDecl(aA_fnDecl fd) {
          * Check if the return type of the function matches the previous
          * declaration.
          */
-        if (ret_type->type != fd->type) {
+        if (!comp_aA_type(ret_type->type, fd->type)) {
             PrintError(*this, fd->pos, "Mismatched function return type.");
         }
 
@@ -193,20 +209,27 @@ void TypeChecker::CheckFnDecl(aA_fnDecl fd) {
          */
         auto prev_params = map[name];
         for (size_t i = 0; i < fd->paramDecl->varDecls.size(); i++) {
-            if (fd->paramDecl->varDecls[i] != (*prev_params)[i]) {
-                PrintError(*this, fd->pos, "Mismatched function parameters.");
+            auto id_type_1 = IdentifierType(fd->paramDecl->varDecls[i]);
+            auto id_type_2 = IdentifierType((*prev_params)[i]);
+            if (!(id_type_1 == id_type_2)) {
+                PrintError(*this, fd->paramDecl->varDecls[i]->pos,
+                           "Mismatched function parameters.");
             }
         }
 
     } else {
-        // Register in the global identifier map.
-        global_type_map_[name] = new IdentifierType(fd->type, 2);
+        auto ret_type = new IdentifierType(fd->type, 2);
+        auto val_decls = new vector<aA_varDecl>();
 
-        // Register in the function parameter map.
-        map[name] = new vector<aA_varDecl>();
+        /**
+         * Check for conflicts between function parameters and global variables.
+         */
         for (size_t i = 0; i < fd->paramDecl->varDecls.size(); i++) {
-            map[name]->push_back(fd->paramDecl->varDecls[i]);
+            val_decls->push_back(fd->paramDecl->varDecls[i]);
         }
+
+        global_type_map_[name] = ret_type;
+        map[name] = val_decls;
     }
     return;
 }
@@ -386,9 +409,14 @@ void TypeChecker::CheckFnDef(aA_fnDef fd) {
 
     func_param_type_map_.clear();
     for (auto vd : fd->fnDecl->paramDecl->varDecls) {
-        // For now, we assume that the functions don't accept arrays.
-        func_param_type_map_.insert(
-            std::make_pair(*(vd->u.declScalar->id), new IdentifierType(vd)));
+        if (ExistLocalVarConflicts(*vd->u.declScalar->id)) {
+            PrintError(*this, vd->pos,
+                       "Duplicate definition of identifier (local and global "
+                       "variable).");
+        } else {
+            func_param_type_map_.insert(std::make_pair(*(vd->u.declScalar->id),
+                                                       new IdentifierType(vd)));
+        }
     }
 
     EnterBlock();
@@ -520,7 +548,7 @@ void TypeChecker::CheckProgram(aA_program p) {
         if (ele->kind == A_programFnDefKind) {
             CheckFnDef(ele->u.fnDef);
         } else if (ele->kind == A_programNullStmtKind) {
-            // do nothing
+            // Do nothing.
         }
     }
 

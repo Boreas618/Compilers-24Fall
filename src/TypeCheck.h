@@ -93,6 +93,7 @@ class TypeChecker {
     bool ExistLocalVarConflicts(string &name);
     void EnterBlock();
     void LeaveBlock();
+    void Reset();
     friend void PrintError(TypeChecker &checker, A_pos p, string info);
     friend void PrintTypeMaps(TypeChecker &checker);
 

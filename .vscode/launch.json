@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Debug",
             "program": "src/compiler",
-            "args": ["tests/15_duplicate_function.tea", "tests/15_duplicate_function.ast"],
+            "args": ["tests/01_var_not_defined.tea", "tests/01_var_not_defined.ast"],
             "cwd": "src"
         }
     ]
