@@ -1,3 +1,4 @@
 *.o
 *.output
 tests/*.ast
+compiler
