@@ -13,7 +13,7 @@ struct IdentifierType;
 typedef std::unordered_map<string, std::shared_ptr<IdentifierType>> TypeMap;
 
 /* Function name to params. */
-typedef std::unordered_map<string, vector<aA_varDecl>*> ParamMemberMap;
+typedef std::unordered_map<string, std::shared_ptr<vector<aA_varDecl>>> ParamMemberMap;
 
 enum class ConstructType {
     SCALAR = 0,

@@ -194,7 +194,8 @@ void TypeChecker::CheckStructDef(aA_structDef sd) {
     if (QueryInStructDefs(struct_name)) {
         PrintError(*this, sd->pos, "This id is already defined!");
     } else {
-        struct_members_map_[struct_name] = &(sd->varDecls);
+        struct_members_map_[struct_name] =
+            std::make_shared<vector<aA_varDecl>>(sd->varDecls);
     }
     return;
 }
@@ -241,7 +242,7 @@ void TypeChecker::CheckFnDecl(aA_fnDecl fd) {
 
     } else {
         auto ret_type = std::make_shared<IdentifierType>(fd->type, 2);
-        auto val_decls = new vector<aA_varDecl>();
+        auto val_decls = std::make_shared<vector<aA_varDecl>>();
 
         /**
          * Check for conflicts between function parameters and global variables.
@@ -615,7 +616,6 @@ std::shared_ptr<IdentifierType> TypeChecker::CheckExprUnit(aA_exprUnit eu) {
             numt->pos = eu->pos;
             numt->type = A_dataType::A_nativeTypeKind;
             numt->u.nativeType = A_nativeType::A_intTypeKind;
-            // ret = new IdentifierType(numt, 0);
             ret = std::make_shared<IdentifierType>(numt, 0);
         } break;
         case A_exprUnitType::A_fnCallKind: {
