@@ -9,7 +9,10 @@
             "request": "launch",
             "name": "Debug",
             "program": "src/compiler",
-            "args": ["tests/01_var_not_defined.tea", "tests/01_var_not_defined.ast"],
+            "args": [
+                "tests/13_active_domain.tea",
+                "tests/13_active_domain.ast"
+            ],
             "cwd": "src"
         }
     ]

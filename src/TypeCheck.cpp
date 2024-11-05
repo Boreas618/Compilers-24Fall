@@ -1,21 +1,7 @@
 #include "TypeCheck.h"
 
 #include <cassert>
-
-void TypeChecker::Reset() {
-    level_ = 0;
-
-    /**
-     * @todo: A lot of memory leak here!
-     */
-    global_type_map_.clear();
-    func_param_type_map_.clear();
-    local_type_map_.clear();
-    TypeMap *tm = new TypeMap();
-    local_type_map_.push_back(tm);
-    func_params_map_.clear();
-    struct_members_map_.clear();
-}
+#include <sstream>
 
 void TypeChecker::EnterBlock() {
     TypeMap *tm = new TypeMap();
@@ -34,25 +20,61 @@ void TypeChecker::LeaveBlock() {
     }
 }
 
-bool TypeChecker::ExistFuncParamConflicts(string &name) {
-    auto map = func_param_type_map_;
-    return !(map.find(name) == map.end());
+bool TypeChecker::QueryInGlobalVars(string &name, IdentifierType **ret) {
+    auto map = global_type_map_;
+    if (map.find(name) != map.end()) {
+        if (ret) *ret = map[name];
+        return true;
+    } else {
+        return false;
+    }
 }
 
-bool TypeChecker::ExistLocalVarConflicts(string &name) {
+bool TypeChecker::QueryInFuncParams(string &name, IdentifierType **ret) {
+    auto map = func_param_type_map_;
+    if (map.find(name) != map.end()) {
+        if (ret) *ret = map[name];
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool TypeChecker::QueryInLocalVars(string &name, IdentifierType **ret) {
     auto map = local_type_map_;
     for (auto level : map) {
-        if (level->find(name) != level->end()) return true;
+        if (level->find(name) != level->end()) {
+            if (ret) *ret = (*level)[name];
+            return true;
+        }
     }
     return false;
 }
 
+inline bool TypeChecker::QueryIdentifier(string &name, IdentifierType **ret) {
+    bool found_1, found_2, found_3;
+    found_1 = found_2 = found_3 = false;
+    found_1 = QueryInGlobalVars(name, ret);
+    found_2 = QueryInFuncParams(name, ret);
+    found_3 = QueryInLocalVars(name, ret);
+    return found_1 || found_2 || found_3;
+}
+
+bool TypeChecker::QueryInStructDefs(string &name) {
+    auto map = struct_members_map_;
+    if (map.find(name) != map.end()) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 void TypeChecker::CheckSymbolConficts(string &name, A_pos pos) {
-    if (ExistFuncParamConflicts(name)) {
+    if (QueryInFuncParams(name, nullptr)) {
         PrintError(*this, pos,
                    "Duplicate definition of identifier (local variable and "
                    "function parameter).");
-    } else if (ExistLocalVarConflicts(name)) {
+    } else if (QueryInLocalVars(name, nullptr)) {
         PrintError(*this, pos, "This id is already defined!");
     }
 }
@@ -164,16 +186,13 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
 }
 
 void TypeChecker::CheckStructDef(aA_structDef sd) {
-    EnterBlock();
-
     if (!sd) return;
-    string name = *sd->id;
-    if (struct_members_map_.find(name) != struct_members_map_.end())
+    auto struct_name = *sd->id;
+    if (QueryInStructDefs(struct_name)) {
         PrintError(*this, sd->pos, "This id is already defined!");
-    struct_members_map_[name] = &(sd->varDecls);
-
-    LeaveBlock();
-
+    } else {
+        struct_members_map_[struct_name] = &(sd->varDecls);
+    }
     return;
 }
 
@@ -242,21 +261,56 @@ void TypeChecker::CheckFnDeclStmt(aA_fnDeclStmt fd) {
 
 void TypeChecker::CheckAssignStmt(aA_assignStmt as) {
     if (!as) return;
-    string name;
-    IdentifierType *deduced_type;  // deduced type if type is omitted at decl
+
+    std::string name;
+    IdentifierType *deduced_type = nullptr;
+
+    auto right_val = as->rightVal;
+    bool is_right_val_array =
+        (as->rightVal->kind == A_arithExprValKind) &&
+        (as->rightVal->u.arithExpr->kind == A_exprUnitKind) &&
+        (as->rightVal->u.arithExpr->u.exprUnit->kind == A_arrayExprKind);
+
     switch (as->leftVal->kind) {
         case A_leftValType::A_varValKind: {
             name = *as->leftVal->u.id;
-            /* fill code here */
-        } break;
+
+            /**
+             * Functions and arrays cannot be assigned.
+             */
+            auto id_type = global_type_map_[name];
+            if (id_type == nullptr) break;
+            if (id_type->construct_type == ConstructType::FUNCTION) {
+                PrintError(*this, as->leftVal->pos,
+                           "Cannot assign a value to a function.");
+            } else if (id_type->construct_type == ConstructType::ARRAY &&
+                       is_right_val_array) {
+                PrintError(*this, as->leftVal->pos,
+                           "[Unsupported] Cannot assign a list of values to an "
+                           "array.");
+            }
+            break;
+        }
         case A_leftValType::A_arrValKind: {
-            /* fill code here */
-        } break;
+            name = *as->leftVal->u.arrExpr->arr->u.id;
+            // TODO: Implement array assignment logic here
+            break;
+        }
         case A_leftValType::A_memberValKind: {
-            /* fill code here */
-        } break;
+            name = *as->leftVal->u.memberExpr->structId->u.id;
+            auto right_val = as->rightVal;
+            CheckMemberExpr(as->leftVal->u.memberExpr);
+            break;
+        }
     }
-    return;
+
+    // Check if the variable is defined either locally or as a function
+    // parameter.
+    if (!QueryInLocalVars(name, nullptr) && !QueryInFuncParams(name, nullptr)) {
+        std::ostringstream oss;
+        oss << "Variable " << name << " is not defined.";
+        PrintError(*this, as->leftVal->pos, oss.str());
+    }
 }
 
 void TypeChecker::CheckBoolExpr(aA_boolExpr be) {
@@ -279,7 +333,23 @@ void TypeChecker::CheckBoolUnit(aA_boolUnit bu) {
     if (!bu) return;
     switch (bu->kind) {
         case A_boolUnitType::A_comOpExprKind: {
-            /* fill code here */
+            auto lunit = bu->u.comExpr->left;
+            auto runit = bu->u.comExpr->right;
+            auto id_type_l = CheckExprUnit(lunit);
+            auto id_type_r = CheckExprUnit(runit);
+            if (!comp_aA_type(id_type_l->type, id_type_r->type)) {
+                std::ostringstream oss;
+                auto l_type_name = (id_type_l->type->type == A_nativeTypeKind)
+                                       ? "int"
+                                       : *id_type_l->type->u.structType;
+                auto r_type_name = (id_type_r->type->type == A_nativeTypeKind)
+                                       ? "int"
+                                       : *id_type_r->type->u.structType;
+                oss << "Cannot compare between " << l_type_name << " and "
+                    << r_type_name;
+
+                PrintError(*this, bu->pos, oss.str());
+            }
         } break;
         case A_boolUnitType::A_boolExprKind:
             CheckBoolExpr(bu->u.boolExpr);
@@ -295,6 +365,7 @@ void TypeChecker::CheckBoolUnit(aA_boolUnit bu) {
 
 void TypeChecker::CheckIfStmt(aA_ifStmt is) {
     if (!is) return;
+    EnterBlock();
     CheckBoolUnit(is->boolUnit);
     /* fill code here, take care of variable scope */
 
@@ -307,11 +378,13 @@ void TypeChecker::CheckIfStmt(aA_ifStmt is) {
         CheckCodeblockStmt(s);
     }
     /* fill code here */
+    LeaveBlock();
     return;
 }
 
 void TypeChecker::CheckWhileStmt(aA_whileStmt ws) {
     if (!ws) return;
+    EnterBlock();
     CheckBoolUnit(ws->boolUnit);
     /* fill code here, take care of variable scope */
 
@@ -319,7 +392,7 @@ void TypeChecker::CheckWhileStmt(aA_whileStmt ws) {
         CheckCodeblockStmt(s);
     }
     /* fill code here */
-
+    LeaveBlock();
     return;
 }
 
@@ -370,7 +443,7 @@ void TypeChecker::CheckReturnStmt(aA_returnStmt rs) {
 void TypeChecker::CheckCodeblockStmt(aA_codeBlockStmt cs) {
     if (!cs) return;
 
-    EnterBlock();
+    // EnterBlock();
 
     switch (cs->kind) {
         case A_codeBlockStmtType::A_varDeclStmtKind:
@@ -395,7 +468,7 @@ void TypeChecker::CheckCodeblockStmt(aA_codeBlockStmt cs) {
             break;
     }
 
-    LeaveBlock();
+    // LeaveBlock();
 
     return;
 }
@@ -409,7 +482,7 @@ void TypeChecker::CheckFnDef(aA_fnDef fd) {
 
     func_param_type_map_.clear();
     for (auto vd : fd->fnDecl->paramDecl->varDecls) {
-        if (ExistLocalVarConflicts(*vd->u.declScalar->id)) {
+        if (QueryInLocalVars(*vd->u.declScalar->id, nullptr)) {
             PrintError(*this, vd->pos,
                        "Duplicate definition of identifier (local and global "
                        "variable).");
@@ -420,14 +493,33 @@ void TypeChecker::CheckFnDef(aA_fnDef fd) {
     }
 
     EnterBlock();
+    current_func_ = fd->fnDecl->id;
     for (aA_codeBlockStmt stmt : fd->stmts) {
         CheckCodeblockStmt(stmt);
 
         /**
          * Check return type.
          */
+        if (stmt->kind == A_returnStmtKind) {
+            IdentifierType *id_type = nullptr;
+            auto ret_val = stmt->u.returnStmt->retVal;
+            if (ret_val->kind == A_boolExprValKind) {
+                CheckBoolExpr(ret_val->u.boolExpr);
+                id_type = new IdentifierType(
+                    new aA_type_{ret_val->pos, A_dataType::A_nativeTypeKind,
+                                 A_nativeType::A_intTypeKind},
+                    0);
+            } else {
+                id_type = CheckArithExpr(ret_val->u.arithExpr);
+            }
+            if (!comp_aA_type(id_type->type,
+                              global_type_map_[*current_func_]->type)) {
+                PrintError(*this, fd->pos, "Mismatched return types.");
+            }
+        }
     }
     LeaveBlock();
+    current_func_ = nullptr;
 
     return;
 }
@@ -444,21 +536,44 @@ void TypeChecker::CheckArrayExpr(aA_arrayExpr ae) {
 }
 
 IdentifierType *TypeChecker::CheckMemberExpr(aA_memberExpr me) {
-    // check if the member exists and return the tyep of the member
     if (!me) return nullptr;
-    string name = *me->structId->u.id;
-    // check struct name
-    /* fill code here */
+    string id = *me->structId->u.id;
+    IdentifierType *type;
 
-    // check member name
-    /* fill code here */
+    if (QueryIdentifier(id, &type) == false) {
+        std::ostringstream oss;
+        oss << "Struct " << id << " is not defined.";
+        PrintError(*this, me->structId->pos, oss.str());
+    }
+
+    if (type->type->type != A_structTypeKind) {
+        std::ostringstream oss;
+        oss << id << " is not struct.";
+        PrintError(*this, me->structId->pos, oss.str());
+    }
+
+    auto type_name = *type->type->u.structType;
+
+    string member_id = *me->memberId;
+    auto params = struct_members_map_[type_name];
+    assert(params != nullptr);
+
+    for (auto decl : *params) {
+        if (*decl->u.declScalar->id == member_id) {
+            return new IdentifierType(decl);
+        }
+    }
+
+    std::ostringstream oss;
+    oss << member_id << " is not a member of " << id << " .";
+    PrintError(*this, me->pos, oss.str());
 
     return nullptr;
 }
 
 IdentifierType *TypeChecker::CheckArithExpr(aA_arithExpr ae) {
     if (!ae) return nullptr;
-    IdentifierType *ret;
+    IdentifierType *ret = nullptr;
     switch (ae->kind) {
         case A_arithExprType::A_arithBiOpExprKind: {
             ret = CheckArithExpr(ae->u.arithBiOpExpr->left);
@@ -482,12 +597,15 @@ IdentifierType *TypeChecker::CheckArithExpr(aA_arithExpr ae) {
 }
 
 IdentifierType *TypeChecker::CheckExprUnit(aA_exprUnit eu) {
-    // return the aA_type of expr eu
     if (!eu) return nullptr;
-    IdentifierType *ret;
+    IdentifierType *ret = nullptr;
     switch (eu->kind) {
         case A_exprUnitType::A_idExprKind: {
-            /* fill code here */
+            auto id = eu->u.id;
+            if (QueryIdentifier(*id, &ret) == false) {
+                PrintTypeMaps(*this);
+                PrintError(*this, eu->pos, "Identifier not defined.");
+            }
         } break;
         case A_exprUnitType::A_numExprKind: {
             aA_type numt = new aA_type_;
@@ -511,8 +629,13 @@ IdentifierType *TypeChecker::CheckExprUnit(aA_exprUnit eu) {
             ret = new IdentifierType(t, 0);
         } break;
         case A_exprUnitType::A_arrayExprKind: {
+            auto id = eu->u.arrayExpr->arr->u.id;
             CheckArrayExpr(eu->u.arrayExpr);
-            /* fill code here */
+            if (QueryInGlobalVars(*id, &ret) || QueryInFuncParams(*id, &ret) ||
+                QueryInLocalVars(*id, &ret) == false) {
+                PrintError(*this, eu->pos, "Identifier not defined.");
+            }
+            ret = new IdentifierType(ret->type, 0);
         } break;
         case A_exprUnitType::A_memberExprKind: {
             ret = CheckMemberExpr(eu->u.memberExpr);
@@ -594,6 +717,8 @@ void PrintTypeMaps(TypeChecker &checker) {
     std::cout << "======== Type Maps ========" << std::endl;
     std::cout << "[Global]" << std::endl;
     PrintTypeMap(&checker.global_type_map_);
+    std::cout << "[Param]" << std::endl;
+    PrintTypeMap(&checker.func_param_type_map_);
     std::cout << "[Local]" << std::endl;
     for (const auto &i : checker.local_type_map_) {
         PrintTypeMap(i);

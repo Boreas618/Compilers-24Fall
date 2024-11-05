@@ -89,16 +89,19 @@ class TypeChecker {
     IdentifierType *CheckArithExpr(aA_arithExpr ae);
 
    private:
-    bool ExistFuncParamConflicts(string &name);
-    bool ExistLocalVarConflicts(string &name);
+    bool QueryInFuncParams(string &name, IdentifierType** ret);
+    bool QueryInLocalVars(string &name, IdentifierType** ret);
+    bool QueryInGlobalVars(string &name, IdentifierType **ret);
+    bool QueryIdentifier(string &name, IdentifierType** ret);
+    bool QueryInStructDefs(string &name);
     void EnterBlock();
     void LeaveBlock();
-    void Reset();
     friend void PrintError(TypeChecker &checker, A_pos p, string info);
     friend void PrintTypeMaps(TypeChecker &checker);
 
     std::ostream &out_;
     size_t level_;
+    string* current_func_;
     TypeMap global_type_map_;      // Global token ids to type.
     TypeMap func_param_type_map_;  // Local token ids to type, since func
                                    // param can override global param.
@@ -106,3 +109,5 @@ class TypeChecker {
     ParamMemberMap func_params_map_;
     ParamMemberMap struct_members_map_;
 };
+
+void PrintTypeMap(TypeMap *map);
