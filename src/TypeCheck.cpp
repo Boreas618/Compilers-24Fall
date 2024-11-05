@@ -267,7 +267,6 @@ void TypeChecker::CheckAssignStmt(aA_assignStmt as) {
     if (!as) return;
 
     std::string name;
-    IdentifierType *deduced_type = nullptr;
 
     auto right_val = as->rightVal;
     bool is_right_val_array =
@@ -601,7 +600,6 @@ std::shared_ptr<IdentifierType> TypeChecker::CheckArithExpr(aA_arithExpr ae) {
 
 std::shared_ptr<IdentifierType> TypeChecker::CheckExprUnit(aA_exprUnit eu) {
     if (!eu) return nullptr;
-    // IdentifierType *ret = nullptr;
     std::shared_ptr<IdentifierType> ret = nullptr;
     switch (eu->kind) {
         case A_exprUnitType::A_idExprKind: {
