@@ -10,10 +10,10 @@
 struct IdentifierType;
 
 /* Token id to token type, including function name to return type. */
-typedef std::unordered_map<string, IdentifierType *> TypeMap;
+typedef std::unordered_map<string, std::shared_ptr<IdentifierType>> TypeMap;
 
 /* Function name to params. */
-typedef std::unordered_map<string, vector<aA_varDecl> *> ParamMemberMap;
+typedef std::unordered_map<string, vector<aA_varDecl>*> ParamMemberMap;
 
 enum class ConstructType {
     SCALAR = 0,
@@ -65,7 +65,7 @@ class TypeChecker {
    public:
     TypeChecker() = delete;
     TypeChecker(std::ostream &out)
-        : out_(out), local_type_map_(vector{new TypeMap()}) {}
+        : out_(out), local_type_map_(vector{std::make_shared<TypeMap>()}) {}
 
     void CheckProgram(aA_program p);
     void CheckVarDecl(aA_varDeclStmt vd);
@@ -84,15 +84,15 @@ class TypeChecker {
     void CheckFuncCall(aA_fnCall fc);
     void CheckReturnStmt(aA_returnStmt rs);
     void CheckArrayExpr(aA_arrayExpr ae);
-    IdentifierType *CheckMemberExpr(aA_memberExpr me);
-    IdentifierType *CheckExprUnit(aA_exprUnit eu);
-    IdentifierType *CheckArithExpr(aA_arithExpr ae);
+    std::shared_ptr<IdentifierType> CheckMemberExpr(aA_memberExpr me);
+    std::shared_ptr<IdentifierType> CheckExprUnit(aA_exprUnit eu);
+    std::shared_ptr<IdentifierType> CheckArithExpr(aA_arithExpr ae);
 
    private:
-    bool QueryInFuncParams(string &name, IdentifierType** ret);
-    bool QueryInLocalVars(string &name, IdentifierType** ret);
-    bool QueryInGlobalVars(string &name, IdentifierType **ret);
-    bool QueryIdentifier(string &name, IdentifierType** ret);
+    bool QueryInFuncParams(string &name, std::shared_ptr<IdentifierType> *ret);
+    bool QueryInLocalVars(string &name, std::shared_ptr<IdentifierType> *ret);
+    bool QueryInGlobalVars(string &name, std::shared_ptr<IdentifierType> *ret);
+    bool QueryIdentifier(string &name, std::shared_ptr<IdentifierType> *ret);
     bool QueryInStructDefs(string &name);
     void EnterBlock();
     void LeaveBlock();
@@ -101,11 +101,11 @@ class TypeChecker {
 
     std::ostream &out_;
     size_t level_;
-    string* current_func_;
+    string *current_func_;
     TypeMap global_type_map_;      // Global token ids to type.
     TypeMap func_param_type_map_;  // Local token ids to type, since func
                                    // param can override global param.
-    vector<TypeMap *> local_type_map_;
+    vector<std::shared_ptr<TypeMap>> local_type_map_;
     ParamMemberMap func_params_map_;
     ParamMemberMap struct_members_map_;
 };
