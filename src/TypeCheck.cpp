@@ -165,7 +165,8 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
                                  A_nativeType::A_intTypeKind},
                     1);
             } else {
-                id_type = std::make_shared<IdentifierType>(vdef->u.defArray->type, 1);
+                id_type =
+                    std::make_shared<IdentifierType>(vdef->u.defArray->type, 1);
             }
 
             /**
@@ -489,8 +490,8 @@ void TypeChecker::CheckFnDef(aA_fnDef fd) {
                        "Duplicate definition of identifier (local and global "
                        "variable).");
         } else {
-            func_param_type_map_.insert(std::make_pair(*(vd->u.declScalar->id),
-                                                       new IdentifierType(vd)));
+            func_param_type_map_.insert(std::make_pair(
+                *(vd->u.declScalar->id), std::make_shared<IdentifierType>(vd)));
         }
     }
 
