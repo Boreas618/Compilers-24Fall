@@ -7,10 +7,10 @@
 #include "TeaplAst.h"
 #include "TeaplaAst.h"
 
-struct IdentifierType;
+struct ExprType;
 
 /* Token id to token type, including function name to return type. */
-typedef std::unordered_map<string, std::shared_ptr<IdentifierType>> TypeMap;
+typedef std::unordered_map<string, std::shared_ptr<ExprType>> TypeMap;
 
 /* Function name to params. */
 typedef std::unordered_map<string, std::shared_ptr<vector<aA_varDecl>>> ParamMemberMap;
@@ -34,25 +34,25 @@ static bool comp_aA_type(aA_type target, aA_type t) {
     return true;
 }
 
-struct IdentifierType {
-    IdentifierType(aA_type t, uint construct_type)
+struct ExprType {
+    ExprType(aA_type t, uint construct_type)
         : type(t), construct_type(ConstructType(construct_type)) {}
 
-    IdentifierType(aA_varDecl vd)
-        : IdentifierType(
+    ExprType(aA_varDecl vd)
+        : ExprType(
               (vd->kind == A_varDeclType::A_varDeclScalarKind)
                   ? vd->u.declScalar->type
                   : vd->u.declArray->type,
               (vd->kind == A_varDeclType::A_varDeclScalarKind) ? 0 : 1) {}
 
-    IdentifierType(aA_varDef vdef)
-        : IdentifierType(
+    ExprType(aA_varDef vdef)
+        : ExprType(
               (vdef->kind == A_varDefType::A_varDefScalarKind)
                   ? vdef->u.defScalar->type
                   : vdef->u.defArray->type,
               (vdef->kind == A_varDefType::A_varDefScalarKind) ? 0 : 1) {}
 
-    bool operator==(const IdentifierType &other) const {
+    bool operator==(const ExprType &other) const {
         if (construct_type != other.construct_type) return false;
         return comp_aA_type(type, other.type);
     }
@@ -84,15 +84,15 @@ class TypeChecker {
     void CheckFuncCall(aA_fnCall fc);
     void CheckReturnStmt(aA_returnStmt rs);
     void CheckArrayExpr(aA_arrayExpr ae);
-    std::shared_ptr<IdentifierType> CheckMemberExpr(aA_memberExpr me);
-    std::shared_ptr<IdentifierType> CheckExprUnit(aA_exprUnit eu);
-    std::shared_ptr<IdentifierType> CheckArithExpr(aA_arithExpr ae);
+    std::shared_ptr<ExprType> CheckMemberExpr(aA_memberExpr me);
+    std::shared_ptr<ExprType> CheckExprUnit(aA_exprUnit eu);
+    std::shared_ptr<ExprType> CheckArithExpr(aA_arithExpr ae);
 
    private:
-    bool QueryInFuncParams(string &name, std::shared_ptr<IdentifierType> *ret);
-    bool QueryInLocalVars(string &name, std::shared_ptr<IdentifierType> *ret);
-    bool QueryInGlobalVars(string &name, std::shared_ptr<IdentifierType> *ret);
-    bool QueryIdentifier(string &name, std::shared_ptr<IdentifierType> *ret);
+    bool QueryInFuncParams(string &name, std::shared_ptr<ExprType> *ret);
+    bool QueryInLocalVars(string &name, std::shared_ptr<ExprType> *ret);
+    bool QueryInGlobalVars(string &name, std::shared_ptr<ExprType> *ret);
+    bool QueryIdentifier(string &name, std::shared_ptr<ExprType> *ret);
     bool QueryInStructDefs(string &name);
     void EnterBlock();
     void LeaveBlock();
