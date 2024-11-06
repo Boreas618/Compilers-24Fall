@@ -4,7 +4,7 @@
 #include <sstream>
 
 void TypeChecker::EnterBlock() {
-    local_type_map_.push_back(std::make_shared<TypeMap>());
+    local_type_.push_back(std::make_shared<TypeTable>());
     level_ += 1;
 }
 
@@ -12,63 +12,57 @@ void TypeChecker::LeaveBlock() {
     if (level_ < 1) {
         std::cout << "[Fatal] Invalid level. " << std::endl;
     } else {
-        std::shared_ptr<TypeMap> tm = local_type_map_.back();
-        local_type_map_.pop_back();
+        std::shared_ptr<TypeTable> tm = local_type_.back();
+        local_type_.pop_back();
         level_ -= 1;
+    }
+}
+
+template <typename T>
+bool TypeChecker::QueryInTable(T map, string &name,
+                               std::shared_ptr<ExprType> *ret) {
+    if (map.find(name) != map.end()) {
+        if (ret) *ret = map[name];
+        return true;
+    } else {
+        return false;
     }
 }
 
 bool TypeChecker::QueryInGlobalVars(string &name,
                                     std::shared_ptr<ExprType> *ret) {
-    auto map = global_type_map_;
-    if (map.find(name) != map.end()) {
-        if (ret) *ret = map[name];
-        return true;
-    } else {
-        return false;
-    }
+    return QueryInTable(global_type_, name, ret);
 }
 
 bool TypeChecker::QueryInFuncParams(string &name,
                                     std::shared_ptr<ExprType> *ret) {
-    auto map = func_param_type_map_;
-    if (map.find(name) != map.end()) {
-        if (ret) *ret = map[name];
-        return true;
-    } else {
-        return false;
-    }
+    return QueryInTable(param_type_, name, ret);
 }
 
 bool TypeChecker::QueryInLocalVars(string &name,
                                    std::shared_ptr<ExprType> *ret) {
-    auto map = local_type_map_;
+    auto map = local_type_;
     for (auto level : map) {
-        if (level->find(name) != level->end()) {
-            if (ret) *ret = (*level)[name];
-            return true;
-        }
+        if (QueryInTable(*level, name, ret)) return true;
     }
     return false;
 }
 
 inline bool TypeChecker::QueryIdentifier(string &name,
                                          std::shared_ptr<ExprType> *ret) {
-    bool found_1, found_2, found_3;
-    found_1 = found_2 = found_3 = false;
-    found_1 = QueryInGlobalVars(name, ret);
-    found_2 = QueryInFuncParams(name, ret);
-    found_3 = QueryInLocalVars(name, ret);
-    return found_1 || found_2 || found_3;
+    bool found = false;
+    found = QueryInGlobalVars(name, ret) || found;
+    found = QueryInFuncParams(name, ret) || found;
+    found = QueryInLocalVars(name, ret) || found;
+    return found;
 }
 
 bool TypeChecker::QueryInStructDefs(string &name) {
-    auto map = struct_members_map_;
-    if (map.find(name) != map.end()) {
+    auto map = struct_members_;
+    if (map.find(name) != map.end())
         return true;
-    } else {
+    else
         return false;
-    }
 }
 
 void TypeChecker::CheckSymbolConficts(string &name, A_pos pos) {
@@ -77,7 +71,9 @@ void TypeChecker::CheckSymbolConficts(string &name, A_pos pos) {
                    "Duplicate definition of identifier (local variable and "
                    "function parameter).");
     } else if (QueryInLocalVars(name, nullptr)) {
-        PrintError(*this, pos, "This id is already defined!");
+        PrintError(*this, pos,
+                   "Duplicate definition of identifier (local variable and "
+                   "local variable).");
     }
 }
 
@@ -90,17 +86,13 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
 
         if (vdecl->kind == A_varDeclType::A_varDeclScalarKind) {
             name = *vdecl->u.declScalar->id;
-
-            /* Fill code here. */
-            CheckSymbolConficts(name, vdecl->pos);
-
         } else if (vdecl->kind == A_varDeclType::A_varDeclArrayKind) {
             name = *vdecl->u.declArray->id;
-
-            /* Fill code here. */
-            CheckSymbolConficts(name, vdecl->pos);
+        } else {
+            // Do nothing.
         }
 
+        CheckSymbolConficts(name, vdecl->pos);
         id_type = std::make_shared<ExprType>(vdecl);
 
     } else if (vd->kind == A_varDeclStmtType::A_varDefKind) {
@@ -108,7 +100,6 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
         if (vdef->kind == A_varDefType::A_varDefScalarKind) {
             name = *vdef->u.defScalar->id;
 
-            /* Fill code here. Type can be omited. */
             CheckSymbolConficts(name, vdef->pos);
 
             if (vdef->u.defScalar->val->kind == A_boolExprValKind) {
@@ -130,8 +121,9 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
                     // Do nothing.
                 } else {
                     if (id_type->construct_type == ConstructType::ARRAY)
-                        PrintError(*this, vdef->pos,
-                                   "Cannot assign array to scalar.");
+                        PrintError(
+                            *this, vdef->pos,
+                            "Attempting to initialize a scalar with an array.");
                     else if (id_type->construct_type ==
                              ConstructType::FUNCTION) {
                         if (id_type->type != vdef->u.defScalar->type) {
@@ -142,70 +134,67 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
                     } else {
                         if (id_type->type->type !=
                             vdef->u.defScalar->type->type) {
-                            PrintError(
-                                *this, vdef->pos,
-                                "Cannot assign between struct and primitive.");
+                            PrintError(*this, vdef->pos,
+                                       "Attempting to initialize a primitive "
+                                       "with a struct.");
                         }
                     }
                 }
             }
         } else if (vdef->kind == A_varDefType::A_varDefArrayKind) {
             name = *vdef->u.defArray->id;
-
-            /* Fill code here. Type can be omited. */
             CheckSymbolConficts(name, vdef->pos);
 
             if (vdef->u.defArray->type == nullptr) {
                 /**
-                 * Perform type inference. However, only int[] is allowed.
+                 * Perform type inference: currently only supports int[].
+                 *
+                 * Note: Memory leak issue. ExprType does not
+                 * explicitly free the allocated aA_type_ because some ExprType
+                 * instances retain a pointer to the AST. Freeing aA_type_ could
+                 * corrupt the AST in such cases.
                  */
                 id_type = std::make_shared<ExprType>(
                     new aA_type_{vdef->pos, A_dataType::A_nativeTypeKind,
                                  A_nativeType::A_intTypeKind},
                     1);
             } else {
-                id_type =
-                    std::make_shared<ExprType>(vdef->u.defArray->type, 1);
+                id_type = std::make_shared<ExprType>(vdef->u.defArray->type, 1);
             }
 
             /**
              * Ensure the lengths of `leftval` and `rightval` match when
-             * initializing an array. If the element count differs, print an
-             * error message.
+             * initializing an array.
              */
             if (vdef->u.defArray->len != vdef->u.defArray->vals.size()) {
-                PrintError(
-                    *this, vdef->pos,
-                    "Array element count does not match the specified length.");
+                PrintError(*this, vdef->pos,
+                           "The number of array elements does not match the "
+                           "specified length.");
             }
         }
     }
 
     assert(id_type != nullptr);
-
-    local_type_map_[level_]->insert(std::make_pair(name, id_type));
+    local_type_[level_]->insert(std::make_pair(name, id_type));
     return;
 }
 
 void TypeChecker::CheckStructDef(aA_structDef sd) {
     if (!sd) return;
     auto struct_name = *sd->id;
-    if (QueryInStructDefs(struct_name)) {
-        PrintError(*this, sd->pos, "This id is already defined!");
-    } else {
-        struct_members_map_[struct_name] =
-            std::make_shared<vector<aA_varDecl>>(sd->varDecls);
-    }
+    CheckSymbolConficts(struct_name, sd->pos);
+    struct_members_[struct_name] =
+        std::make_shared<vector<aA_varDecl>>(sd->varDecls);
     return;
 }
 
-void TypeChecker::CheckFnDecl(aA_fnDecl fd) {
+void TypeChecker::CheckFnSignature(aA_fnDecl fd) {
     if (!fd) return;
     string name = *fd->id;
-    auto &map = func_params_map_;
+    auto &map = fn_params_;
 
     if (map.find(name) != map.end()) {
-        auto ret_type = global_type_map_[name];
+        auto ret_type = global_type_[name];
 
         /**
          * Check if the function name conflicts with a previously defined
@@ -250,7 +239,7 @@ void TypeChecker::CheckFnDecl(aA_fnDecl fd) {
             val_decls->push_back(fd->paramDecl->varDecls[i]);
         }
 
-        global_type_map_[name] = ret_type;
+        global_type_[name] = ret_type;
         map[name] = val_decls;
     }
     return;
@@ -258,7 +247,7 @@ void TypeChecker::CheckFnDecl(aA_fnDecl fd) {
 
 void TypeChecker::CheckFnDeclStmt(aA_fnDeclStmt fd) {
     if (!fd) return;
-    CheckFnDecl(fd->fnDecl);
+    CheckFnSignature(fd->fnDecl);
     return;
 }
 
@@ -280,7 +269,7 @@ void TypeChecker::CheckAssignStmt(aA_assignStmt as) {
             /**
              * Functions and arrays cannot be assigned.
              */
-            auto id_type = global_type_map_[name];
+            auto id_type = global_type_[name];
             if (id_type == nullptr) break;
             if (id_type->construct_type == ConstructType::FUNCTION) {
                 PrintError(*this, as->leftVal->pos,
@@ -401,7 +390,7 @@ void TypeChecker::CheckWhileStmt(aA_whileStmt ws) {
 void TypeChecker::CheckFuncCall(aA_fnCall fc) {
     if (!fc) return;
     string func_name = *fc->fn;
-    auto &map = func_params_map_;
+    auto &map = fn_params_;
 
     /**
      * Check if the function is defined.
@@ -480,16 +469,16 @@ void TypeChecker::CheckFnDef(aA_fnDef fd) {
     /**
      * If the function was declared, the signature should be matched.
      */
-    CheckFnDecl(fd->fnDecl);
+    CheckFnSignature(fd->fnDecl);
 
-    func_param_type_map_.clear();
+    param_type_.clear();
     for (auto vd : fd->fnDecl->paramDecl->varDecls) {
         if (QueryInLocalVars(*vd->u.declScalar->id, nullptr)) {
             PrintError(*this, vd->pos,
                        "Duplicate definition of identifier (local and global "
                        "variable).");
         } else {
-            func_param_type_map_.insert(std::make_pair(
+            param_type_.insert(std::make_pair(
                 *(vd->u.declScalar->id), std::make_shared<ExprType>(vd)));
         }
     }
@@ -515,7 +504,7 @@ void TypeChecker::CheckFnDef(aA_fnDef fd) {
                 id_type = CheckArithExpr(ret_val->u.arithExpr);
             }
             if (!comp_aA_type(id_type->type,
-                              global_type_map_[*current_func_]->type)) {
+                              global_type_[*current_func_]->type)) {
                 PrintError(*this, fd->pos, "Mismatched return types.");
             }
         }
@@ -557,7 +546,7 @@ std::shared_ptr<ExprType> TypeChecker::CheckMemberExpr(aA_memberExpr me) {
     auto type_name = *type->type->u.structType;
 
     string member_id = *me->memberId;
-    auto params = struct_members_map_[type_name];
+    auto params = struct_members_[type_name];
     assert(params != nullptr);
 
     for (auto decl : *params) {
@@ -620,7 +609,7 @@ std::shared_ptr<ExprType> TypeChecker::CheckExprUnit(aA_exprUnit eu) {
             aA_type t = new aA_type_;
             t->pos = eu->pos;
             auto func_name = eu->u.callExpr->fn;
-            auto ret_type = global_type_map_[*func_name]->type;
+            auto ret_type = global_type_[*func_name]->type;
             t->type = ret_type->type;
             if (t->type == A_nativeTypeKind) {
                 t->u.nativeType = A_nativeType::A_intTypeKind;
@@ -664,7 +653,7 @@ void TypeChecker::CheckProgram(aA_program p) {
         if (ele->kind == A_programFnDeclStmtKind) {
             CheckFnDeclStmt(ele->u.fnDeclStmt);
         } else if (ele->kind == A_programFnDefKind) {
-            CheckFnDecl(ele->u.fnDef->fnDecl);
+            CheckFnSignature(ele->u.fnDef->fnDecl);
         }
     }
 
@@ -680,7 +669,7 @@ void TypeChecker::CheckProgram(aA_program p) {
     return;
 }
 
-void PrintTypeMap(TypeMap *map) {
+void PrintTypeMap(TypeTable *map) {
     for (auto it = map->begin(); it != map->end(); it++) {
         std::cout << it->first << " : ";
         switch (it->second->type->type) {
@@ -717,11 +706,11 @@ void PrintTypeMap(TypeMap *map) {
 void PrintTypeMaps(TypeChecker &checker) {
     std::cout << "======== Type Maps ========" << std::endl;
     std::cout << "[Global]" << std::endl;
-    PrintTypeMap(&checker.global_type_map_);
+    PrintTypeMap(&checker.global_type_);
     std::cout << "[Param]" << std::endl;
-    PrintTypeMap(&checker.func_param_type_map_);
+    PrintTypeMap(&checker.param_type_);
     std::cout << "[Local]" << std::endl;
-    for (const auto &i : checker.local_type_map_) {
+    for (const auto &i : checker.local_type_) {
         PrintTypeMap(i.get());
     }
 }
