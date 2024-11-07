@@ -78,8 +78,7 @@ A_indexExpr A_IdIndexExpr(A_pos pos, char *id)
     return p;
 }
 
-A_arrayExpr A_ArrayExpr(A_pos pos, A_leftVal arr, A_indexExpr idx)
-{
+A_arrayExpr A_ArrayExpr(A_pos pos, A_leftVal arr, A_indexExpr idx){
     A_arrayExpr p = (A_arrayExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->arr = arr;
@@ -87,8 +86,7 @@ A_arrayExpr A_ArrayExpr(A_pos pos, A_leftVal arr, A_indexExpr idx)
     return p;
 }
 
-A_memberExpr A_MemberExpr(A_pos pos, A_leftVal structId, char *memberId)
-{
+A_memberExpr A_MemberExpr(A_pos pos, A_leftVal structId, char* memberId){
     A_memberExpr p = (A_memberExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->structId = structId;
@@ -196,8 +194,7 @@ A_arithExpr A_ExprUnit(A_pos pos, A_exprUnit exprUnit)
     return p;
 }
 
-A_boolBiOpExpr A_BoolBiOpExpr(A_pos pos, A_boolBiOp op, A_boolExpr left, A_boolExpr right)
-{
+A_boolBiOpExpr A_BoolBiOpExpr(A_pos pos, A_boolBiOp op, A_boolExpr left, A_boolExpr right){
     A_boolBiOpExpr p = (A_boolBiOpExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->op = op;
@@ -469,8 +466,7 @@ A_fnDef A_FnDef(A_pos pos, A_fnDecl fnDecl, A_codeBlockStmtList stmts)
     return p;
 }
 
-A_ifStmt A_IfStmt(A_pos pos, A_boolUnit boolUnit, A_codeBlockStmtList ifStmts, A_codeBlockStmtList elseStmts)
-{
+A_ifStmt A_IfStmt(A_pos pos, A_boolUnit boolUnit, A_codeBlockStmtList ifStmts, A_codeBlockStmtList elseStmts){
     A_ifStmt p = (A_ifStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->boolUnit = boolUnit;
@@ -479,8 +475,7 @@ A_ifStmt A_IfStmt(A_pos pos, A_boolUnit boolUnit, A_codeBlockStmtList ifStmts, A
     return p;
 }
 
-A_whileStmt A_WhileStmt(A_pos pos, A_boolUnit boolUnit, A_codeBlockStmtList whileStmts)
-{
+A_whileStmt A_WhileStmt(A_pos pos, A_boolUnit boolUnit, A_codeBlockStmtList whileStmts){
     A_whileStmt p = (A_whileStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->boolUnit = boolUnit;

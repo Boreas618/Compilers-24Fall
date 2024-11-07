@@ -27,7 +27,7 @@ An expression is a composd of identifiers, values,  and operators, e.g., 1+2, a*
 
 ```
 arithExpr := arithExpr arithBiOp arithExpr | exprUnit
-exprUnit :=  num | id | < ( > arithExpr < ) > | fnCall | leftVal < [ > id | num < ] > | leftVal < . > id
+exprUnit :=  num | id | < ( > arithExpr < ) > | fnCall | leftVal < [ > id | num < ] > | leftVal < . > id | arithUOp exprUnit
 arithBiOp := < + > | < - > | < * > | < / >
 ```
 
@@ -35,7 +35,7 @@ arithBiOp := < + > | < - > | < * > | < / >
 
 ```
 boolExpr := boolExpr boolBiOp boolExpr | boolUnit
-boolUnit := < ( > exprUnit comOp exprUnit < ) > | < ( > boolExpr < ) > | boolUOp boolUnit // we restrict the operands of comparison operators to be exprUnit instead of rightVal to avoid confusing the precedence.
+boolUnit := exprUnit comOp exprUnit | < ( > boolExpr < ) > | boolUOp boolUnit // we restrict the operands of comparison operators to be exprUnit instead of rightVal to avoid confusing the precedence.
 boolBiOp := < && > | < || >
 boolUOp := < ! >
 comOp := < > > | < < > | < >= > | < <= > | < == > | < != >
@@ -47,7 +47,7 @@ We restrict neither the left value nor right value can be assignments.
 ```
 assignStmt := leftVal < = > rightVal < ; >  
 leftVal := id | leftVal < [ > id | num < ] > | leftVal < . > id
-rightVal := arithExpr
+rightVal := arithExpr | boolExpr
 ```
 
 **Function Call**
