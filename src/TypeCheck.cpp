@@ -80,7 +80,7 @@ void TypeChecker::CheckSymbolConficts(string &name, A_pos pos) {
 void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
     if (!vd) return;
     string name;
-    std::shared_ptr<ExprType> id_type = nullptr;
+    std::shared_ptr<ExprType> expr_type = nullptr;
     if (vd->kind == A_varDeclStmtType::A_varDeclKind) {
         aA_varDecl vdecl = vd->u.varDecl;
 
@@ -93,8 +93,7 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
         }
 
         CheckSymbolConficts(name, vdecl->pos);
-        id_type = std::make_shared<ExprType>(vdecl);
-
+        expr_type = std::make_shared<ExprType>(vdecl);
     } else if (vd->kind == A_varDeclStmtType::A_varDefKind) {
         aA_varDef vdef = vd->u.varDef;
         if (vdef->kind == A_varDefType::A_varDefScalarKind) {
@@ -107,32 +106,32 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
 
                 /* Perform type inference. */
                 if (vdef->u.defScalar->type == nullptr) {
-                    id_type = std::make_shared<ExprType>(
+                    expr_type = std::make_shared<ExprType>(
                         new aA_type_{vdef->pos, A_dataType::A_nativeTypeKind,
                                      A_nativeType::A_intTypeKind},
                         0);
                 } else {
-                    id_type = std::make_shared<ExprType>(vdef);
+                    expr_type = std::make_shared<ExprType>(vdef);
                 }
 
             } else {
-                id_type = CheckArithExpr(vdef->u.defScalar->val->u.arithExpr);
+                expr_type = CheckArithExpr(vdef->u.defScalar->val->u.arithExpr);
                 if (vdef->u.defScalar->type == nullptr) {
                     // Do nothing.
                 } else {
-                    if (id_type->construct_type == ConstructType::ARRAY)
+                    if (expr_type->construct_type == ConstructType::ARRAY)
                         PrintError(
                             *this, vdef->pos,
                             "Attempting to initialize a scalar with an array.");
-                    else if (id_type->construct_type ==
+                    else if (expr_type->construct_type ==
                              ConstructType::FUNCTION) {
-                        if (id_type->type != vdef->u.defScalar->type) {
+                        if (expr_type->type != vdef->u.defScalar->type) {
                             PrintError(*this, vdef->pos,
                                        "The return type doesn't match the "
                                        "given left type.");
                         }
                     } else {
-                        if (id_type->type->type !=
+                        if (expr_type->type->type !=
                             vdef->u.defScalar->type->type) {
                             PrintError(*this, vdef->pos,
                                        "Attempting to initialize a primitive "
@@ -154,12 +153,13 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
                  * instances retain a pointer to the AST. Freeing aA_type_ could
                  * corrupt the AST in such cases.
                  */
-                id_type = std::make_shared<ExprType>(
+                expr_type = std::make_shared<ExprType>(
                     new aA_type_{vdef->pos, A_dataType::A_nativeTypeKind,
                                  A_nativeType::A_intTypeKind},
                     1);
             } else {
-                id_type = std::make_shared<ExprType>(vdef->u.defArray->type, 1);
+                expr_type =
+                    std::make_shared<ExprType>(vdef->u.defArray->type, 1);
             }
 
             /**
@@ -174,8 +174,8 @@ void TypeChecker::CheckVarDecl(aA_varDeclStmt vd) {
         }
     }
 
-    assert(id_type != nullptr);
-    local_type_[level_]->insert(std::make_pair(name, id_type));
+    assert(expr_type != nullptr);
+    local_type_[level_]->insert(std::make_pair(name, expr_type));
     return;
 }
 
@@ -201,9 +201,10 @@ void TypeChecker::CheckFnSignature(aA_fnDecl fd) {
          * identifier.
          */
         if (ret_type->construct_type != ConstructType::FUNCTION) {
-            PrintError(*this, fd->pos,
-                       "Function name conflicts with a previously defined "
-                       "identifier.");
+            PrintError(
+                *this, fd->pos,
+                "The function name is conflicted with a previously defined "
+                "identifier.");
         }
 
         /**
@@ -211,7 +212,9 @@ void TypeChecker::CheckFnSignature(aA_fnDecl fd) {
          * declaration.
          */
         if (!comp_aA_type(ret_type->type, fd->type)) {
-            PrintError(*this, fd->pos, "Mismatched function return type.");
+            PrintError(*this, fd->pos,
+                       "The function return type is conflicted with a previous "
+                       "declaration.");
         }
 
         /**
@@ -220,11 +223,12 @@ void TypeChecker::CheckFnSignature(aA_fnDecl fd) {
          */
         auto prev_params = map[name];
         for (size_t i = 0; i < fd->paramDecl->varDecls.size(); i++) {
-            auto id_type_1 = ExprType(fd->paramDecl->varDecls[i]);
-            auto id_type_2 = ExprType((*prev_params)[i]);
-            if (!(id_type_1 == id_type_2)) {
+            auto expr_type_1 = ExprType(fd->paramDecl->varDecls[i]);
+            auto expr_type_2 = ExprType((*prev_params)[i]);
+            if (!(expr_type_1 == expr_type_2)) {
                 PrintError(*this, fd->paramDecl->varDecls[i]->pos,
-                           "Mismatched function parameters.");
+                           "The function parameter is conflicted with a "
+                           "previous declaration.");
             }
         }
 
@@ -253,38 +257,74 @@ void TypeChecker::CheckFnDeclStmt(aA_fnDeclStmt fd) {
 
 void TypeChecker::CheckAssignStmt(aA_assignStmt as) {
     if (!as) return;
-
     std::string name;
-
     auto right_val = as->rightVal;
-    bool is_right_val_array =
-        (as->rightVal->kind == A_arithExprValKind) &&
-        (as->rightVal->u.arithExpr->kind == A_exprUnitKind) &&
-        (as->rightVal->u.arithExpr->u.exprUnit->kind == A_arrayExprKind);
+
+    std::shared_ptr<ExprType> right_type = nullptr;
+
+    /**
+     * Check the right value expression.
+     */
+    if (as->rightVal->kind == A_arithExprValKind) {
+        right_type = CheckArithExpr(right_val->u.arithExpr);
+    } else {
+        CheckBoolExpr(right_val->u.boolExpr);
+        right_type = std::make_shared<ExprType>(
+            new aA_type_{right_val->pos, A_dataType::A_nativeTypeKind,
+                         A_nativeType::A_intTypeKind},
+            0);
+    }
 
     switch (as->leftVal->kind) {
         case A_leftValType::A_varValKind: {
             name = *as->leftVal->u.id;
+            std::shared_ptr<ExprType> left_type = nullptr;
+            if (!QueryIdentifier(name, &left_type)) break;
+
+            if (left_type->type == nullptr) {
+                left_type->type =
+                    new aA_type_{as->leftVal->pos, right_type->type->type,
+                                 right_type->type->u};
+            }
 
             /**
-             * Functions and arrays cannot be assigned.
+             * Functions and arrays cannot be assigned to.
              */
-            auto id_type = global_type_[name];
-            if (id_type == nullptr) break;
-            if (id_type->construct_type == ConstructType::FUNCTION) {
+            if (left_type->construct_type == ConstructType::FUNCTION) {
                 PrintError(*this, as->leftVal->pos,
                            "Cannot assign a value to a function.");
-            } else if (id_type->construct_type == ConstructType::ARRAY &&
-                       is_right_val_array) {
-                PrintError(*this, as->leftVal->pos,
-                           "[Unsupported] Cannot assign a list of values to an "
-                           "array.");
+            } else if (left_type->construct_type == ConstructType::ARRAY ||
+                       left_type->construct_type == ConstructType::SCALAR) {
+                if (right_type->construct_type != left_type->construct_type) {
+                    PrintError(*this, as->leftVal->pos,
+                               "Left and right values are different types of "
+                               "constructs.");
+                }
+
+                if (!comp_aA_type(left_type->type, right_type->type)) {
+                    PrintError(
+                        *this, as->leftVal->pos,
+                        "Mismatched types between left and right value.");
+                }
+
+            } else {
+                PrintError(*this, as->leftVal->pos, "Unknown construct type.");
             }
             break;
         }
         case A_leftValType::A_arrValKind: {
             name = *as->leftVal->u.arrExpr->arr->u.id;
-            // TODO: Implement array assignment logic here
+            auto idx = *as->leftVal->u.arrExpr->idx;
+            std::shared_ptr<ExprType> arr_type = nullptr;
+            if (!QueryIdentifier(name, &arr_type)) break;
+
+            /* For now, we won't ban invalid array index. */
+            if (arr_type->construct_type != ConstructType::ARRAY) {
+                std::ostringstream oss;
+                oss << "'" << name << "'"
+                    << " is not an array.";
+                PrintError(*this, as->leftVal->pos, oss.str());
+            }
             break;
         }
         case A_leftValType::A_memberValKind: {
@@ -295,8 +335,10 @@ void TypeChecker::CheckAssignStmt(aA_assignStmt as) {
         }
     }
 
-    // Check if the variable is defined either locally or as a function
-    // parameter.
+    /**
+     * Check if the variable is defined either locally or as a function
+     * parameter.
+     */
     if (!QueryInLocalVars(name, nullptr) && !QueryInFuncParams(name, nullptr)) {
         std::ostringstream oss;
         oss << "Variable " << name << " is not defined.";
@@ -326,16 +368,16 @@ void TypeChecker::CheckBoolUnit(aA_boolUnit bu) {
         case A_boolUnitType::A_comOpExprKind: {
             auto lunit = bu->u.comExpr->left;
             auto runit = bu->u.comExpr->right;
-            auto id_type_l = CheckExprUnit(lunit);
-            auto id_type_r = CheckExprUnit(runit);
-            if (!comp_aA_type(id_type_l->type, id_type_r->type)) {
+            auto expr_type_l = CheckExprUnit(lunit);
+            auto expr_type_r = CheckExprUnit(runit);
+            if (!comp_aA_type(expr_type_l->type, expr_type_r->type)) {
                 std::ostringstream oss;
-                auto l_type_name = (id_type_l->type->type == A_nativeTypeKind)
+                auto l_type_name = (expr_type_l->type->type == A_nativeTypeKind)
                                        ? "int"
-                                       : *id_type_l->type->u.structType;
-                auto r_type_name = (id_type_r->type->type == A_nativeTypeKind)
+                                       : *expr_type_l->type->u.structType;
+                auto r_type_name = (expr_type_r->type->type == A_nativeTypeKind)
                                        ? "int"
-                                       : *id_type_r->type->u.structType;
+                                       : *expr_type_r->type->u.structType;
                 oss << "Cannot compare between " << l_type_name << " and "
                     << r_type_name;
 
@@ -358,17 +400,8 @@ void TypeChecker::CheckIfStmt(aA_ifStmt is) {
     if (!is) return;
     EnterBlock();
     CheckBoolUnit(is->boolUnit);
-    /* fill code here, take care of variable scope */
-
-    for (aA_codeBlockStmt s : is->ifStmts) {
-        CheckCodeblockStmt(s);
-    }
-
-    /* fill code here */
-    for (aA_codeBlockStmt s : is->elseStmts) {
-        CheckCodeblockStmt(s);
-    }
-    /* fill code here */
+    for (aA_codeBlockStmt s : is->ifStmts) CheckCodeblockStmt(s);
+    for (aA_codeBlockStmt s : is->elseStmts) CheckCodeblockStmt(s);
     LeaveBlock();
     return;
 }
@@ -377,12 +410,7 @@ void TypeChecker::CheckWhileStmt(aA_whileStmt ws) {
     if (!ws) return;
     EnterBlock();
     CheckBoolUnit(ws->boolUnit);
-    /* fill code here, take care of variable scope */
-
-    for (aA_codeBlockStmt s : ws->whileStmts) {
-        CheckCodeblockStmt(s);
-    }
-    /* fill code here */
+    for (aA_codeBlockStmt s : ws->whileStmts) CheckCodeblockStmt(s);
     LeaveBlock();
     return;
 }
@@ -434,8 +462,6 @@ void TypeChecker::CheckReturnStmt(aA_returnStmt rs) {
 void TypeChecker::CheckCodeblockStmt(aA_codeBlockStmt cs) {
     if (!cs) return;
 
-    // EnterBlock();
-
     switch (cs->kind) {
         case A_codeBlockStmtType::A_varDeclStmtKind:
             CheckVarDecl(cs->u.varDeclStmt);
@@ -459,8 +485,6 @@ void TypeChecker::CheckCodeblockStmt(aA_codeBlockStmt cs) {
             break;
     }
 
-    // LeaveBlock();
-
     return;
 }
 
@@ -478,8 +502,8 @@ void TypeChecker::CheckFnDef(aA_fnDef fd) {
                        "Duplicate definition of identifier (local and global "
                        "variable).");
         } else {
-            param_type_.insert(std::make_pair(
-                *(vd->u.declScalar->id), std::make_shared<ExprType>(vd)));
+            param_type_.insert(std::make_pair(*(vd->u.declScalar->id),
+                                              std::make_shared<ExprType>(vd)));
         }
     }
 
@@ -492,18 +516,18 @@ void TypeChecker::CheckFnDef(aA_fnDef fd) {
          * Check return type.
          */
         if (stmt->kind == A_returnStmtKind) {
-            std::shared_ptr<ExprType> id_type = nullptr;
+            std::shared_ptr<ExprType> expr_type = nullptr;
             auto ret_val = stmt->u.returnStmt->retVal;
             if (ret_val->kind == A_boolExprValKind) {
                 CheckBoolExpr(ret_val->u.boolExpr);
-                id_type = std::make_shared<ExprType>(
+                expr_type = std::make_shared<ExprType>(
                     new aA_type_{ret_val->pos, A_dataType::A_nativeTypeKind,
                                  A_nativeType::A_intTypeKind},
                     0);
             } else {
-                id_type = CheckArithExpr(ret_val->u.arithExpr);
+                expr_type = CheckArithExpr(ret_val->u.arithExpr);
             }
-            if (!comp_aA_type(id_type->type,
+            if (!comp_aA_type(expr_type->type,
                               global_type_[*current_func_]->type)) {
                 PrintError(*this, fd->pos, "Mismatched return types.");
             }
@@ -518,11 +542,25 @@ void TypeChecker::CheckFnDef(aA_fnDef fd) {
 void TypeChecker::CheckArrayExpr(aA_arrayExpr ae) {
     if (!ae) return;
     string name = *ae->arr->u.id;
-    // check array name
-    /* fill code here */
+    std::ostringstream oss;
 
-    // check index
-    /* fill code here */
+    std::shared_ptr<ExprType> arr_type = nullptr;
+    if (!QueryIdentifier(name, &arr_type)) {
+        oss << "'" << name << "'"
+            << " is not defined.";
+        PrintError(*this, ae->pos, oss.str());
+    }
+
+    if (arr_type->construct_type != ConstructType::ARRAY) {
+        oss << "'" << name << "'"
+            << " is not an array.";
+        PrintError(*this, ae->pos, oss.str());
+    }
+
+    /**
+     * For now, we won't ban invalid index.
+     */
+
     return;
 }
 
@@ -533,13 +571,13 @@ std::shared_ptr<ExprType> TypeChecker::CheckMemberExpr(aA_memberExpr me) {
 
     if (QueryIdentifier(id, &type) == false) {
         std::ostringstream oss;
-        oss << "Struct " << id << " is not defined.";
+        oss << "Struct '" << id << "' is not defined.";
         PrintError(*this, me->structId->pos, oss.str());
     }
 
     if (type->type->type != A_structTypeKind) {
         std::ostringstream oss;
-        oss << id << " is not struct.";
+        oss << id << " is not a struct.";
         PrintError(*this, me->structId->pos, oss.str());
     }
 
@@ -577,7 +615,7 @@ std::shared_ptr<ExprType> TypeChecker::CheckArithExpr(aA_arithExpr ae) {
                 rightType->type->u.nativeType != A_nativeType::A_intTypeKind)
                 PrintError(
                     *this, ae->pos,
-                    "Only int can be arithmetic expression operation values!");
+                    "Only int can be arithmetic expression operation values.");
         } break;
         case A_arithExprType::A_exprUnitKind:
             ret = CheckExprUnit(ae->u.exprUnit);
@@ -593,7 +631,6 @@ std::shared_ptr<ExprType> TypeChecker::CheckExprUnit(aA_exprUnit eu) {
         case A_exprUnitType::A_idExprKind: {
             auto id = eu->u.id;
             if (QueryIdentifier(*id, &ret) == false) {
-                PrintTypeMaps(*this);
                 PrintError(*this, eu->pos, "Identifier not defined.");
             }
         } break;
@@ -665,7 +702,7 @@ void TypeChecker::CheckProgram(aA_program p) {
         }
     }
 
-    out_ << "Typecheck passed!" << std::endl;
+    out_ << "Typecheck passed." << std::endl;
     return;
 }
 

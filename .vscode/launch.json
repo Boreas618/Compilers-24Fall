@@ -10,8 +10,8 @@
             "name": "Debug",
             "program": "src/compiler",
             "args": [
-                "tests/13_active_domain.tea",
-                "tests/13_active_domain.ast"
+                "tests/17_type_inference.tea",
+                "tests/17_type_inference.ast"
             ],
             "cwd": "src"
         }
