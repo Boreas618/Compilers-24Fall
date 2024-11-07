@@ -1,48 +1,48 @@
 #pragma once
 
-typedef struct A_pos_ *A_pos; // position information
-typedef struct A_type_ *A_type;
-typedef struct A_varDecl_ *A_varDecl;
-typedef struct A_varDef_ *A_varDef;
-typedef struct A_rightVal_ *A_rightVal;
-typedef struct A_arithExpr_ *A_arithExpr;
-typedef struct A_boolExpr_ *A_boolExpr;
-typedef struct A_arithBiOpExpr_ *A_arithBiOpExpr;
-typedef struct A_arithUExpr_ *A_arithUExpr;
-typedef struct A_exprUnit_ *A_exprUnit;
-typedef struct A_fnCall_ *A_fnCall;
-typedef struct A_indexExpr_ *A_indexExpr;
-typedef struct A_arrayExpr_ *A_arrayExpr;
-typedef struct A_memberExpr_ *A_memberExpr;
-typedef struct A_boolUnit_ *A_boolUnit;
-typedef struct A_boolBiOpExpr_ *A_boolBiOpExpr;
-typedef struct A_boolUOpExpr_ *A_boolUOpExpr;
-typedef struct A_comExpr_ *A_comExpr;
-typedef struct A_leftVal_ *A_leftVal;
-typedef struct A_assignStmt_ *A_assignStmt;
-typedef struct A_rightValList_ *A_rightValList;
-typedef struct A_varDefScalar_ *A_varDefScalar;
-typedef struct A_varDefArray_ *A_varDefArray;
-typedef struct A_varDeclScalar_ *A_varDeclScalar;
-typedef struct A_varDeclArray_ *A_varDeclArray;
-typedef struct A_varDeclStmt_ *A_varDeclStmt;
-typedef struct A_varDeclList_ *A_varDeclList;
-typedef struct A_structDef_ *A_structDef;
-typedef struct A_paramDecl_ *A_paramDecl;
-typedef struct A_fnDecl_ *A_fnDecl;
-typedef struct A_fnDef_ *A_fnDef;
-typedef struct A_codeBlockStmt_ *A_codeBlockStmt;
-typedef struct A_ifStmt_ *A_ifStmt;
-typedef struct A_whileStmt_ *A_whileStmt;
-typedef struct A_fnDeclStmt_ *A_fnDeclStmt;
-typedef struct A_callStmt_ *A_callStmt;
-typedef struct A_returnStmt_ *A_returnStmt;
-typedef struct A_programElement_ *A_programElement;
-typedef struct A_codeBlockStmtList_ *A_codeBlockStmtList;
-typedef struct A_programElementList_ *A_programElementList;
-typedef struct A_program_ *A_program;
-typedef struct A_tokenId_ *A_tokenId;
-typedef struct A_tokenNum_ *A_tokenNum;
+typedef struct A_pos_* A_pos; //position information
+typedef struct A_type_* A_type;
+typedef struct A_varDecl_* A_varDecl;
+typedef struct A_varDef_* A_varDef;
+typedef struct A_rightVal_* A_rightVal;
+typedef struct A_arithExpr_* A_arithExpr;
+typedef struct A_boolExpr_* A_boolExpr;
+typedef struct A_arithBiOpExpr_* A_arithBiOpExpr;
+typedef struct A_arithUExpr_* A_arithUExpr;
+typedef struct A_exprUnit_* A_exprUnit;
+typedef struct A_fnCall_* A_fnCall;
+typedef struct A_indexExpr_* A_indexExpr;
+typedef struct A_arrayExpr_* A_arrayExpr;
+typedef struct A_memberExpr_* A_memberExpr;
+typedef struct A_boolUnit_* A_boolUnit;
+typedef struct A_boolBiOpExpr_* A_boolBiOpExpr;
+typedef struct A_boolUOpExpr_* A_boolUOpExpr;
+typedef struct A_comExpr_* A_comExpr;
+typedef struct A_leftVal_* A_leftVal;
+typedef struct A_assignStmt_* A_assignStmt;
+typedef struct A_rightValList_* A_rightValList;
+typedef struct A_varDefScalar_* A_varDefScalar;
+typedef struct A_varDefArray_* A_varDefArray;
+typedef struct A_varDeclScalar_* A_varDeclScalar;
+typedef struct A_varDeclArray_* A_varDeclArray;
+typedef struct A_varDeclStmt_* A_varDeclStmt;
+typedef struct A_varDeclList_* A_varDeclList;
+typedef struct A_structDef_* A_structDef;
+typedef struct A_paramDecl_* A_paramDecl;
+typedef struct A_fnDecl_* A_fnDecl;
+typedef struct A_fnDef_* A_fnDef;
+typedef struct A_codeBlockStmt_* A_codeBlockStmt;
+typedef struct A_ifStmt_* A_ifStmt;
+typedef struct A_whileStmt_* A_whileStmt;
+typedef struct A_fnDeclStmt_* A_fnDeclStmt;
+typedef struct A_callStmt_* A_callStmt;
+typedef struct A_returnStmt_* A_returnStmt;
+typedef struct A_programElement_* A_programElement;
+typedef struct A_codeBlockStmtList_* A_codeBlockStmtList;
+typedef struct A_programElementList_* A_programElementList;
+typedef struct A_program_* A_program;
+typedef struct A_tokenId_* A_tokenId;
+typedef struct A_tokenNum_* A_tokenNum;
 
 struct A_pos_
 {
@@ -115,7 +115,7 @@ struct A_memberExpr_
 {
     A_pos pos;
     A_leftVal structId;
-    char *memberId;
+    char* memberId;
 };
 
 typedef enum
@@ -567,9 +567,9 @@ A_type A_StructType(A_pos pos, char *stype);
 A_rightValList A_RightValList(A_rightVal head, A_rightValList tail);
 A_fnCall A_FnCall(A_pos pos, char *fn, A_rightValList vals);
 A_indexExpr A_NumIndexExpr(A_pos pos, int num);
-A_indexExpr A_IdIndexExpr(A_pos pos, char *id);
+A_indexExpr A_IdIndexExpr(A_pos pos, char* id);
 A_arrayExpr A_ArrayExpr(A_pos pos, A_leftVal arr, A_indexExpr idx);
-A_memberExpr A_MemberExpr(A_pos pos, A_leftVal structId, char *memberId);
+A_memberExpr A_MemberExpr(A_pos pos, A_leftVal structId, char* memberId);
 A_exprUnit A_NumExprUnit(A_pos pos, int num);
 A_exprUnit A_IdExprUnit(A_pos pos, char *id);
 A_exprUnit A_ArithExprUnit(A_pos pos, A_arithExpr arithExpr);
