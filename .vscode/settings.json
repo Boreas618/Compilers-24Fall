@@ -64,6 +64,7 @@
         "algorithm": "cpp",
         "socket.h": "c",
         "__config": "cpp",
-        "version": "cpp"
+        "version": "cpp",
+        "type_traits": "cpp"
     }
 }
