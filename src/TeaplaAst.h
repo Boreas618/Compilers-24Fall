@@ -46,271 +46,271 @@ typedef struct aA_programElement_* aA_programElement;
 typedef struct aA_program_* aA_program;
 
 struct aA_type_ {
-  A_pos pos;
-  A_dataType type;
-  union {
-    A_nativeType nativeType;
-    string* structType;
-  } u;
+    A_pos pos;
+    A_dataType type;
+    union {
+        A_nativeType nativeType;
+        string* structType;
+    } u;
 };
 
 struct aA_fnCall_ {
-  A_pos pos;
-  string* fn;
-  vector<aA_rightVal> vals;
+    A_pos pos;
+    string* fn;
+    vector<aA_rightVal> vals;
 };
 
 struct aA_indexExpr_ {
-  A_pos pos;
-  A_indexExprKind kind;
-  union {
-    int num;
-    string* id;
-  } u;
+    A_pos pos;
+    A_indexExprKind kind;
+    union {
+        int num;
+        string* id;
+    } u;
 };
 
 struct aA_arrayExpr_ {
-  A_pos pos;
-  aA_leftVal arr;
-  aA_indexExpr idx;
+    A_pos pos;
+    aA_leftVal arr;
+    aA_indexExpr idx;
 };
 
 struct aA_memberExpr_ {
-  A_pos pos;
-  aA_leftVal structId;
-  string* memberId;
+    A_pos pos;
+    aA_leftVal structId;
+    string* memberId;
 };
 
 struct aA_exprUnit_ {
-  A_pos pos;
-  A_exprUnitType kind;
-  union {
-    int num;
-    string* id;
-    aA_arithExpr arithExpr;
-    aA_fnCall callExpr;
-    aA_arrayExpr arrayExpr;
-    aA_memberExpr memberExpr;
-    aA_arithUExpr arithUExpr;
-  } u;
+    A_pos pos;
+    A_exprUnitType kind;
+    union {
+        int num;
+        string* id;
+        aA_arithExpr arithExpr;
+        aA_fnCall callExpr;
+        aA_arrayExpr arrayExpr;
+        aA_memberExpr memberExpr;
+        aA_arithUExpr arithUExpr;
+    } u;
 };
 
 struct aA_arithBiOpExpr_ {
-  A_pos pos;
-  A_arithBiOp op;
-  aA_arithExpr left, right;
+    A_pos pos;
+    A_arithBiOp op;
+    aA_arithExpr left, right;
 };
 
 struct aA_arithUExpr_ {
-  A_pos pos;
-  A_arithUOp op;
-  aA_exprUnit expr;
+    A_pos pos;
+    A_arithUOp op;
+    aA_exprUnit expr;
 };
 
 struct aA_arithExpr_ {
-  A_pos pos;
-  A_arithExprType kind;
-  union {
-    aA_arithBiOpExpr arithBiOpExpr;
-    aA_exprUnit exprUnit;
-  } u;
+    A_pos pos;
+    A_arithExprType kind;
+    union {
+        aA_arithBiOpExpr arithBiOpExpr;
+        aA_exprUnit exprUnit;
+    } u;
 };
 
 struct aA_boolBiOpExpr_ {
-  A_pos pos;
-  A_boolBiOp op;
-  aA_boolExpr left;
-  aA_boolExpr right;
+    A_pos pos;
+    A_boolBiOp op;
+    aA_boolExpr left;
+    aA_boolExpr right;
 };
 
 struct aA_boolUOpExpr_ {
-  A_pos pos;
-  A_boolUOp op;
-  aA_boolUnit cond;
+    A_pos pos;
+    A_boolUOp op;
+    aA_boolUnit cond;
 };
 
 struct aA_boolExpr_ {
-  A_pos pos;
-  A_boolExprType kind;
-  union {
-    aA_boolBiOpExpr boolBiOpExpr;
-    aA_boolUnit boolUnit;
-  } u;
+    A_pos pos;
+    A_boolExprType kind;
+    union {
+        aA_boolBiOpExpr boolBiOpExpr;
+        aA_boolUnit boolUnit;
+    } u;
 };
 
 struct aA_comExpr_ {
-  A_pos pos;
-  A_comOp op;
-  aA_exprUnit left, right;
+    A_pos pos;
+    A_comOp op;
+    aA_exprUnit left, right;
 };
 
 struct aA_boolUnit_ {
-  A_pos pos;
-  A_boolUnitType kind;
-  union {
-    aA_comExpr comExpr;
-    aA_boolExpr boolExpr;
-    aA_boolUOpExpr boolUOpExpr;
-  } u;
+    A_pos pos;
+    A_boolUnitType kind;
+    union {
+        aA_comExpr comExpr;
+        aA_boolExpr boolExpr;
+        aA_boolUOpExpr boolUOpExpr;
+    } u;
 };
 
 struct aA_rightVal_ {
-  A_pos pos;
-  A_rightValType kind;
-  union {
-    aA_arithExpr arithExpr;
-    aA_boolExpr boolExpr;
-  } u;
+    A_pos pos;
+    A_rightValType kind;
+    union {
+        aA_arithExpr arithExpr;
+        aA_boolExpr boolExpr;
+    } u;
 };
 
 struct aA_leftVal_ {
-  A_pos pos;
-  A_leftValType kind;
-  union {
-    string* id;
-    aA_arrayExpr arrExpr;
-    aA_memberExpr memberExpr;
-  } u;
+    A_pos pos;
+    A_leftValType kind;
+    union {
+        string* id;
+        aA_arrayExpr arrExpr;
+        aA_memberExpr memberExpr;
+    } u;
 };
 
 struct aA_assignStmt_ {
-  A_pos pos;
-  aA_leftVal leftVal;
-  aA_rightVal rightVal;
+    A_pos pos;
+    aA_leftVal leftVal;
+    aA_rightVal rightVal;
 };
 
 struct aA_varDeclScalar_ {
-  A_pos pos;
-  string* id;
-  aA_type type;
+    A_pos pos;
+    string* id;
+    aA_type type;
 };
 
 struct aA_varDeclArray_ {
-  A_pos pos;
-  string* id;
-  int len;
-  aA_type type;
+    A_pos pos;
+    string* id;
+    int len;
+    aA_type type;
 };
 
 struct aA_varDecl_ {
-  A_pos pos;
-  A_varDeclType kind;
-  union {
-    aA_varDeclScalar declScalar;
-    aA_varDeclArray declArray;
-  } u;
+    A_pos pos;
+    A_varDeclType kind;
+    union {
+        aA_varDeclScalar declScalar;
+        aA_varDeclArray declArray;
+    } u;
 };
 
 struct aA_varDefScalar_ {
-  A_pos pos;
-  string* id;
-  aA_type type;
-  aA_rightVal val;
+    A_pos pos;
+    string* id;
+    aA_type type;
+    aA_rightVal val;
 };
 
 struct aA_varDefArray_ {
-  A_pos pos;
-  string* id;
-  int len;
-  aA_type type;
-  vector<aA_rightVal> vals;
+    A_pos pos;
+    string* id;
+    int len;
+    aA_type type;
+    vector<aA_rightVal> vals;
 };
 
 struct aA_varDef_ {
-  A_pos pos;
-  A_varDefType kind;
-  union {
-    aA_varDefScalar defScalar;
-    aA_varDefArray defArray;
-  } u;
+    A_pos pos;
+    A_varDefType kind;
+    union {
+        aA_varDefScalar defScalar;
+        aA_varDefArray defArray;
+    } u;
 };
 
 struct aA_varDeclStmt_ {
-  A_pos pos;
-  A_varDeclStmtType kind;
-  union {
-    aA_varDecl varDecl;
-    aA_varDef varDef;
-  } u;
+    A_pos pos;
+    A_varDeclStmtType kind;
+    union {
+        aA_varDecl varDecl;
+        aA_varDef varDef;
+    } u;
 };
 
 struct aA_structDef_ {
-  A_pos pos;
-  string* id;
-  vector<aA_varDecl> varDecls;
+    A_pos pos;
+    string* id;
+    vector<aA_varDecl> varDecls;
 };
 
 struct aA_fnDecl_ {
-  A_pos pos;
-  string* id;
-  aA_paramDecl paramDecl;
-  aA_type type;
+    A_pos pos;
+    string* id;
+    aA_paramDecl paramDecl;
+    aA_type type;
 };
 
 struct aA_paramDecl_ {
-  vector<aA_varDecl> varDecls;
+    vector<aA_varDecl> varDecls;
 };
 
 struct aA_fnDef_ {
-  A_pos pos;
-  aA_fnDecl fnDecl;
-  vector<aA_codeBlockStmt> stmts;
+    A_pos pos;
+    aA_fnDecl fnDecl;
+    vector<aA_codeBlockStmt> stmts;
 };
 
 struct aA_ifStmt_ {
-  A_pos pos;
-  aA_boolUnit boolUnit;
-  vector<aA_codeBlockStmt> ifStmts, elseStmts;
+    A_pos pos;
+    aA_boolUnit boolUnit;
+    vector<aA_codeBlockStmt> ifStmts, elseStmts;
 };
 
 struct aA_whileStmt_ {
-  A_pos pos;
-  aA_boolUnit boolUnit;
-  vector<aA_codeBlockStmt> whileStmts;
+    A_pos pos;
+    aA_boolUnit boolUnit;
+    vector<aA_codeBlockStmt> whileStmts;
 };
 
 struct aA_callStmt_ {
-  A_pos pos;
-  aA_fnCall fnCall;
+    A_pos pos;
+    aA_fnCall fnCall;
 };
 
 struct aA_returnStmt_ {
-  A_pos pos;
-  aA_rightVal retVal;
+    A_pos pos;
+    aA_rightVal retVal;
 };
 
 struct aA_codeBlockStmt_ {
-  A_pos pos;
-  A_codeBlockStmtType kind;
-  union {
-    aA_varDeclStmt varDeclStmt;
-    aA_assignStmt assignStmt;
-    aA_callStmt callStmt;
-    aA_ifStmt ifStmt;
-    aA_whileStmt whileStmt;
-    aA_returnStmt returnStmt;
-    // continue and break do not need other info
-  } u;
+    A_pos pos;
+    A_codeBlockStmtType kind;
+    union {
+        aA_varDeclStmt varDeclStmt;
+        aA_assignStmt assignStmt;
+        aA_callStmt callStmt;
+        aA_ifStmt ifStmt;
+        aA_whileStmt whileStmt;
+        aA_returnStmt returnStmt;
+        // continue and break do not need other info
+    } u;
 };
 
 struct aA_fnDeclStmt_ {
-  A_pos pos;
-  aA_fnDecl fnDecl;
+    A_pos pos;
+    aA_fnDecl fnDecl;
 };
 
 struct aA_programElement_ {
-  A_pos pos;
-  A_programElementType kind;
-  union {
-    aA_varDeclStmt varDeclStmt;
-    aA_structDef structDef;
-    aA_fnDeclStmt fnDeclStmt;
-    aA_fnDef fnDef;
-  } u;
+    A_pos pos;
+    A_programElementType kind;
+    union {
+        aA_varDeclStmt varDeclStmt;
+        aA_structDef structDef;
+        aA_fnDeclStmt fnDeclStmt;
+        aA_fnDef fnDef;
+    } u;
 };
 
 struct aA_program_ {
-  vector<aA_programElement> programElements;
+    vector<aA_programElement> programElements;
 };
 
 aA_type aA_Type(A_type type);
