@@ -19,8 +19,8 @@ void TypeChecker::LeaveBlock() {
 }
 
 template <typename T>
-bool TypeChecker::QueryInTable(T map, string &name,
-                               std::shared_ptr<ExprType> *ret) {
+bool TypeChecker::QueryInTable(T map, string& name,
+                               std::shared_ptr<ExprType>* ret) {
     if (map.find(name) != map.end()) {
         if (ret) *ret = map[name];
         return true;
@@ -29,18 +29,18 @@ bool TypeChecker::QueryInTable(T map, string &name,
     }
 }
 
-bool TypeChecker::QueryInGlobalVars(string &name,
-                                    std::shared_ptr<ExprType> *ret) {
+bool TypeChecker::QueryInGlobalVars(string& name,
+                                    std::shared_ptr<ExprType>* ret) {
     return QueryInTable(global_type_, name, ret);
 }
 
-bool TypeChecker::QueryInFuncParams(string &name,
-                                    std::shared_ptr<ExprType> *ret) {
+bool TypeChecker::QueryInFuncParams(string& name,
+                                    std::shared_ptr<ExprType>* ret) {
     return QueryInTable(param_type_, name, ret);
 }
 
-bool TypeChecker::QueryInLocalVars(string &name,
-                                   std::shared_ptr<ExprType> *ret) {
+bool TypeChecker::QueryInLocalVars(string& name,
+                                   std::shared_ptr<ExprType>* ret) {
     auto map = local_type_;
     for (auto level : map) {
         if (QueryInTable(*level, name, ret)) return true;
@@ -48,8 +48,8 @@ bool TypeChecker::QueryInLocalVars(string &name,
     return false;
 }
 
-inline bool TypeChecker::QueryIdentifier(string &name,
-                                         std::shared_ptr<ExprType> *ret) {
+inline bool TypeChecker::QueryIdentifier(string& name,
+                                         std::shared_ptr<ExprType>* ret) {
     bool found = false;
     found = QueryInGlobalVars(name, ret) || found;
     found = QueryInFuncParams(name, ret) || found;
@@ -57,7 +57,7 @@ inline bool TypeChecker::QueryIdentifier(string &name,
     return found;
 }
 
-bool TypeChecker::QueryInStructDefs(string &name) {
+bool TypeChecker::QueryInStructDefs(string& name) {
     auto map = struct_members_;
     if (map.find(name) != map.end())
         return true;
@@ -65,7 +65,7 @@ bool TypeChecker::QueryInStructDefs(string &name) {
         return false;
 }
 
-void TypeChecker::CheckSymbolConficts(string &name, A_pos pos) {
+void TypeChecker::CheckSymbolConficts(string& name, A_pos pos) {
     if (QueryInFuncParams(name, nullptr)) {
         PrintError(*this, pos,
                    "Duplicate definition of identifier (local variable and "
@@ -191,7 +191,7 @@ void TypeChecker::CheckStructDef(aA_structDef sd) {
 void TypeChecker::CheckFnSignature(aA_fnDecl fd) {
     if (!fd) return;
     string name = *fd->id;
-    auto &map = fn_params_;
+    auto& map = fn_params_;
 
     if (map.find(name) != map.end()) {
         auto ret_type = global_type_[name];
@@ -418,7 +418,7 @@ void TypeChecker::CheckWhileStmt(aA_whileStmt ws) {
 void TypeChecker::CheckFuncCall(aA_fnCall fc) {
     if (!fc) return;
     string func_name = *fc->fn;
-    auto &map = fn_params_;
+    auto& map = fn_params_;
 
     /**
      * Check if the function is defined.
@@ -706,7 +706,7 @@ void TypeChecker::CheckProgram(aA_program p) {
     return;
 }
 
-void PrintTypeMap(TypeTable *map) {
+void PrintTypeMap(TypeTable* map) {
     for (auto it = map->begin(); it != map->end(); it++) {
         std::cout << it->first << " : ";
         switch (it->second->type->type) {
@@ -740,19 +740,19 @@ void PrintTypeMap(TypeTable *map) {
     }
 }
 
-void PrintTypeMaps(TypeChecker &checker) {
+void PrintTypeMaps(TypeChecker& checker) {
     std::cout << "======== Type Maps ========" << std::endl;
     std::cout << "[Global]" << std::endl;
     PrintTypeMap(&checker.global_type_);
     std::cout << "[Param]" << std::endl;
     PrintTypeMap(&checker.param_type_);
     std::cout << "[Local]" << std::endl;
-    for (const auto &i : checker.local_type_) {
+    for (const auto& i : checker.local_type_) {
         PrintTypeMap(i.get());
     }
 }
 
-void PrintError(TypeChecker &checker, A_pos p, string info) {
+void PrintError(TypeChecker& checker, A_pos p, string info) {
     checker.out_ << "Typecheck error in line " << p->line << ", col " << p->col
                  << ": " << info << std::endl;
     exit(0);

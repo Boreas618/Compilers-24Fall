@@ -1,32 +1,29 @@
-#include <cstdlib>
 #include "TeaplAst.h"
 
-A_pos A_Pos(int line, int col)
-{
+#include <cstdlib>
+
+A_pos A_Pos(int line, int col) {
     A_pos p = (A_pos)malloc(sizeof(*p));
     p->line = line;
     p->col = col;
     return p;
 }
 
-A_tokenId A_TokenId(A_pos pos, char *id)
-{
+A_tokenId A_TokenId(A_pos pos, char* id) {
     A_tokenId p = (A_tokenId)malloc(sizeof(*p));
     p->pos = pos;
     p->id = id;
     return p;
 }
 
-A_tokenNum A_TokenNum(A_pos pos, int num)
-{
+A_tokenNum A_TokenNum(A_pos pos, int num) {
     A_tokenNum p = (A_tokenNum)malloc(sizeof(*p));
     p->pos = pos;
     p->num = num;
     return p;
 }
 
-A_type A_NativeType(A_pos pos, A_nativeType ntype)
-{
+A_type A_NativeType(A_pos pos, A_nativeType ntype) {
     A_type p = (A_type)malloc(sizeof(*p));
     p->pos = pos;
     p->type = A_nativeTypeKind;
@@ -34,8 +31,7 @@ A_type A_NativeType(A_pos pos, A_nativeType ntype)
     return p;
 }
 
-A_type A_StructType(A_pos pos, char *stype)
-{
+A_type A_StructType(A_pos pos, char* stype) {
     A_type p = (A_type)malloc(sizeof(*p));
     p->pos = pos;
     p->type = A_structTypeKind;
@@ -43,16 +39,14 @@ A_type A_StructType(A_pos pos, char *stype)
     return p;
 }
 
-A_rightValList A_RightValList(A_rightVal head, A_rightValList tail)
-{
+A_rightValList A_RightValList(A_rightVal head, A_rightValList tail) {
     A_rightValList p = (A_rightValList)malloc(sizeof(*p));
     p->head = head;
     p->tail = tail;
     return p;
 }
 
-A_fnCall A_FnCall(A_pos pos, char *fn, A_rightValList vals)
-{
+A_fnCall A_FnCall(A_pos pos, char* fn, A_rightValList vals) {
     A_fnCall p = (A_fnCall)malloc(sizeof(*p));
     p->pos = pos;
     p->fn = fn;
@@ -60,8 +54,7 @@ A_fnCall A_FnCall(A_pos pos, char *fn, A_rightValList vals)
     return p;
 }
 
-A_indexExpr A_NumIndexExpr(A_pos pos, int num)
-{
+A_indexExpr A_NumIndexExpr(A_pos pos, int num) {
     A_indexExpr p = (A_indexExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_numIndexKind;
@@ -69,8 +62,7 @@ A_indexExpr A_NumIndexExpr(A_pos pos, int num)
     return p;
 }
 
-A_indexExpr A_IdIndexExpr(A_pos pos, char *id)
-{
+A_indexExpr A_IdIndexExpr(A_pos pos, char* id) {
     A_indexExpr p = (A_indexExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_idIndexKind;
@@ -78,7 +70,7 @@ A_indexExpr A_IdIndexExpr(A_pos pos, char *id)
     return p;
 }
 
-A_arrayExpr A_ArrayExpr(A_pos pos, A_leftVal arr, A_indexExpr idx){
+A_arrayExpr A_ArrayExpr(A_pos pos, A_leftVal arr, A_indexExpr idx) {
     A_arrayExpr p = (A_arrayExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->arr = arr;
@@ -86,7 +78,7 @@ A_arrayExpr A_ArrayExpr(A_pos pos, A_leftVal arr, A_indexExpr idx){
     return p;
 }
 
-A_memberExpr A_MemberExpr(A_pos pos, A_leftVal structId, char* memberId){
+A_memberExpr A_MemberExpr(A_pos pos, A_leftVal structId, char* memberId) {
     A_memberExpr p = (A_memberExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->structId = structId;
@@ -94,8 +86,7 @@ A_memberExpr A_MemberExpr(A_pos pos, A_leftVal structId, char* memberId){
     return p;
 }
 
-A_exprUnit A_NumExprUnit(A_pos pos, int num)
-{
+A_exprUnit A_NumExprUnit(A_pos pos, int num) {
     A_exprUnit p = (A_exprUnit)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_numExprKind;
@@ -103,8 +94,7 @@ A_exprUnit A_NumExprUnit(A_pos pos, int num)
     return p;
 }
 
-A_exprUnit A_IdExprUnit(A_pos pos, char *id)
-{
+A_exprUnit A_IdExprUnit(A_pos pos, char* id) {
     A_exprUnit p = (A_exprUnit)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_idExprKind;
@@ -112,8 +102,7 @@ A_exprUnit A_IdExprUnit(A_pos pos, char *id)
     return p;
 }
 
-A_exprUnit A_ArithExprUnit(A_pos pos, A_arithExpr arithExpr)
-{
+A_exprUnit A_ArithExprUnit(A_pos pos, A_arithExpr arithExpr) {
     A_exprUnit p = (A_exprUnit)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_arithExprKind;
@@ -121,8 +110,7 @@ A_exprUnit A_ArithExprUnit(A_pos pos, A_arithExpr arithExpr)
     return p;
 }
 
-A_exprUnit A_CallExprUnit(A_pos pos, A_fnCall callExpr)
-{
+A_exprUnit A_CallExprUnit(A_pos pos, A_fnCall callExpr) {
     A_exprUnit p = (A_exprUnit)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_fnCallKind;
@@ -130,8 +118,7 @@ A_exprUnit A_CallExprUnit(A_pos pos, A_fnCall callExpr)
     return p;
 }
 
-A_exprUnit A_ArrayExprUnit(A_pos pos, A_arrayExpr arrayExpr)
-{
+A_exprUnit A_ArrayExprUnit(A_pos pos, A_arrayExpr arrayExpr) {
     A_exprUnit p = (A_exprUnit)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_arrayExprKind;
@@ -139,8 +126,7 @@ A_exprUnit A_ArrayExprUnit(A_pos pos, A_arrayExpr arrayExpr)
     return p;
 }
 
-A_exprUnit A_MemberExprUnit(A_pos pos, A_memberExpr memberExpr)
-{
+A_exprUnit A_MemberExprUnit(A_pos pos, A_memberExpr memberExpr) {
     A_exprUnit p = (A_exprUnit)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_memberExprKind;
@@ -148,8 +134,7 @@ A_exprUnit A_MemberExprUnit(A_pos pos, A_memberExpr memberExpr)
     return p;
 }
 
-A_exprUnit A_ArithUExprUnit(A_pos pos, A_arithUExpr arithUExpr)
-{
+A_exprUnit A_ArithUExprUnit(A_pos pos, A_arithUExpr arithUExpr) {
     A_exprUnit p = (A_exprUnit)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_arithUExprKind;
@@ -157,8 +142,8 @@ A_exprUnit A_ArithUExprUnit(A_pos pos, A_arithUExpr arithUExpr)
     return p;
 }
 
-A_arithBiOpExpr A_ArithBiOpExpr(A_pos pos, A_arithBiOp op, A_arithExpr left, A_arithExpr right)
-{
+A_arithBiOpExpr A_ArithBiOpExpr(A_pos pos, A_arithBiOp op, A_arithExpr left,
+                                A_arithExpr right) {
     A_arithBiOpExpr p = (A_arithBiOpExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->op = op;
@@ -167,8 +152,7 @@ A_arithBiOpExpr A_ArithBiOpExpr(A_pos pos, A_arithBiOp op, A_arithExpr left, A_a
     return p;
 }
 
-A_arithUExpr A_ArithUExpr(A_pos pos, A_arithUOp op, A_exprUnit expr)
-{
+A_arithUExpr A_ArithUExpr(A_pos pos, A_arithUOp op, A_exprUnit expr) {
     A_arithUExpr p = (A_arithUExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->op = op;
@@ -176,8 +160,7 @@ A_arithUExpr A_ArithUExpr(A_pos pos, A_arithUOp op, A_exprUnit expr)
     return p;
 }
 
-A_arithExpr A_ArithBiOp_Expr(A_pos pos, A_arithBiOpExpr arithBiOpExpr)
-{
+A_arithExpr A_ArithBiOp_Expr(A_pos pos, A_arithBiOpExpr arithBiOpExpr) {
     A_arithExpr p = (A_arithExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_arithBiOpExprKind;
@@ -185,8 +168,7 @@ A_arithExpr A_ArithBiOp_Expr(A_pos pos, A_arithBiOpExpr arithBiOpExpr)
     return p;
 }
 
-A_arithExpr A_ExprUnit(A_pos pos, A_exprUnit exprUnit)
-{
+A_arithExpr A_ExprUnit(A_pos pos, A_exprUnit exprUnit) {
     A_arithExpr p = (A_arithExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_exprUnitKind;
@@ -194,7 +176,8 @@ A_arithExpr A_ExprUnit(A_pos pos, A_exprUnit exprUnit)
     return p;
 }
 
-A_boolBiOpExpr A_BoolBiOpExpr(A_pos pos, A_boolBiOp op, A_boolExpr left, A_boolExpr right){
+A_boolBiOpExpr A_BoolBiOpExpr(A_pos pos, A_boolBiOp op, A_boolExpr left,
+                              A_boolExpr right) {
     A_boolBiOpExpr p = (A_boolBiOpExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->op = op;
@@ -203,8 +186,7 @@ A_boolBiOpExpr A_BoolBiOpExpr(A_pos pos, A_boolBiOp op, A_boolExpr left, A_boolE
     return p;
 }
 
-A_boolUOpExpr A_BoolUOpExpr(A_pos pos, A_boolUOp op, A_boolUnit cond)
-{
+A_boolUOpExpr A_BoolUOpExpr(A_pos pos, A_boolUOp op, A_boolUnit cond) {
     A_boolUOpExpr p = (A_boolUOpExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->op = op;
@@ -212,8 +194,7 @@ A_boolUOpExpr A_BoolUOpExpr(A_pos pos, A_boolUOp op, A_boolUnit cond)
     return p;
 }
 
-A_boolExpr A_BoolBiOp_Expr(A_pos pos, A_boolBiOpExpr boolBiOpExpr)
-{
+A_boolExpr A_BoolBiOp_Expr(A_pos pos, A_boolBiOpExpr boolBiOpExpr) {
     A_boolExpr p = (A_boolExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_boolBiOpExprKind;
@@ -221,8 +202,7 @@ A_boolExpr A_BoolBiOp_Expr(A_pos pos, A_boolBiOpExpr boolBiOpExpr)
     return p;
 }
 
-A_boolExpr A_BoolExpr(A_pos pos, A_boolUnit boolUnit)
-{
+A_boolExpr A_BoolExpr(A_pos pos, A_boolUnit boolUnit) {
     A_boolExpr p = (A_boolExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_boolUnitKind;
@@ -230,8 +210,7 @@ A_boolExpr A_BoolExpr(A_pos pos, A_boolUnit boolUnit)
     return p;
 }
 
-A_comExpr A_ComExpr(A_pos pos, A_comOp op, A_exprUnit left, A_exprUnit right)
-{
+A_comExpr A_ComExpr(A_pos pos, A_comOp op, A_exprUnit left, A_exprUnit right) {
     A_comExpr p = (A_comExpr)malloc(sizeof(*p));
     p->pos = pos;
     p->op = op;
@@ -240,8 +219,7 @@ A_comExpr A_ComExpr(A_pos pos, A_comOp op, A_exprUnit left, A_exprUnit right)
     return p;
 }
 
-A_boolUnit A_ComExprUnit(A_pos pos, A_comExpr comExpr)
-{
+A_boolUnit A_ComExprUnit(A_pos pos, A_comExpr comExpr) {
     A_boolUnit p = (A_boolUnit)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_comOpExprKind;
@@ -249,8 +227,7 @@ A_boolUnit A_ComExprUnit(A_pos pos, A_comExpr comExpr)
     return p;
 }
 
-A_boolUnit A_BoolExprUnit(A_pos pos, A_boolExpr boolExpr)
-{
+A_boolUnit A_BoolExprUnit(A_pos pos, A_boolExpr boolExpr) {
     A_boolUnit p = (A_boolUnit)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_boolExprKind;
@@ -258,8 +235,7 @@ A_boolUnit A_BoolExprUnit(A_pos pos, A_boolExpr boolExpr)
     return p;
 }
 
-A_boolUnit A_BoolUOpExprUnit(A_pos pos, A_boolUOpExpr boolUOpExpr)
-{
+A_boolUnit A_BoolUOpExprUnit(A_pos pos, A_boolUOpExpr boolUOpExpr) {
     A_boolUnit p = (A_boolUnit)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_boolUOpExprKind;
@@ -267,8 +243,7 @@ A_boolUnit A_BoolUOpExprUnit(A_pos pos, A_boolUOpExpr boolUOpExpr)
     return p;
 }
 
-A_rightVal A_ArithExprRVal(A_pos pos, A_arithExpr arithExpr)
-{
+A_rightVal A_ArithExprRVal(A_pos pos, A_arithExpr arithExpr) {
     A_rightVal p = (A_rightVal)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_arithExprValKind;
@@ -276,8 +251,7 @@ A_rightVal A_ArithExprRVal(A_pos pos, A_arithExpr arithExpr)
     return p;
 }
 
-A_rightVal A_BoolExprRVal(A_pos pos, A_boolExpr boolExpr)
-{
+A_rightVal A_BoolExprRVal(A_pos pos, A_boolExpr boolExpr) {
     A_rightVal p = (A_rightVal)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_boolExprValKind;
@@ -285,8 +259,7 @@ A_rightVal A_BoolExprRVal(A_pos pos, A_boolExpr boolExpr)
     return p;
 }
 
-A_leftVal A_IdExprLVal(A_pos pos, char *id)
-{
+A_leftVal A_IdExprLVal(A_pos pos, char* id) {
     A_leftVal p = (A_leftVal)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_varValKind;
@@ -294,8 +267,7 @@ A_leftVal A_IdExprLVal(A_pos pos, char *id)
     return p;
 }
 
-A_leftVal A_ArrExprLVal(A_pos pos, A_arrayExpr arrExpr)
-{
+A_leftVal A_ArrExprLVal(A_pos pos, A_arrayExpr arrExpr) {
     A_leftVal p = (A_leftVal)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_arrValKind;
@@ -303,8 +275,7 @@ A_leftVal A_ArrExprLVal(A_pos pos, A_arrayExpr arrExpr)
     return p;
 }
 
-A_leftVal A_MemberExprLVal(A_pos pos, A_memberExpr memberExpr)
-{
+A_leftVal A_MemberExprLVal(A_pos pos, A_memberExpr memberExpr) {
     A_leftVal p = (A_leftVal)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_memberValKind;
@@ -312,8 +283,7 @@ A_leftVal A_MemberExprLVal(A_pos pos, A_memberExpr memberExpr)
     return p;
 }
 
-A_assignStmt A_AssignStmt(A_pos pos, A_leftVal leftVal, A_rightVal rightVal)
-{
+A_assignStmt A_AssignStmt(A_pos pos, A_leftVal leftVal, A_rightVal rightVal) {
     A_assignStmt p = (A_assignStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->leftVal = leftVal;
@@ -321,8 +291,7 @@ A_assignStmt A_AssignStmt(A_pos pos, A_leftVal leftVal, A_rightVal rightVal)
     return p;
 }
 
-A_varDeclScalar A_VarDeclScalar(A_pos pos, char *id, A_type type)
-{
+A_varDeclScalar A_VarDeclScalar(A_pos pos, char* id, A_type type) {
     A_varDeclScalar p = (A_varDeclScalar)malloc(sizeof(*p));
     p->pos = pos;
     p->id = id;
@@ -330,8 +299,7 @@ A_varDeclScalar A_VarDeclScalar(A_pos pos, char *id, A_type type)
     return p;
 }
 
-A_varDeclArray A_VarDeclArray(A_pos pos, char *id, int len, A_type type)
-{
+A_varDeclArray A_VarDeclArray(A_pos pos, char* id, int len, A_type type) {
     A_varDeclArray p = (A_varDeclArray)malloc(sizeof(*p));
     p->pos = pos;
     p->id = id;
@@ -340,8 +308,7 @@ A_varDeclArray A_VarDeclArray(A_pos pos, char *id, int len, A_type type)
     return p;
 }
 
-A_varDecl A_VarDecl_Scalar(A_pos pos, A_varDeclScalar declScalar)
-{
+A_varDecl A_VarDecl_Scalar(A_pos pos, A_varDeclScalar declScalar) {
     A_varDecl p = (A_varDecl)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_varDeclScalarKind;
@@ -349,8 +316,7 @@ A_varDecl A_VarDecl_Scalar(A_pos pos, A_varDeclScalar declScalar)
     return p;
 }
 
-A_varDecl A_VarDecl_Array(A_pos pos, A_varDeclArray declArray)
-{
+A_varDecl A_VarDecl_Array(A_pos pos, A_varDeclArray declArray) {
     A_varDecl p = (A_varDecl)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_varDeclArrayKind;
@@ -358,8 +324,8 @@ A_varDecl A_VarDecl_Array(A_pos pos, A_varDeclArray declArray)
     return p;
 }
 
-A_varDefScalar A_VarDefScalar(A_pos pos, char *id, A_type type, A_rightVal val)
-{
+A_varDefScalar A_VarDefScalar(A_pos pos, char* id, A_type type,
+                              A_rightVal val) {
     A_varDefScalar p = (A_varDefScalar)malloc(sizeof(*p));
     p->pos = pos;
     p->id = id;
@@ -368,8 +334,8 @@ A_varDefScalar A_VarDefScalar(A_pos pos, char *id, A_type type, A_rightVal val)
     return p;
 }
 
-A_varDefArray A_VarDefArray(A_pos pos, char *id, int len, A_type type, A_rightValList vals)
-{
+A_varDefArray A_VarDefArray(A_pos pos, char* id, int len, A_type type,
+                            A_rightValList vals) {
     A_varDefArray p = (A_varDefArray)malloc(sizeof(*p));
     p->pos = pos;
     p->id = id;
@@ -379,8 +345,7 @@ A_varDefArray A_VarDefArray(A_pos pos, char *id, int len, A_type type, A_rightVa
     return p;
 }
 
-A_varDef A_VarDef_Scalar(A_pos pos, A_varDefScalar defScalar)
-{
+A_varDef A_VarDef_Scalar(A_pos pos, A_varDefScalar defScalar) {
     A_varDef p = (A_varDef)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_varDefScalarKind;
@@ -388,8 +353,7 @@ A_varDef A_VarDef_Scalar(A_pos pos, A_varDefScalar defScalar)
     return p;
 }
 
-A_varDef A_VarDef_Array(A_pos pos, A_varDefArray defArray)
-{
+A_varDef A_VarDef_Array(A_pos pos, A_varDefArray defArray) {
     A_varDef p = (A_varDef)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_varDefArrayKind;
@@ -397,8 +361,7 @@ A_varDef A_VarDef_Array(A_pos pos, A_varDefArray defArray)
     return p;
 }
 
-A_varDeclStmt A_VarDeclStmt(A_pos pos, A_varDecl varDecl)
-{
+A_varDeclStmt A_VarDeclStmt(A_pos pos, A_varDecl varDecl) {
     A_varDeclStmt p = (A_varDeclStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_varDeclKind;
@@ -406,8 +369,7 @@ A_varDeclStmt A_VarDeclStmt(A_pos pos, A_varDecl varDecl)
     return p;
 }
 
-A_varDeclStmt A_VarDefStmt(A_pos pos, A_varDef varDef)
-{
+A_varDeclStmt A_VarDefStmt(A_pos pos, A_varDef varDef) {
     A_varDeclStmt p = (A_varDeclStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_varDefKind;
@@ -415,16 +377,14 @@ A_varDeclStmt A_VarDefStmt(A_pos pos, A_varDef varDef)
     return p;
 }
 
-A_varDeclList A_VarDeclList(A_varDecl head, A_varDeclList tail)
-{
+A_varDeclList A_VarDeclList(A_varDecl head, A_varDeclList tail) {
     A_varDeclList p = (A_varDeclList)malloc(sizeof(*p));
     p->head = head;
     p->tail = tail;
     return p;
 }
 
-A_structDef A_StructDef(A_pos pos, char *id, A_varDeclList varDecls)
-{
+A_structDef A_StructDef(A_pos pos, char* id, A_varDeclList varDecls) {
     A_structDef p = (A_structDef)malloc(sizeof(*p));
     p->pos = pos;
     p->id = id;
@@ -432,8 +392,7 @@ A_structDef A_StructDef(A_pos pos, char *id, A_varDeclList varDecls)
     return p;
 }
 
-A_fnDecl A_FnDecl(A_pos pos, char *id, A_paramDecl paramDecl, A_type type)
-{
+A_fnDecl A_FnDecl(A_pos pos, char* id, A_paramDecl paramDecl, A_type type) {
     A_fnDecl p = (A_fnDecl)malloc(sizeof(*p));
     p->pos = pos;
     p->id = id;
@@ -442,23 +401,21 @@ A_fnDecl A_FnDecl(A_pos pos, char *id, A_paramDecl paramDecl, A_type type)
     return p;
 }
 
-A_paramDecl A_ParamDecl(A_varDeclList varDecls)
-{
+A_paramDecl A_ParamDecl(A_varDeclList varDecls) {
     A_paramDecl p = (A_paramDecl)malloc(sizeof(*p));
     p->varDecls = varDecls;
     return p;
 }
 
-A_codeBlockStmtList A_CodeBlockStmtList(A_codeBlockStmt head, A_codeBlockStmtList tail)
-{
+A_codeBlockStmtList A_CodeBlockStmtList(A_codeBlockStmt head,
+                                        A_codeBlockStmtList tail) {
     A_codeBlockStmtList p = (A_codeBlockStmtList)malloc(sizeof(*p));
     p->head = head;
     p->tail = tail;
     return p;
 }
 
-A_fnDef A_FnDef(A_pos pos, A_fnDecl fnDecl, A_codeBlockStmtList stmts)
-{
+A_fnDef A_FnDef(A_pos pos, A_fnDecl fnDecl, A_codeBlockStmtList stmts) {
     A_fnDef p = (A_fnDef)malloc(sizeof(*p));
     p->pos = pos;
     p->fnDecl = fnDecl;
@@ -466,7 +423,8 @@ A_fnDef A_FnDef(A_pos pos, A_fnDecl fnDecl, A_codeBlockStmtList stmts)
     return p;
 }
 
-A_ifStmt A_IfStmt(A_pos pos, A_boolUnit boolUnit, A_codeBlockStmtList ifStmts, A_codeBlockStmtList elseStmts){
+A_ifStmt A_IfStmt(A_pos pos, A_boolUnit boolUnit, A_codeBlockStmtList ifStmts,
+                  A_codeBlockStmtList elseStmts) {
     A_ifStmt p = (A_ifStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->boolUnit = boolUnit;
@@ -475,7 +433,8 @@ A_ifStmt A_IfStmt(A_pos pos, A_boolUnit boolUnit, A_codeBlockStmtList ifStmts, A
     return p;
 }
 
-A_whileStmt A_WhileStmt(A_pos pos, A_boolUnit boolUnit, A_codeBlockStmtList whileStmts){
+A_whileStmt A_WhileStmt(A_pos pos, A_boolUnit boolUnit,
+                        A_codeBlockStmtList whileStmts) {
     A_whileStmt p = (A_whileStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->boolUnit = boolUnit;
@@ -483,32 +442,28 @@ A_whileStmt A_WhileStmt(A_pos pos, A_boolUnit boolUnit, A_codeBlockStmtList whil
     return p;
 }
 
-A_callStmt A_CallStmt(A_pos pos, A_fnCall fnCall)
-{
+A_callStmt A_CallStmt(A_pos pos, A_fnCall fnCall) {
     A_callStmt p = (A_callStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->fnCall = fnCall;
     return p;
 }
 
-A_returnStmt A_ReturnStmt(A_pos pos, A_rightVal retVal)
-{
+A_returnStmt A_ReturnStmt(A_pos pos, A_rightVal retVal) {
     A_returnStmt p = (A_returnStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->retVal = retVal;
     return p;
 }
 
-A_codeBlockStmt A_BlockNullStmt(A_pos pos)
-{
+A_codeBlockStmt A_BlockNullStmt(A_pos pos) {
     A_codeBlockStmt p = (A_codeBlockStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_nullStmtKind;
     return p;
 }
 
-A_codeBlockStmt A_BlockVarDeclStmt(A_pos pos, A_varDeclStmt varDeclStmt)
-{
+A_codeBlockStmt A_BlockVarDeclStmt(A_pos pos, A_varDeclStmt varDeclStmt) {
     A_codeBlockStmt p = (A_codeBlockStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_varDeclStmtKind;
@@ -516,8 +471,7 @@ A_codeBlockStmt A_BlockVarDeclStmt(A_pos pos, A_varDeclStmt varDeclStmt)
     return p;
 }
 
-A_codeBlockStmt A_BlockAssignStmt(A_pos pos, A_assignStmt assignStmt)
-{
+A_codeBlockStmt A_BlockAssignStmt(A_pos pos, A_assignStmt assignStmt) {
     A_codeBlockStmt p = (A_codeBlockStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_assignStmtKind;
@@ -525,8 +479,7 @@ A_codeBlockStmt A_BlockAssignStmt(A_pos pos, A_assignStmt assignStmt)
     return p;
 }
 
-A_codeBlockStmt A_BlockCallStmt(A_pos pos, A_callStmt callStmt)
-{
+A_codeBlockStmt A_BlockCallStmt(A_pos pos, A_callStmt callStmt) {
     A_codeBlockStmt p = (A_codeBlockStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_callStmtKind;
@@ -534,8 +487,7 @@ A_codeBlockStmt A_BlockCallStmt(A_pos pos, A_callStmt callStmt)
     return p;
 }
 
-A_codeBlockStmt A_BlockIfStmt(A_pos pos, A_ifStmt ifStmt)
-{
+A_codeBlockStmt A_BlockIfStmt(A_pos pos, A_ifStmt ifStmt) {
     A_codeBlockStmt p = (A_codeBlockStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_ifStmtKind;
@@ -543,8 +495,7 @@ A_codeBlockStmt A_BlockIfStmt(A_pos pos, A_ifStmt ifStmt)
     return p;
 }
 
-A_codeBlockStmt A_BlockWhileStmt(A_pos pos, A_whileStmt whileStmt)
-{
+A_codeBlockStmt A_BlockWhileStmt(A_pos pos, A_whileStmt whileStmt) {
     A_codeBlockStmt p = (A_codeBlockStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_whileStmtKind;
@@ -552,8 +503,7 @@ A_codeBlockStmt A_BlockWhileStmt(A_pos pos, A_whileStmt whileStmt)
     return p;
 }
 
-A_codeBlockStmt A_BlockReturnStmt(A_pos pos, A_returnStmt returnStmt)
-{
+A_codeBlockStmt A_BlockReturnStmt(A_pos pos, A_returnStmt returnStmt) {
     A_codeBlockStmt p = (A_codeBlockStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_returnStmtKind;
@@ -561,40 +511,35 @@ A_codeBlockStmt A_BlockReturnStmt(A_pos pos, A_returnStmt returnStmt)
     return p;
 }
 
-A_codeBlockStmt A_BlockContinueStmt(A_pos pos)
-{
+A_codeBlockStmt A_BlockContinueStmt(A_pos pos) {
     A_codeBlockStmt p = (A_codeBlockStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_continueStmtKind;
     return p;
 }
 
-A_codeBlockStmt A_BlockBreakStmt(A_pos pos)
-{
+A_codeBlockStmt A_BlockBreakStmt(A_pos pos) {
     A_codeBlockStmt p = (A_codeBlockStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_breakStmtKind;
     return p;
 }
 
-A_fnDeclStmt A_FnDeclStmt(A_pos pos, A_fnDecl fnDecl)
-{
+A_fnDeclStmt A_FnDeclStmt(A_pos pos, A_fnDecl fnDecl) {
     A_fnDeclStmt p = (A_fnDeclStmt)malloc(sizeof(*p));
     p->pos = pos;
     p->fnDecl = fnDecl;
     return p;
 }
 
-A_programElement A_ProgramNullStmt(A_pos pos)
-{
+A_programElement A_ProgramNullStmt(A_pos pos) {
     A_programElement p = (A_programElement)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_programNullStmtKind;
     return p;
 }
 
-A_programElement A_ProgramVarDeclStmt(A_pos pos, A_varDeclStmt varDeclStmt)
-{
+A_programElement A_ProgramVarDeclStmt(A_pos pos, A_varDeclStmt varDeclStmt) {
     A_programElement p = (A_programElement)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_programVarDeclStmtKind;
@@ -602,8 +547,7 @@ A_programElement A_ProgramVarDeclStmt(A_pos pos, A_varDeclStmt varDeclStmt)
     return p;
 }
 
-A_programElement A_ProgramStructDef(A_pos pos, A_structDef structDef)
-{
+A_programElement A_ProgramStructDef(A_pos pos, A_structDef structDef) {
     A_programElement p = (A_programElement)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_programStructDefKind;
@@ -611,8 +555,7 @@ A_programElement A_ProgramStructDef(A_pos pos, A_structDef structDef)
     return p;
 }
 
-A_programElement A_ProgramFnDeclStmt(A_pos pos, A_fnDeclStmt fnDeclStmt)
-{
+A_programElement A_ProgramFnDeclStmt(A_pos pos, A_fnDeclStmt fnDeclStmt) {
     A_programElement p = (A_programElement)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_programFnDeclStmtKind;
@@ -620,8 +563,7 @@ A_programElement A_ProgramFnDeclStmt(A_pos pos, A_fnDeclStmt fnDeclStmt)
     return p;
 }
 
-A_programElement A_ProgramFnDef(A_pos pos, A_fnDef fnDef)
-{
+A_programElement A_ProgramFnDef(A_pos pos, A_fnDef fnDef) {
     A_programElement p = (A_programElement)malloc(sizeof(*p));
     p->pos = pos;
     p->kind = A_programFnDefKind;
@@ -629,16 +571,15 @@ A_programElement A_ProgramFnDef(A_pos pos, A_fnDef fnDef)
     return p;
 }
 
-A_programElementList A_ProgramElementList(A_programElement head, A_programElementList tail)
-{
+A_programElementList A_ProgramElementList(A_programElement head,
+                                          A_programElementList tail) {
     A_programElementList p = (A_programElementList)malloc(sizeof(*p));
     p->head = head;
     p->tail = tail;
     return p;
 }
 
-A_program A_Program(A_programElementList programElements)
-{
+A_program A_Program(A_programElementList programElements) {
     A_program p = (A_program)malloc(sizeof(*p));
     p->programElements = programElements;
     return p;

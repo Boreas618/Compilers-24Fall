@@ -49,7 +49,7 @@ class ExprType {
                        : vdef->u.defArray->type,
                    (vdef->kind == A_varDefType::A_varDefScalarKind) ? 0 : 1) {}
 
-    bool operator==(const ExprType &other) const {
+    bool operator==(const ExprType& other) const {
         if (construct_type != other.construct_type) return false;
         return comp_aA_type(type, other.type);
     }
@@ -61,12 +61,12 @@ class ExprType {
 class TypeChecker {
    public:
     TypeChecker() = delete;
-    TypeChecker(std::ostream &out)
+    TypeChecker(std::ostream& out)
         : out_(out), local_type_(vector{std::make_shared<TypeTable>()}) {}
 
     void CheckProgram(aA_program p);
     void CheckVarDecl(aA_varDeclStmt vd);
-    void CheckSymbolConficts(string &name, A_pos pos);
+    void CheckSymbolConficts(string& name, A_pos pos);
     void CheckStructDef(aA_structDef sd);
     void CheckFnDeclStmt(aA_fnDeclStmt fd);
     void CheckFnSignature(aA_fnDecl fd);
@@ -87,20 +87,20 @@ class TypeChecker {
 
    private:
     template <typename T>
-    bool QueryInTable(T map, string &name, std::shared_ptr<ExprType> *ret);
-    bool QueryInFuncParams(string &name, std::shared_ptr<ExprType> *ret);
-    bool QueryInLocalVars(string &name, std::shared_ptr<ExprType> *ret);
-    bool QueryInGlobalVars(string &name, std::shared_ptr<ExprType> *ret);
-    bool QueryIdentifier(string &name, std::shared_ptr<ExprType> *ret);
-    bool QueryInStructDefs(string &name);
+    bool QueryInTable(T map, string& name, std::shared_ptr<ExprType>* ret);
+    bool QueryInFuncParams(string& name, std::shared_ptr<ExprType>* ret);
+    bool QueryInLocalVars(string& name, std::shared_ptr<ExprType>* ret);
+    bool QueryInGlobalVars(string& name, std::shared_ptr<ExprType>* ret);
+    bool QueryIdentifier(string& name, std::shared_ptr<ExprType>* ret);
+    bool QueryInStructDefs(string& name);
     void EnterBlock();
     void LeaveBlock();
-    friend void PrintError(TypeChecker &checker, A_pos p, string info);
-    friend void PrintTypeMaps(TypeChecker &checker);
+    friend void PrintError(TypeChecker& checker, A_pos p, string info);
+    friend void PrintTypeMaps(TypeChecker& checker);
 
-    std::ostream &out_;
+    std::ostream& out_;
     size_t level_;
-    string *current_func_;
+    string* current_func_;
     TypeTable global_type_;
     TypeTable param_type_;
     vector<std::shared_ptr<TypeTable>> local_type_;
@@ -108,4 +108,4 @@ class TypeChecker {
     MembersTable struct_members_;
 };
 
-void PrintTypeMap(TypeTable *map);
+void PrintTypeMap(TypeTable* map);

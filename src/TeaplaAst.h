@@ -1,8 +1,9 @@
 #pragma once
 
-#include "TeaplAst.h"
 #include <string>
 #include <vector>
+
+#include "TeaplAst.h"
 
 using std::string;
 using std::vector;
@@ -44,57 +45,48 @@ typedef struct aA_returnStmt_* aA_returnStmt;
 typedef struct aA_programElement_* aA_programElement;
 typedef struct aA_program_* aA_program;
 
-struct aA_type_
-{
+struct aA_type_ {
     A_pos pos;
     A_dataType type;
-    union
-    {
+    union {
         A_nativeType nativeType;
-        string *structType;
+        string* structType;
     } u;
 };
 
-struct aA_fnCall_
-{
+struct aA_fnCall_ {
     A_pos pos;
-    string *fn;
+    string* fn;
     vector<aA_rightVal> vals;
 };
 
-struct aA_indexExpr_
-{
+struct aA_indexExpr_ {
     A_pos pos;
     A_indexExprKind kind;
-    union
-    {
+    union {
         int num;
-        string *id;
+        string* id;
     } u;
 };
 
-struct aA_arrayExpr_
-{
+struct aA_arrayExpr_ {
     A_pos pos;
     aA_leftVal arr;
     aA_indexExpr idx;
 };
 
-struct aA_memberExpr_
-{
+struct aA_memberExpr_ {
     A_pos pos;
     aA_leftVal structId;
     string* memberId;
 };
 
-struct aA_exprUnit_
-{
+struct aA_exprUnit_ {
     A_pos pos;
     A_exprUnitType kind;
-    union
-    {
+    union {
         int num;
-        string *id;
+        string* id;
         aA_arithExpr arithExpr;
         aA_fnCall callExpr;
         aA_arrayExpr arrayExpr;
@@ -103,230 +95,194 @@ struct aA_exprUnit_
     } u;
 };
 
-struct aA_arithBiOpExpr_
-{
+struct aA_arithBiOpExpr_ {
     A_pos pos;
     A_arithBiOp op;
     aA_arithExpr left, right;
 };
 
-struct aA_arithUExpr_
-{
+struct aA_arithUExpr_ {
     A_pos pos;
     A_arithUOp op;
     aA_exprUnit expr;
 };
 
-struct aA_arithExpr_
-{
+struct aA_arithExpr_ {
     A_pos pos;
     A_arithExprType kind;
-    union
-    {
+    union {
         aA_arithBiOpExpr arithBiOpExpr;
         aA_exprUnit exprUnit;
     } u;
 };
 
-struct aA_boolBiOpExpr_
-{
+struct aA_boolBiOpExpr_ {
     A_pos pos;
     A_boolBiOp op;
     aA_boolExpr left;
     aA_boolExpr right;
 };
 
-struct aA_boolUOpExpr_
-{
+struct aA_boolUOpExpr_ {
     A_pos pos;
     A_boolUOp op;
     aA_boolUnit cond;
 };
 
-struct aA_boolExpr_
-{
+struct aA_boolExpr_ {
     A_pos pos;
     A_boolExprType kind;
-    union
-    {
+    union {
         aA_boolBiOpExpr boolBiOpExpr;
         aA_boolUnit boolUnit;
     } u;
 };
 
-struct aA_comExpr_
-{
+struct aA_comExpr_ {
     A_pos pos;
     A_comOp op;
     aA_exprUnit left, right;
 };
 
-struct aA_boolUnit_
-{
+struct aA_boolUnit_ {
     A_pos pos;
     A_boolUnitType kind;
-    union
-    {
+    union {
         aA_comExpr comExpr;
         aA_boolExpr boolExpr;
         aA_boolUOpExpr boolUOpExpr;
     } u;
 };
 
-struct aA_rightVal_
-{
+struct aA_rightVal_ {
     A_pos pos;
     A_rightValType kind;
-    union
-    {
+    union {
         aA_arithExpr arithExpr;
         aA_boolExpr boolExpr;
     } u;
 };
 
-struct aA_leftVal_
-{
+struct aA_leftVal_ {
     A_pos pos;
     A_leftValType kind;
-    union
-    {
-        string *id;
+    union {
+        string* id;
         aA_arrayExpr arrExpr;
         aA_memberExpr memberExpr;
     } u;
 };
 
-struct aA_assignStmt_
-{
+struct aA_assignStmt_ {
     A_pos pos;
     aA_leftVal leftVal;
     aA_rightVal rightVal;
 };
 
-struct aA_varDeclScalar_
-{
+struct aA_varDeclScalar_ {
     A_pos pos;
-    string *id;
+    string* id;
     aA_type type;
 };
 
-struct aA_varDeclArray_
-{
+struct aA_varDeclArray_ {
     A_pos pos;
-    string *id;
+    string* id;
     int len;
     aA_type type;
 };
 
-struct aA_varDecl_
-{
+struct aA_varDecl_ {
     A_pos pos;
     A_varDeclType kind;
-    union
-    {
+    union {
         aA_varDeclScalar declScalar;
         aA_varDeclArray declArray;
     } u;
 };
 
-struct aA_varDefScalar_
-{
+struct aA_varDefScalar_ {
     A_pos pos;
-    string *id;
+    string* id;
     aA_type type;
     aA_rightVal val;
 };
 
-struct aA_varDefArray_
-{
+struct aA_varDefArray_ {
     A_pos pos;
-    string *id;
+    string* id;
     int len;
     aA_type type;
     vector<aA_rightVal> vals;
 };
 
-struct aA_varDef_
-{
+struct aA_varDef_ {
     A_pos pos;
     A_varDefType kind;
-    union
-    {
+    union {
         aA_varDefScalar defScalar;
         aA_varDefArray defArray;
     } u;
 };
 
-struct aA_varDeclStmt_
-{
+struct aA_varDeclStmt_ {
     A_pos pos;
     A_varDeclStmtType kind;
-    union
-    {
+    union {
         aA_varDecl varDecl;
         aA_varDef varDef;
     } u;
 };
 
-struct aA_structDef_
-{
+struct aA_structDef_ {
     A_pos pos;
-    string *id;
+    string* id;
     vector<aA_varDecl> varDecls;
 };
 
-struct aA_fnDecl_
-{
+struct aA_fnDecl_ {
     A_pos pos;
-    string *id;
+    string* id;
     aA_paramDecl paramDecl;
     aA_type type;
 };
 
-struct aA_paramDecl_
-{
+struct aA_paramDecl_ {
     vector<aA_varDecl> varDecls;
 };
 
-struct aA_fnDef_
-{
+struct aA_fnDef_ {
     A_pos pos;
     aA_fnDecl fnDecl;
     vector<aA_codeBlockStmt> stmts;
 };
 
-struct aA_ifStmt_
-{
+struct aA_ifStmt_ {
     A_pos pos;
     aA_boolUnit boolUnit;
     vector<aA_codeBlockStmt> ifStmts, elseStmts;
 };
 
-struct aA_whileStmt_
-{
+struct aA_whileStmt_ {
     A_pos pos;
     aA_boolUnit boolUnit;
     vector<aA_codeBlockStmt> whileStmts;
 };
 
-struct aA_callStmt_
-{
+struct aA_callStmt_ {
     A_pos pos;
     aA_fnCall fnCall;
 };
 
-struct aA_returnStmt_
-{
+struct aA_returnStmt_ {
     A_pos pos;
     aA_rightVal retVal;
 };
 
-struct aA_codeBlockStmt_
-{
+struct aA_codeBlockStmt_ {
     A_pos pos;
     A_codeBlockStmtType kind;
-    union
-    {
+    union {
         aA_varDeclStmt varDeclStmt;
         aA_assignStmt assignStmt;
         aA_callStmt callStmt;
@@ -337,18 +293,15 @@ struct aA_codeBlockStmt_
     } u;
 };
 
-struct aA_fnDeclStmt_
-{
+struct aA_fnDeclStmt_ {
     A_pos pos;
     aA_fnDecl fnDecl;
 };
 
-struct aA_programElement_
-{
+struct aA_programElement_ {
     A_pos pos;
     A_programElementType kind;
-    union
-    {
+    union {
         aA_varDeclStmt varDeclStmt;
         aA_structDef structDef;
         aA_fnDeclStmt fnDeclStmt;
@@ -356,8 +309,7 @@ struct aA_programElement_
     } u;
 };
 
-struct aA_program_
-{
+struct aA_program_ {
     vector<aA_programElement> programElements;
 };
 
