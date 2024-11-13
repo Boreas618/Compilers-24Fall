@@ -19,10 +19,10 @@ struct StructProp {
 struct FuncProp {
     std::string name;
     ir::FuncType ret;
-    std::vector<LocalVal*> args;
+    std::vector<std::shared_ptr<LocalVal>> args;
     std::list<std::shared_ptr<ir::Stmt>> irs;
     FuncProp(const std::string _name, ir::FuncType _ret,
-             const std::vector<LocalVal*>& _args,
+             const std::vector<std::shared_ptr<LocalVal>>& _args,
              const std::list<std::shared_ptr<ir::Stmt>>& _irs)
         : name(_name), ret(_ret), args(_args), irs(_irs) {}
 };
@@ -36,16 +36,16 @@ class IRGenerator {
     std::vector<std::shared_ptr<ir::TopLevelDef>> GenerateFirst(aA_program p);
     std::vector<std::shared_ptr<FuncProp>> GenerateSecond(aA_program p);
     void MoveAlloca(std::shared_ptr<ir::Func> f);
-    void HandleVarDecl(vector<std::shared_ptr<TopLevelDef>>& defs,
-                       aA_programElement v);
-    void HandleVarDeclScalar(vector<std::shared_ptr<TopLevelDef>>& defs,
+    void HandleGlobalVarDecl(vector<std::shared_ptr<TopLevelDef>>& defs,
                              aA_programElement v);
-    void HandleVarDeclArray(vector<std::shared_ptr<TopLevelDef>>& defs,
-                            aA_programElement v);
-    void HandleVarDefScalar(vector<std::shared_ptr<TopLevelDef>>& defs,
-                            aA_programElement v);
-    void HandleVarDefArray(vector<std::shared_ptr<TopLevelDef>>& defs,
-                           aA_programElement v);
+    void HandleGlobalVarDeclScalar(vector<std::shared_ptr<TopLevelDef>>& defs,
+                                   aA_programElement v);
+    void HandleGlobalVarDeclArray(vector<std::shared_ptr<TopLevelDef>>& defs,
+                                  aA_programElement v);
+    void HandleGlobalVarDefScalar(vector<std::shared_ptr<TopLevelDef>>& defs,
+                                  aA_programElement v);
+    void HandleGlobalVarDefArray(vector<std::shared_ptr<TopLevelDef>>& defs,
+                                 aA_programElement v);
     void HandleStructDef(vector<std::shared_ptr<TopLevelDef>>& defs,
                          aA_programElement v);
     void HandleFnDecl(vector<std::shared_ptr<TopLevelDef>>& defs,
@@ -83,9 +83,24 @@ class IRGenerator {
     std::shared_ptr<ir::Operand> IRGenerator::HandleArithUExpr(aA_arithUExpr a);
     std::shared_ptr<ir::Operand> IRGenerator::HandleArithExpr(aA_arithExpr a);
     std::shared_ptr<ir::Operand> IRGenerator::HandleExprUnit(aA_exprUnit e);
+    void HandleLocalVarDecl(aA_varDeclStmt v);
+    void HandleLocalVarDeclScalar(aA_varDecl d);
+    void HandleLocalVarDeclArray(aA_varDecl d);
+    void HandleLocalVarDefScalar(aA_varDef d);
+    void HandleLocalVarDefArray(aA_varDef d);
+    void HandleAssignmentStmt(aA_assignStmt as);
+    void HandleCallStmt(aA_callStmt call);
+    void HandleIfStmt(aA_ifStmt ifs, std::shared_ptr<BlockLabel> con_label,
+                      std::shared_ptr<BlockLabel> bre_label);
+    void HandleWhileStmt(aA_whileStmt ws);
+    void HandleReturnStmt(aA_returnStmt r);
+    void InitArray(std::shared_ptr<LocalVal> base_ptr, int len,
+                   vector<aA_rightVal> vals);
+    void InitStruct(std::shared_ptr<LocalVal> base_ptr, int len,
+                    vector<aA_rightVal> vals, string& type_name);
     unordered_map<string, FuncType> func_ret_;
     unordered_map<string, StructProp> struct_props_;
     unordered_map<string, std::shared_ptr<GlobalVal>> global_vars_;
     unordered_map<string, std::shared_ptr<LocalVal>> local_vars_;
-    list<ir::Stmt> emit_irs;
+    list<std::shared_ptr<ir::Stmt>> emit_irs_;
 };

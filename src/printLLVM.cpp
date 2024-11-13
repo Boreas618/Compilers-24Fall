@@ -105,15 +105,15 @@ void ir::printL_def(ostream& os, TopLevelDef* def) {
         case DefKind::kFunc: {
             os << "declare ";
             switch (def->u.FUNC->ret.type) {
-                case ReturnType::VOID_TYPE: {
+                case ReturnType::kVoid: {
                     os << "void ";
                     break;
                 }
-                case ReturnType::INT_TYPE: {
+                case ReturnType::kInt: {
                     os << "i32 ";
                     break;
                 }
-                case ReturnType::STRUCT_TYPE: {
+                case ReturnType::kStruct: {
                     os << "%" << def->u.FUNC->ret.structname << " ";
                     break;
                 }
@@ -162,20 +162,20 @@ void ir::printL_def(ostream& os, TopLevelDef* def) {
 void ir::printL_stm(std::ostream& os, ir::L_stm* stm) {
     switch (stm->type) {
         case StmtKind::kAlloca: {
-            if (stm->u.ALLOCA->dst->kind == OperandKind::kNumbered) {
+            if (stm->u.ALLOCA->dst->kind == OperandKind::kLocal) {
                 os << "  ";
                 printL_oper(os, stm->u.ALLOCA->dst);
                 os << " = alloca ";
-                switch (stm->u.ALLOCA->dst->u.kNumbered->type) {
+                switch (stm->u.ALLOCA->dst->u.kLocal->type) {
                     case RegType::kInt: {
                         assert(0);
                         break;
                     }
                     case RegType::kIntPtr: {
-                        if (stm->u.ALLOCA->dst->u.kNumbered->len == 0)
+                        if (stm->u.ALLOCA->dst->u.kLocal->len == 0)
                             os << "i32";
                         else
-                            os << "[ " << stm->u.ALLOCA->dst->u.kNumbered->len
+                            os << "[ " << stm->u.ALLOCA->dst->u.kLocal->len
                                << " x i32 ]";
                         break;
                     }
@@ -184,13 +184,13 @@ void ir::printL_stm(std::ostream& os, ir::L_stm* stm) {
                         break;
                     }
                     case RegType::kStructPtr: {
-                        if (stm->u.ALLOCA->dst->u.kNumbered->len == 0)
+                        if (stm->u.ALLOCA->dst->u.kLocal->len == 0)
                             os << "%"
-                               << stm->u.ALLOCA->dst->u.kNumbered->structname;
+                               << stm->u.ALLOCA->dst->u.kLocal->structname;
                         else
-                            os << "[ " << stm->u.ALLOCA->dst->u.kNumbered->len
+                            os << "[ " << stm->u.ALLOCA->dst->u.kLocal->len
                                << " x %"
-                               << stm->u.ALLOCA->dst->u.kNumbered->structname
+                               << stm->u.ALLOCA->dst->u.kLocal->structname
                                << " ]";
                         break;
                     }
@@ -203,7 +203,7 @@ void ir::printL_stm(std::ostream& os, ir::L_stm* stm) {
             break;
         }
         case StmtKind::kBiOP: {
-            if (stm->u.BINOP->dst->kind != OperandKind::kNumbered) {
+            if (stm->u.BINOP->dst->kind != OperandKind::kLocal) {
                 assert(0);
             }
             os << "  ";
@@ -246,25 +246,25 @@ void ir::printL_stm(std::ostream& os, ir::L_stm* stm) {
                 } else {
                     os << ", ";
                 }
-                if (v->kind == OperandKind::kNumbered) {
-                    if (v->u.kNumbered->type == RegType::kInt) {
+                if (v->kind == OperandKind::kLocal) {
+                    if (v->u.kLocal->type == RegType::kInt) {
                         os << "i32 ";
-                    } else if (v->u.kNumbered->type == RegType::kIntPtr) {
+                    } else if (v->u.kLocal->type == RegType::kIntPtr) {
                         os << "i32* ";
-                    } else if (v->u.kNumbered->type == RegType::kStruct) {
-                        os << "%" << v->u.kNumbered->structname << " ";
+                    } else if (v->u.kLocal->type == RegType::kStruct) {
+                        os << "%" << v->u.kLocal->structname << " ";
                     } else {
-                        os << "%" << v->u.kNumbered->structname << "* ";
+                        os << "%" << v->u.kLocal->structname << "* ";
                     }
                 } else if (v->kind == OperandKind::kIntConst) {
                     os << "i32 ";
                 } else {
-                    if (v->u.kNamed->type == RegType::kIntPtr) {
+                    if (v->u.kGlobal->type == RegType::kIntPtr) {
                         os << "i32* ";
-                    } else if (v->u.kNamed->type == RegType::kStruct) {
-                        os << "%" << v->u.kNamed->structname << "* ";
-                    } else if (v->u.kNamed->type == RegType::kStructPtr) {
-                        os << "%" << v->u.kNamed->structname << "* ";
+                    } else if (v->u.kGlobal->type == RegType::kStruct) {
+                        os << "%" << v->u.kGlobal->structname << "* ";
+                    } else if (v->u.kGlobal->type == RegType::kStructPtr) {
+                        os << "%" << v->u.kGlobal->structname << "* ";
                     } else {
                         assert(0);
                     }
@@ -323,21 +323,21 @@ void ir::printL_stm(std::ostream& os, ir::L_stm* stm) {
             os << "  ";
             printL_oper(os, stm->u.GEP->new_ptr);
             os << " = getelementptr ";
-            if (stm->u.GEP->base_ptr->kind == OperandKind::kNumbered) {
-                switch (stm->u.GEP->base_ptr->u.kNumbered->type) {
+            if (stm->u.GEP->base_ptr->kind == OperandKind::kLocal) {
+                switch (stm->u.GEP->base_ptr->u.kLocal->type) {
                     case RegType::kInt: {
                         assert(0);
                         break;
                     }
                     case RegType::kIntPtr: {
-                        if (stm->u.GEP->base_ptr->u.kNumbered->len == -1 ||
-                            stm->u.GEP->base_ptr->u.kNumbered->len == 0) {
+                        if (stm->u.GEP->base_ptr->u.kLocal->len == -1 ||
+                            stm->u.GEP->base_ptr->u.kLocal->len == 0) {
                             os << "i32, i32* ";
                             printL_oper(os, stm->u.GEP->base_ptr);
                         } else {
-                            os << "[" << stm->u.GEP->base_ptr->u.kNumbered->len
+                            os << "[" << stm->u.GEP->base_ptr->u.kLocal->len
                                << " x i32 ], ";
-                            os << "[" << stm->u.GEP->base_ptr->u.kNumbered->len
+                            os << "[" << stm->u.GEP->base_ptr->u.kLocal->len
                                << " x i32 ]* ";
                             printL_oper(os, stm->u.GEP->base_ptr);
                             os << ", i32 0";
@@ -349,32 +349,32 @@ void ir::printL_stm(std::ostream& os, ir::L_stm* stm) {
                         break;
                     }
                     case RegType::kStructPtr: {
-                        if (stm->u.GEP->base_ptr->u.kNumbered->len == 0) {
+                        if (stm->u.GEP->base_ptr->u.kLocal->len == 0) {
                             os << "%"
-                               << stm->u.GEP->base_ptr->u.kNumbered->structname
+                               << stm->u.GEP->base_ptr->u.kLocal->structname
                                << ", %"
-                               << stm->u.GEP->base_ptr->u.kNumbered->structname
+                               << stm->u.GEP->base_ptr->u.kLocal->structname
                                << "* ";
                             printL_oper(os, stm->u.GEP->base_ptr);
                             os << ", i32 0";
-                        } else if (stm->u.GEP->base_ptr->u.kNumbered->len ==
+                        } else if (stm->u.GEP->base_ptr->u.kLocal->len ==
                                    -1) {
                             os << "%"
-                               << stm->u.GEP->base_ptr->u.kNumbered->structname
+                               << stm->u.GEP->base_ptr->u.kLocal->structname
                                << ", %"
-                               << stm->u.GEP->base_ptr->u.kNumbered->structname
+                               << stm->u.GEP->base_ptr->u.kLocal->structname
                                << "* ";
                             printL_oper(os, stm->u.GEP->base_ptr);
                         } else {
-                            os << "[" << stm->u.GEP->base_ptr->u.kNumbered->len
+                            os << "[" << stm->u.GEP->base_ptr->u.kLocal->len
                                << " x "
                                << "%"
-                               << stm->u.GEP->base_ptr->u.kNumbered->structname
+                               << stm->u.GEP->base_ptr->u.kLocal->structname
                                << " ], ";
-                            os << "[" << stm->u.GEP->base_ptr->u.kNumbered->len
+                            os << "[" << stm->u.GEP->base_ptr->u.kLocal->len
                                << " x "
                                << "%"
-                               << stm->u.GEP->base_ptr->u.kNumbered->structname
+                               << stm->u.GEP->base_ptr->u.kLocal->structname
                                << " ]* ";
                             printL_oper(os, stm->u.GEP->base_ptr);
                             os << ", i32 0";
@@ -386,21 +386,21 @@ void ir::printL_stm(std::ostream& os, ir::L_stm* stm) {
                 }
                 os << ", i32 ";
                 printL_oper(os, stm->u.GEP->index);
-            } else if (stm->u.GEP->base_ptr->kind == OperandKind::kNamed) {
-                switch (stm->u.GEP->base_ptr->u.kNamed->type) {
+            } else if (stm->u.GEP->base_ptr->kind == OperandKind::kGlobal) {
+                switch (stm->u.GEP->base_ptr->u.kGlobal->type) {
                     case RegType::kInt: {
                         assert(0);
                         break;
                     }
                     case RegType::kIntPtr: {
-                        if (stm->u.GEP->base_ptr->u.kNamed->len == -1 ||
-                            stm->u.GEP->base_ptr->u.kNamed->len == 0) {
+                        if (stm->u.GEP->base_ptr->u.kGlobal->len == -1 ||
+                            stm->u.GEP->base_ptr->u.kGlobal->len == 0) {
                             os << "i32, i32* ";
                             printL_oper(os, stm->u.GEP->base_ptr);
                         } else {
-                            os << "[" << stm->u.GEP->base_ptr->u.kNamed->len
+                            os << "[" << stm->u.GEP->base_ptr->u.kGlobal->len
                                << " x i32 ], ";
-                            os << "[" << stm->u.GEP->base_ptr->u.kNamed->len
+                            os << "[" << stm->u.GEP->base_ptr->u.kGlobal->len
                                << " x i32 ]* ";
                             printL_oper(os, stm->u.GEP->base_ptr);
                             os << ", i32 0";
@@ -408,32 +408,32 @@ void ir::printL_stm(std::ostream& os, ir::L_stm* stm) {
                         break;
                     }
                     case RegType::kStruct: {
-                        os << "%" << stm->u.GEP->base_ptr->u.kNamed->structname
+                        os << "%" << stm->u.GEP->base_ptr->u.kGlobal->structname
                            << ", %"
-                           << stm->u.GEP->base_ptr->u.kNamed->structname
+                           << stm->u.GEP->base_ptr->u.kGlobal->structname
                            << "* ";
                         printL_oper(os, stm->u.GEP->base_ptr);
                         os << ", i32 0";
                         break;
                     }
                     case RegType::kStructPtr: {
-                        if (stm->u.GEP->base_ptr->u.kNamed->len == -1 ||
-                            stm->u.GEP->base_ptr->u.kNamed->len == 0) {
+                        if (stm->u.GEP->base_ptr->u.kGlobal->len == -1 ||
+                            stm->u.GEP->base_ptr->u.kGlobal->len == 0) {
                             os << "%"
-                               << stm->u.GEP->base_ptr->u.kNamed->structname
+                               << stm->u.GEP->base_ptr->u.kGlobal->structname
                                << ", %"
-                               << stm->u.GEP->base_ptr->u.kNamed->structname
+                               << stm->u.GEP->base_ptr->u.kGlobal->structname
                                << "* ";
                             printL_oper(os, stm->u.GEP->base_ptr);
                             os << ", i32 0";
                         } else {
-                            os << "[" << stm->u.GEP->base_ptr->u.kNamed->len
+                            os << "[" << stm->u.GEP->base_ptr->u.kGlobal->len
                                << " x " << "%"
-                               << stm->u.GEP->base_ptr->u.kNamed->structname
+                               << stm->u.GEP->base_ptr->u.kGlobal->structname
                                << " ], ";
-                            os << "[" << stm->u.GEP->base_ptr->u.kNamed->len
+                            os << "[" << stm->u.GEP->base_ptr->u.kGlobal->len
                                << " x " << "%"
-                               << stm->u.GEP->base_ptr->u.kNamed->structname
+                               << stm->u.GEP->base_ptr->u.kGlobal->structname
                                << " ]* ";
                             printL_oper(os, stm->u.GEP->base_ptr);
                             os << ", i32 0";
@@ -518,25 +518,25 @@ void ir::printL_stm(std::ostream& os, ir::L_stm* stm) {
                 } else {
                     os << ", ";
                 }
-                if (v->kind == OperandKind::kNumbered) {
-                    if (v->u.kNumbered->type == RegType::kInt) {
+                if (v->kind == OperandKind::kLocal) {
+                    if (v->u.kLocal->type == RegType::kInt) {
                         os << "i32 ";
-                    } else if (v->u.kNumbered->type == RegType::kIntPtr) {
+                    } else if (v->u.kLocal->type == RegType::kIntPtr) {
                         os << "i32* ";
-                    } else if (v->u.kNumbered->type == RegType::kStruct) {
-                        os << "%" << v->u.kNumbered->structname << " ";
+                    } else if (v->u.kLocal->type == RegType::kStruct) {
+                        os << "%" << v->u.kLocal->structname << " ";
                     } else {
-                        os << "%" << v->u.kNumbered->structname << "* ";
+                        os << "%" << v->u.kLocal->structname << "* ";
                     }
                 } else if (v->kind == OperandKind::kIntConst) {
                     os << "i32 ";
                 } else {
-                    if (v->u.kNamed->type == RegType::kIntPtr) {
+                    if (v->u.kGlobal->type == RegType::kIntPtr) {
                         os << "i32* ";
-                    } else if (v->u.kNamed->type == RegType::kStruct) {
-                        os << "%" << v->u.kNamed->structname << "* ";
-                    } else if (v->u.kNamed->type == RegType::kStructPtr) {
-                        os << "%" << v->u.kNamed->structname << "* ";
+                    } else if (v->u.kGlobal->type == RegType::kStruct) {
+                        os << "%" << v->u.kGlobal->structname << "* ";
+                    } else if (v->u.kGlobal->type == RegType::kStructPtr) {
+                        os << "%" << v->u.kGlobal->structname << "* ";
                     } else {
                         assert(0);
                     }
@@ -559,12 +559,12 @@ void ir::printL_oper(std::ostream& os, Operand* oper) {
             os << oper->u.kIntConst;
             break;
         }
-        case OperandKind::kNumbered: {
-            os << "%r" << oper->u.kNumbered->num;
+        case OperandKind::kLocal: {
+            os << "%r" << oper->u.kLocal->num;
             break;
         }
-        case OperandKind::kNamed: {
-            os << "@" << oper->u.kNamed->name->name;
+        case OperandKind::kGlobal: {
+            os << "@" << oper->u.kGlobal->name->name;
             break;
         }
         default:
@@ -584,15 +584,15 @@ void ir::printL_prog(std::ostream& os, ir::Prog* prog) {
 void ir::printL_func(std::ostream& os, ir::Func* func) {
     os << "define ";
     switch (func->ret.type) {
-        case ReturnType::VOID_TYPE: {
+        case ReturnType::kVoid: {
             os << "void ";
             break;
         }
-        case ReturnType::INT_TYPE: {
+        case ReturnType::kInt: {
             os << "i32 ";
             break;
         }
-        case ReturnType::STRUCT_TYPE: {
+        case ReturnType::kStruct: {
             os << "%" << func->ret.structname << " ";
             break;
         }

@@ -20,22 +20,22 @@ static int GetNextLabelIndex() {
 
 class LocalVal {
    public:
-    static std::shared_ptr<LocalVal> CreateIntReg() {
+    static std::shared_ptr<LocalVal> CreateInt() {
         return std::make_shared<LocalVal>(GetNextIndex(), RegType::kInt);
     }
 
-    static std::shared_ptr<LocalVal> CreateIntPtrReg(int len) {
+    static std::shared_ptr<LocalVal> CreateIntPtr(int len) {
         return std::make_shared<LocalVal>(GetNextIndex(), RegType::kIntPtr,
                                           len);
     }
 
-    static std::shared_ptr<LocalVal> CreateStructReg(const std::string& name) {
+    static std::shared_ptr<LocalVal> CreateStruct(const std::string& name) {
         return std::make_shared<LocalVal>(GetNextIndex(), RegType::kStruct, 0,
                                           name);
     }
 
-    static std::shared_ptr<LocalVal> CreateStructPtrReg(
-        int len, const std::string& name) {
+    static std::shared_ptr<LocalVal> CreateStructPtr(int len,
+                                                     const std::string& name) {
         return std::make_shared<LocalVal>(GetNextIndex(), RegType::kStructPtr,
                                           len, name);
     }
@@ -47,8 +47,8 @@ class LocalVal {
     int len() const { return len_; }
 
    private:
-    explicit LocalVal(int num, RegType type = RegType::kInt, int len = 0,
-                      const std::string& struct_name = std::string())
+    LocalVal(int num, RegType type = RegType::kInt, int len = 0,
+             const std::string& struct_name = std::string())
         : num_(num),
           type_(type),
           struct_name_(struct_name),
@@ -127,32 +127,35 @@ class GlobalVal {
     std::string struct_name_;
 };
 
-enum class OperandKind { kNumbered, kNamed, kIntConst };
+enum class OperandKind { kLocal, kGlobal, kIntConst };
 
 struct Operand {
     using InnerType = std::variant<std::shared_ptr<LocalVal>,
                                    std::shared_ptr<GlobalVal>, int>;
 
    public:
-    static std::shared_ptr<Operand> CreateNumberedOp(
-        std::shared_ptr<LocalVal> reg) {
-        return std::make_shared<Operand>(OperandKind::kNumbered, reg);
+    static std::shared_ptr<Operand> FromLocal(std::shared_ptr<LocalVal> reg) {
+        return std::make_shared<Operand>(OperandKind::kLocal, reg);
     }
 
-    static std::shared_ptr<Operand> CreateNamedOp(
+    static std::shared_ptr<Operand> FromGlobal(
         std::shared_ptr<GlobalVal> reg) {
-        return std::make_shared<Operand>(OperandKind::kNamed, reg);
+        return std::make_shared<Operand>(OperandKind::kGlobal, reg);
     }
 
-    static std::shared_ptr<Operand> CreateIConstOp(int iconst) {
+    static std::shared_ptr<Operand> FromIConst(int iconst) {
         return std::make_shared<Operand>(OperandKind::kIntConst, iconst);
+    }
+
+    OperandKind kind() const {
+        return kind_;
     }
 
     InnerType inner() const {
         switch (kind_) {
-            case OperandKind::kNumbered:
+            case OperandKind::kLocal:
                 return numbered_reg_;
-            case OperandKind::kNamed:
+            case OperandKind::kGlobal:
                 return named_reg_;
             case OperandKind::kIntConst:
                 return iconst_;
@@ -174,12 +177,12 @@ struct Operand {
     int iconst_;
 };
 
-enum class ReturnType { INT_TYPE, STRUCT_TYPE, VOID_TYPE };
+enum class ReturnType { kInt, kStruct, kVoid };
 
 struct FuncType {
     ReturnType type;
     std::string structname;
-    FuncType(ReturnType _type = ReturnType::INT_TYPE,
+    FuncType(ReturnType _type = ReturnType::kInt,
              const std::string _name = std::string())
         : type(_type), structname(_name) {}
 };
