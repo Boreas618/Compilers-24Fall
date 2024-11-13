@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <ostream>
+
 #include "TeaplaAst.h"
 
 using std::ostream;
