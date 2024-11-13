@@ -6,14 +6,14 @@
 #include "IRDef.h"
 #include "TeaplaAst.h"
 
-struct MemberInfo {
+struct MemberProp {
     int offset;
     ValDef def;
-    MemberInfo(int off = 0, ValDef d = ValDef()) : offset(off), def(d) {}
+    MemberProp(int off = 0, ValDef d = ValDef()) : offset(off), def(d) {}
 };
 
-struct StructInfo {
-    std::unordered_map<std::string, MemberInfo> memberinfos;
+struct StructProp {
+    std::unordered_map<std::string, MemberProp> mem_props;
 };
 
 struct FuncProp {
@@ -52,8 +52,39 @@ class IRGenerator {
                       aA_programElement v);
     void HandleFnDef(vector<std::shared_ptr<TopLevelDef>>& defs,
                      aA_programElement v);
+    int HandleRightValFirst(aA_rightVal r);
+    int HandleBoolExpr(aA_boolExpr b);
+    int HandleBoolBiOpExpr(aA_boolBiOpExpr b);
+    int HandleBoolUOpExpr(aA_boolUOpExpr b);
+    int HandleBoolUnit(aA_boolUnit b);
+    int HandleComOpExpr(aA_comExpr c);
+    int HandleArithBiOpExprFirst(aA_arithBiOpExpr a);
+    int HandleArithUExprFirst(aA_arithUExpr a);
+    int HandleArithExprFirst(aA_arithExpr a);
+    int HandleExprUnitFirst(aA_exprUnit e);
+    std::shared_ptr<FuncProp> HandleFunc(aA_fnDef f);
+    void HandleBlock(aA_codeBlockStmt b, std::shared_ptr<BlockLabel> con_label,
+                     std::shared_ptr<BlockLabel> bre_label);
+    std::shared_ptr<ir::Operand> HandleRightVal(aA_rightVal r);
+    std::shared_ptr<ir::Operand> HandleLeftVal(aA_leftVal l);
+    std::shared_ptr<ir::Operand> HandleIndexExpr(aA_indexExpr index);
+    std::shared_ptr<ir::Operand> HandleBoolExpr(
+        aA_boolExpr b, std::shared_ptr<BlockLabel> true_label,
+        std::shared_ptr<BlockLabel> false_label);
+    void HandleBoolBiOpExpr(aA_boolBiOpExpr b,
+                            std::shared_ptr<BlockLabel> true_label,
+                            std::shared_ptr<BlockLabel> false_label);
+    void HandleBoolUnit(aA_boolUnit b, std::shared_ptr<BlockLabel> true_label,
+                        std::shared_ptr<BlockLabel> false_label);
+    void HandleComOpExpr(aA_comExpr c, std::shared_ptr<BlockLabel> true_label,
+                         std::shared_ptr<BlockLabel> false_label);
+    std::shared_ptr<ir::Operand> IRGenerator::HandleArithBiOpExpr(
+        aA_arithBiOpExpr a);
+    std::shared_ptr<ir::Operand> IRGenerator::HandleArithUExpr(aA_arithUExpr a);
+    std::shared_ptr<ir::Operand> IRGenerator::HandleArithExpr(aA_arithExpr a);
+    std::shared_ptr<ir::Operand> IRGenerator::HandleExprUnit(aA_exprUnit e);
     unordered_map<string, FuncType> func_ret_;
-    unordered_map<string, StructInfo> struct_info_;
+    unordered_map<string, StructProp> struct_props_;
     unordered_map<string, std::shared_ptr<GlobalVal>> global_vars_;
     unordered_map<string, std::shared_ptr<LocalVal>> local_vars_;
     list<ir::Stmt> emit_irs;
