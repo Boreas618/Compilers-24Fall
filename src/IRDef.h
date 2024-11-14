@@ -55,6 +55,7 @@ class LocalVal {
     const std::string& struct_name() const { return struct_name_; }
     const std::string& var_name() const { return var_name_; }
     int len() const { return len_; }
+    void set_len(int i) { len_ = i; }
 
    private:
     int num_;
@@ -601,7 +602,9 @@ class Stmt {
 
 class Block {
    public:
-    std::shared_ptr<std::list<std::shared_ptr<Stmt>>> instrs() { return instrs_; }
+    std::shared_ptr<std::list<std::shared_ptr<Stmt>>> instrs() {
+        return instrs_;
+    }
     Block(std::shared_ptr<BlockLabel> label,
           const std::unordered_set<std::shared_ptr<BlockLabel>>& succs,
           const std::shared_ptr<std::list<std::shared_ptr<Stmt>>>& instrs)

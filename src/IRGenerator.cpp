@@ -1254,21 +1254,45 @@ std::shared_ptr<Operand> IRGenerator::PtrDeref(std::shared_ptr<Operand> ptr) {
         auto inner = ptr->inner<LocalVal>();
         if (inner->type() != RegType::kIntPtr) return ptr;
         if (inner->type() == RegType::kIntPtr) {
-            auto val = LocalVal::CreateInt();
-            emit_irs_.push_back(
-                ir::Stmt::CreateLoad(Operand::FromLocal(val), ptr));
-            return Operand::FromLocal(val);
+            if (inner->len() == 0) {
+                auto val = LocalVal::CreateInt();
+                emit_irs_.push_back(
+                    ir::Stmt::CreateLoad(Operand::FromLocal(val), ptr));
+                return Operand::FromLocal(val);
+            } else {
+                auto val = LocalVal::CreateIntPtr(0);
+                emit_irs_.push_back(ir::Stmt::CreateGep(
+                    Operand::FromLocal(val), ptr, Operand::FromIConst(0)));
+                val->set_len(-1);
+                return Operand::FromLocal(val);
+            }
         }
     } else {
         auto inner = ptr->inner<GlobalVal>();
-        if (inner->type() == RegType::kIntPtr ||
-            inner->type() == RegType::kInt) {
+        if (inner->type() == RegType::kIntPtr) {
+            if (inner->len() == 0) {
+                auto val = LocalVal::CreateInt();
+                emit_irs_.push_back(
+                    ir::Stmt::CreateLoad(Operand::FromLocal(val), ptr));
+                return Operand::FromLocal(val);
+            } else {
+                auto val = LocalVal::CreateIntPtr(0);
+                emit_irs_.push_back(ir::Stmt::CreateGep(
+                    Operand::FromLocal(val), ptr, Operand::FromIConst(0)));
+                val->set_len(-1);
+                return Operand::FromLocal(val);
+            }
+        } else if (inner->type() == RegType::kInt) {
             auto val = LocalVal::CreateInt();
             emit_irs_.push_back(
                 ir::Stmt::CreateLoad(Operand::FromLocal(val), ptr));
             return Operand::FromLocal(val);
-        } else {
-            return ptr;
+        } else if (inner->type() == RegType::kStructPtr) {
+            auto val = LocalVal::CreateStructPtr(0, inner->struct_name());
+            emit_irs_.push_back(ir::Stmt::CreateGep(
+                Operand::FromLocal(val), ptr, Operand::FromIConst(0)));
+            val->set_len(-1);
+            return Operand::FromLocal(val);
         }
     }
     return ptr;
