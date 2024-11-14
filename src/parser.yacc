@@ -1,6 +1,6 @@
 %{
 #include <stdio.h>
-#include "TeaplAst.h"
+#include "teapl_ast.hh"
 
 extern A_pos pos;
 extern A_program root;

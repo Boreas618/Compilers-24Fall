@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 #include <string.h>
-#include "TeaplAst.h"
+#include "teapl_ast.hh"
 #include "y.tab.hpp"
 extern int line, col;
 int c;
