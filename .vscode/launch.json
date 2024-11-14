@@ -10,7 +10,7 @@
             "name": "Debug",
             "program": "src/compiler",
             "args": [
-                "tests/brainfk.tea",
+                "tests/quick_pow.tea",
             ],
             "cwd": "src"
         }

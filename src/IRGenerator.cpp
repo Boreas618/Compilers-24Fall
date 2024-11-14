@@ -551,19 +551,29 @@ std::shared_ptr<FuncProp> IRGenerator::HandleFunc(aA_fnDef f) {
 
 void IRGenerator::HandleLocalVarDeclScalar(aA_varDecl d) {
     auto id = *d->u.declScalar->id;
-    auto type = d->u.declScalar->type->type;
+    auto type_nullable = d->u.declScalar->type;
+    A_dataType type;
+
+    if (type_nullable == nullptr) {
+        type = kUndecided;
+    } else {
+        type = type_nullable->type;
+    }
 
     std::shared_ptr<LocalVal> v = nullptr;
 
     if (type == A_nativeTypeKind) {
         v = LocalVal::CreateIntPtr(0);
+        emit_irs_.push_back(ir::Stmt::CreateAlloca(Operand::FromLocal(v)));
     } else if (type == A_structTypeKind) {
         auto type_name = *d->u.declScalar->type->u.structType;
         v = LocalVal::CreateStructPtr(0, type_name);
+        emit_irs_.push_back(ir::Stmt::CreateAlloca(Operand::FromLocal(v)));
+    } else if (type == kUndecided) {
+        v = LocalVal::CreateIntPtr(-2);
     }
 
     assert(v != nullptr);
-    emit_irs_.push_back(ir::Stmt::CreateAlloca(Operand::FromLocal(v)));
     local_vars_[id] = v;
 }
 
@@ -682,8 +692,48 @@ void IRGenerator::HandleLocalVarDecl(aA_varDeclStmt v) {
 
 void IRGenerator::HandleAssignmentStmt(aA_assignStmt as) {
     auto left = HandleLeftVal(as->leftVal);
-    emit_irs_.push_back(
-        ir::Stmt::CreateStore(PtrDeref(HandleRightVal(as->rightVal)), left));
+    auto right = PtrDeref(HandleRightVal(as->rightVal));
+
+    /**
+     * Deduce the type. For now we suppose that global variables are all
+     * initialized.
+     */
+    if (left->inner<LocalVal>()) {
+        auto inner = left->inner<LocalVal>();
+        if (inner->len() == -2) {
+            RegType rt;
+            int len = 0;
+            string name;
+            std::shared_ptr<LocalVal> deduced = nullptr;
+            if (right->inner<LocalVal>()) {
+                rt = right->inner<LocalVal>()->type();
+                len = right->inner<LocalVal>()->len();
+                name = right->inner<LocalVal>()->struct_name();
+            } else if (right->inner<GlobalVal>()) {
+                rt = right->inner<GlobalVal>()->type();
+                len = right->inner<LocalVal>()->len();
+                name = right->inner<LocalVal>()->struct_name();
+            } else {
+                rt = RegType::kInt;
+            }
+            if (rt == RegType::kInt) {
+                deduced = LocalVal::CreateIntPtr(0);
+            } else if (rt == RegType::kIntPtr) {
+                deduced = LocalVal::CreateIntPtr(len);
+            } else if (rt == RegType::kStruct) {
+                deduced = LocalVal::CreateStructPtr(0, name);
+            } else if (rt == RegType::kStructPtr) {
+                deduced = LocalVal::CreateStructPtr(len, name);
+            }
+
+            emit_irs_.push_back(
+                ir::Stmt::CreateAlloca(Operand::FromLocal(deduced)));
+            local_vars_[*as->leftVal->u.id] = deduced;
+            left = Operand::FromLocal(deduced);
+        }
+    }
+
+    emit_irs_.push_back(ir::Stmt::CreateStore(right, left));
 }
 
 void IRGenerator::HandleCallStmt(aA_callStmt call) {
@@ -916,12 +966,13 @@ std::shared_ptr<ir::Operand> IRGenerator::HandleLeftVal(aA_leftVal l) {
         /**
          * First resolve within the block.
          */
-        if (local_vars_.find(id) != local_vars_.end())
+        if (local_vars_.find(id) != local_vars_.end()) {
             lval = Operand::FromLocal(local_vars_[id]);
-        else if (global_vars_.find(id) != global_vars_.end())
+        } else if (global_vars_.find(id) != global_vars_.end()) {
             lval = Operand::FromGlobal(global_vars_[id]);
-        else
+        } else {
             assert(0);
+        }
         return lval;
     } else if (l->kind == A_arrValKind) {
         return HandleArrayExpr(l->u.arrExpr);

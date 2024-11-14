@@ -22,6 +22,11 @@ static int GetNextLabelIndex() {
 
 class LocalVal {
    public:
+    static std::shared_ptr<LocalVal> CreateUndecided() {
+        std::shared_ptr<LocalVal> ret = nullptr;
+        return std::move(ret);
+    }
+
     static std::shared_ptr<LocalVal> CreateInt() {
         return std::make_shared<LocalVal>(GetNextIndex(), RegType::kInt);
     }

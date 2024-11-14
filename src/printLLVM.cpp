@@ -172,7 +172,7 @@ void printL_stm(std::ostream& os, std::shared_ptr<ir::Stmt> stm) {
                 switch (
                     stm->inner<Alloca>()->dst()->inner<LocalVal>()->type()) {
                     case RegType::kInt: {
-                        assert(0);
+                        // assert(0);
                         break;
                     }
                     case RegType::kIntPtr: {
