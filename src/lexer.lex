@@ -285,7 +285,6 @@ int calc(const char *s, int len);
 }
 
 <INITIAL>. {
-    printf("Illegal input \"%c\"\n", yytext[0]);
 }
 
 %%

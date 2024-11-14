@@ -1,3 +1,5 @@
+#pragma once
+
 #include <list>
 #include <string>
 #include <unordered_map>
@@ -6,10 +8,13 @@
 #include "IRDef.h"
 #include "TeaplaAst.h"
 
+namespace ir {
+
 struct MemberProp {
     int offset;
-    ValDef def;
-    MemberProp(int off = 0, ValDef d = ValDef()) : offset(off), def(d) {}
+    ir::ValDef def;
+    MemberProp(int off = 0, ir::ValDef d = ir::ValDef())
+        : offset(off), def(d) {}
 };
 
 struct StructProp {
@@ -19,7 +24,7 @@ struct StructProp {
 struct FuncProp {
     std::string name;
     ir::FuncType ret;
-    std::vector<std::shared_ptr<LocalVal>> args;
+    std::vector<std::shared_ptr<ir::LocalVal>> args;
     std::list<std::shared_ptr<ir::Stmt>> irs;
     FuncProp(const std::string _name, ir::FuncType _ret,
              const std::vector<std::shared_ptr<LocalVal>>& _args,
@@ -53,7 +58,7 @@ class IRGenerator {
     void HandleFnDef(vector<std::shared_ptr<TopLevelDef>>& defs,
                      aA_programElement v);
     int HandleRightValFirst(aA_rightVal r);
-    int HandleBoolExpr(aA_boolExpr b);
+    int HandleBoolExprFirst(aA_boolExpr b);
     int HandleBoolBiOpExpr(aA_boolBiOpExpr b);
     int HandleBoolUOpExpr(aA_boolUOpExpr b);
     int HandleBoolUnit(aA_boolUnit b);
@@ -78,11 +83,10 @@ class IRGenerator {
                         std::shared_ptr<BlockLabel> false_label);
     void HandleComOpExpr(aA_comExpr c, std::shared_ptr<BlockLabel> true_label,
                          std::shared_ptr<BlockLabel> false_label);
-    std::shared_ptr<ir::Operand> IRGenerator::HandleArithBiOpExpr(
-        aA_arithBiOpExpr a);
-    std::shared_ptr<ir::Operand> IRGenerator::HandleArithUExpr(aA_arithUExpr a);
-    std::shared_ptr<ir::Operand> IRGenerator::HandleArithExpr(aA_arithExpr a);
-    std::shared_ptr<ir::Operand> IRGenerator::HandleExprUnit(aA_exprUnit e);
+    std::shared_ptr<ir::Operand> HandleArithBiOpExpr(aA_arithBiOpExpr a);
+    std::shared_ptr<ir::Operand> HandleArithUExpr(aA_arithUExpr a);
+    std::shared_ptr<ir::Operand> HandleArithExpr(aA_arithExpr a);
+    std::shared_ptr<ir::Operand> HandleExprUnit(aA_exprUnit e);
     void HandleLocalVarDecl(aA_varDeclStmt v);
     void HandleLocalVarDeclScalar(aA_varDecl d);
     void HandleLocalVarDeclArray(aA_varDecl d);
@@ -94,13 +98,19 @@ class IRGenerator {
                       std::shared_ptr<BlockLabel> bre_label);
     void HandleWhileStmt(aA_whileStmt ws);
     void HandleReturnStmt(aA_returnStmt r);
+    std::shared_ptr<ir::Operand> HandleArrayExpr(aA_arrayExpr ae);
+    std::shared_ptr<ir::Operand> HandleMemberExpr(aA_memberExpr ae);
     void InitArray(std::shared_ptr<LocalVal> base_ptr, int len,
                    vector<aA_rightVal> vals);
     void InitStruct(std::shared_ptr<LocalVal> base_ptr, int len,
                     vector<aA_rightVal> vals, string& type_name);
-    unordered_map<string, FuncType> func_ret_;
-    unordered_map<string, StructProp> struct_props_;
-    unordered_map<string, std::shared_ptr<GlobalVal>> global_vars_;
-    unordered_map<string, std::shared_ptr<LocalVal>> local_vars_;
-    list<std::shared_ptr<ir::Stmt>> emit_irs_;
+    std::shared_ptr<Operand> PtrDeref(
+        std::shared_ptr<Operand> ptr);
+    std::unordered_map<string, FuncType> func_ret_;
+    std::unordered_map<string, StructProp> struct_props_;
+    std::unordered_map<string, std::shared_ptr<GlobalVal>> global_vars_;
+    std::unordered_map<string, std::shared_ptr<LocalVal>> local_vars_;
+    std::list<std::shared_ptr<ir::Stmt>> emit_irs_;
 };
+
+}  // namespace ir

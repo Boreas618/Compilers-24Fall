@@ -2,7 +2,7 @@
 func_testcase_dir=$(realpath $(dirname "$0")/./tests)
 
 test_single() {
-	test_file=`realpath --relative-base=$func_testcase_dir $func_testcase_dir/$1.tea`	
+	test_file=$(python -c "import os.path; print(os.path.relpath('$func_testcase_dir/$1.tea', '$func_testcase_dir'))")
 	test_name=${test_file%.tea}
 	
 	echo -n $test_name

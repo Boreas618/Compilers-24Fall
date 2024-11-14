@@ -10,8 +10,7 @@
             "name": "Debug",
             "program": "src/compiler",
             "args": [
-                "tests/17_type_inference.tea",
-                "tests/17_type_inference.ast"
+                "tests/quick_pow.tea",
             ],
             "cwd": "src"
         }

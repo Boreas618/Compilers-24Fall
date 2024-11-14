@@ -48,7 +48,7 @@ struct A_pos_ {
     int line, col;
 };
 
-typedef enum { A_nativeTypeKind, A_structTypeKind } A_dataType;
+typedef enum { A_nativeTypeKind, A_structTypeKind, kUndecided} A_dataType;
 
 typedef enum { A_intTypeKind } A_nativeType;
 

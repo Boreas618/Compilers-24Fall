@@ -65,6 +65,8 @@
         "socket.h": "c",
         "__config": "cpp",
         "version": "cpp",
-        "type_traits": "cpp"
+        "type_traits": "cpp",
+        "iterator": "cpp",
+        "cassert": "cpp"
     }
 }
