@@ -9,6 +9,7 @@
 using namespace std;
 using namespace ir;
 
+namespace ir {
 std::shared_ptr<ir::Prog> IRGenerator::Generate(aA_program p) {
     auto defs = GenerateFirst(p);
     auto funcs = GenerateSecond(p);
@@ -17,7 +18,7 @@ std::shared_ptr<ir::Prog> IRGenerator::Generate(aA_program p) {
         funcs_block.push_back(GenerateFn(f));
     }
     for (auto& f : funcs_block) {
-        MoveAlloca(f);
+        // MoveAlloca(f);
     }
     return std::make_shared<Prog>(defs, funcs_block);
 }
@@ -32,7 +33,7 @@ int IRGenerator::HandleRightValFirst(aA_rightVal r) {
             break;
         }
         case A_boolExprValKind: {
-            return HandleBoolExpr(r->u.boolExpr);
+            return HandleBoolExprFirst(r->u.boolExpr);
             break;
         }
         default:
@@ -41,7 +42,7 @@ int IRGenerator::HandleRightValFirst(aA_rightVal r) {
     return 0;
 }
 
-int IRGenerator::HandleBoolExpr(aA_boolExpr b) {
+int IRGenerator::HandleBoolExprFirst(aA_boolExpr b) {
     switch (b->kind) {
         case A_boolBiOpExprKind: {
             return HandleBoolBiOpExpr(b->u.boolBiOpExpr);
@@ -58,8 +59,8 @@ int IRGenerator::HandleBoolExpr(aA_boolExpr b) {
 }
 
 int IRGenerator::HandleBoolBiOpExpr(aA_boolBiOpExpr b) {
-    int l = HandleBoolExpr(b->left);
-    int r = HandleBoolExpr(b->right);
+    int l = HandleBoolExprFirst(b->left);
+    int r = HandleBoolExprFirst(b->right);
     if (b->op == A_and) {
         return l && r;
     } else {
@@ -81,7 +82,7 @@ int IRGenerator::HandleBoolUnit(aA_boolUnit b) {
             break;
         }
         case A_boolExprKind: {
-            return HandleBoolExpr(b->u.boolExpr);
+            return HandleBoolExprFirst(b->u.boolExpr);
             break;
         }
         case A_boolUOpExprKind: {
@@ -95,8 +96,8 @@ int IRGenerator::HandleBoolUnit(aA_boolUnit b) {
 }
 
 int IRGenerator::HandleComOpExpr(aA_comExpr c) {
-    auto l = HandleExprUnit(c->left);
-    auto r = HandleExprUnit(c->right);
+    auto l = PtrDeref(HandleExprUnit(c->left));
+    auto r = PtrDeref(HandleExprUnit(c->right));
     switch (c->op) {
         case A_lt: {
             return l < r;
@@ -485,6 +486,7 @@ std::shared_ptr<FuncProp> IRGenerator::HandleFunc(aA_fnDef f) {
     vector<std::shared_ptr<ir::LocalVal>> args;
     for (const auto& decl : arg_decls) {
         if (decl->kind == A_varDeclScalarKind) {
+            auto arg_id = *decl->u.declScalar->id;
             auto is_struct =
                 (decl->u.declScalar->type->type == A_structTypeKind);
             auto is_primitive =
@@ -493,7 +495,7 @@ std::shared_ptr<FuncProp> IRGenerator::HandleFunc(aA_fnDef f) {
                 auto type_name = *decl->u.declScalar->type->u.structType;
                 auto local_val = LocalVal::CreateStructPtr(0, type_name);
                 args.push_back(local_val);
-                local_vars_[id] = local_val;
+                local_vars_[arg_id] = local_val;
             } else if (is_primitive) {
                 auto val = LocalVal::CreateInt();
                 auto val_ptr = LocalVal::CreateIntPtr(0);
@@ -502,11 +504,12 @@ std::shared_ptr<FuncProp> IRGenerator::HandleFunc(aA_fnDef f) {
                     Stmt::CreateAlloca(Operand::FromLocal(val_ptr)));
                 emit_irs_.push_back(Stmt::CreateStore(
                     Operand::FromLocal(val), Operand::FromLocal(val_ptr)));
-                local_vars_[id] = val_ptr;
+                local_vars_[arg_id] = val_ptr;
             } else {
                 assert(0);
             }
         } else if (decl->kind == A_varDeclArrayKind) {
+            auto arg_id = *decl->u.declArray->id;
             auto is_struct =
                 (decl->u.declArray->type->type == A_structTypeKind);
             auto is_primitive =
@@ -523,7 +526,7 @@ std::shared_ptr<FuncProp> IRGenerator::HandleFunc(aA_fnDef f) {
             }
 
             args.push_back(local_val);
-            local_vars_[id] = local_val;
+            local_vars_[arg_id] = local_val;
         } else {
             assert(0);
         }
@@ -549,14 +552,15 @@ std::shared_ptr<FuncProp> IRGenerator::HandleFunc(aA_fnDef f) {
 void IRGenerator::HandleLocalVarDeclScalar(aA_varDecl d) {
     auto id = *d->u.declScalar->id;
     auto type = d->u.declScalar->type->type;
-    auto type_name = *d->u.declScalar->type->u.structType;
 
     std::shared_ptr<LocalVal> v = nullptr;
 
-    if (type == A_nativeTypeKind)
+    if (type == A_nativeTypeKind) {
         v = LocalVal::CreateIntPtr(0);
-    else if (type == A_structTypeKind)
+    } else if (type == A_structTypeKind) {
+        auto type_name = *d->u.declScalar->type->u.structType;
         v = LocalVal::CreateStructPtr(0, type_name);
+    }
 
     assert(v != nullptr);
     emit_irs_.push_back(ir::Stmt::CreateAlloca(Operand::FromLocal(v)));
@@ -566,15 +570,16 @@ void IRGenerator::HandleLocalVarDeclScalar(aA_varDecl d) {
 void IRGenerator::HandleLocalVarDeclArray(aA_varDecl d) {
     auto id = *d->u.declArray->id;
     auto type_kind = d->u.declArray->type->type;
-    auto type_name = *d->u.declArray->type->u.structType;
     auto len = d->u.declArray->len;
 
     std::shared_ptr<LocalVal> v = nullptr;
 
     if (type_kind == A_nativeTypeKind)
         v = LocalVal::CreateIntPtr(len);
-    else if (type_kind == A_structTypeKind)
+    else if (type_kind == A_structTypeKind) {
+        auto type_name = *d->u.declArray->type->u.structType;
         v = LocalVal::CreateStructPtr(len, type_name);
+    }
 
     assert(v != nullptr);
     emit_irs_.push_back(ir::Stmt::CreateAlloca(Operand::FromLocal(v)));
@@ -583,7 +588,7 @@ void IRGenerator::HandleLocalVarDeclArray(aA_varDecl d) {
 
 void IRGenerator::HandleLocalVarDefScalar(aA_varDef d) {
     auto id = *d->u.defScalar->id;
-    auto right_val = HandleRightVal(d->u.defScalar->val);
+    auto right_val = PtrDeref(HandleRightVal(d->u.defScalar->val));
     if (d->u.defScalar->type->type == A_nativeTypeKind) {
         auto local_val = LocalVal::CreateIntPtr(0);
         local_vars_[id] = local_val;
@@ -608,7 +613,7 @@ void IRGenerator::InitArray(std::shared_ptr<LocalVal> base_ptr, int len,
         emit_irs_.push_back(ir::Stmt::CreateGep(Operand::FromLocal(element_ptr),
                                                 Operand::FromLocal(base_ptr),
                                                 Operand::FromIConst(i)));
-        auto right_ele = HandleRightVal(vals[i]);
+        auto right_ele = PtrDeref(HandleRightVal(vals[i]));
         assert(right_ele->kind() == OperandKind::kIntConst);
         emit_irs_.push_back(
             ir::Stmt::CreateStore(right_ele, Operand::FromLocal(element_ptr)));
@@ -623,7 +628,7 @@ void IRGenerator::InitStruct(std::shared_ptr<LocalVal> base_ptr, int len,
         emit_irs_.push_back(ir::Stmt::CreateGep(Operand::FromLocal(element_ptr),
                                                 Operand::FromLocal(base_ptr),
                                                 Operand::FromIConst(i)));
-        auto right_ele = HandleRightVal(vals[i]);
+        auto right_ele = PtrDeref(HandleRightVal(vals[i]));
         assert(right_ele->kind() == OperandKind::kLocal);
         emit_irs_.push_back(
             ir::Stmt::CreateStore(right_ele, Operand::FromLocal(element_ptr)));
@@ -634,7 +639,7 @@ void IRGenerator::HandleLocalVarDefArray(aA_varDef d) {
     auto id = *d->u.defArray->id;
     auto len = d->u.defArray->len;
     auto vals = d->u.defArray->vals;
-    auto right_val = HandleRightVal(d->u.defScalar->val);
+    auto right_val = PtrDeref(HandleRightVal(d->u.defScalar->val));
 
     std::shared_ptr<ir::LocalVal> local_val = nullptr;
     if (d->u.defScalar->type->type == A_nativeTypeKind) {
@@ -678,14 +683,14 @@ void IRGenerator::HandleLocalVarDecl(aA_varDeclStmt v) {
 void IRGenerator::HandleAssignmentStmt(aA_assignStmt as) {
     auto left = HandleLeftVal(as->leftVal);
     emit_irs_.push_back(
-        ir::Stmt::CreateStore(HandleRightVal(as->rightVal), left));
+        ir::Stmt::CreateStore(PtrDeref(HandleRightVal(as->rightVal)), left));
 }
 
 void IRGenerator::HandleCallStmt(aA_callStmt call) {
     auto func_name = *call->fnCall->fn;
     vector<std::shared_ptr<Operand>> args;
     for (const auto& arg : call->fnCall->vals) {
-        args.push_back(HandleRightVal(arg));
+        args.push_back(PtrDeref(HandleRightVal(arg)));
     }
     if (func_name == "putint" || func_name == "putch" ||
         func_name == "_sysy_starttime" || func_name == "_sysy_stoptime" ||
@@ -731,7 +736,7 @@ void IRGenerator::HandleIfStmt(aA_ifStmt ifs,
 
     emit_irs_.push_back(ir::Stmt::CreateLabel(false_label));
     for (auto b : ifs->elseStmts) HandleBlock(b, con_label, bre_label);
-    emit_irs_.push_back(ir::Stmt::CreateJump(false_label));
+    emit_irs_.push_back(ir::Stmt::CreateJump(after_label));
 
     emit_irs_.push_back(ir::Stmt::CreateLabel(after_label));
 }
@@ -740,6 +745,8 @@ void IRGenerator::HandleWhileStmt(aA_whileStmt ws) {
     auto test_label = BlockLabel::CreateEmpty();
     auto true_label = BlockLabel::CreateEmpty();
     auto false_label = BlockLabel::CreateEmpty();
+
+    emit_irs_.push_back(ir::Stmt::CreateJump(test_label));
 
     emit_irs_.push_back(ir::Stmt::CreateLabel(test_label));
     HandleBoolUnit(ws->boolUnit, true_label, false_label);
@@ -756,7 +763,8 @@ void IRGenerator::HandleReturnStmt(aA_returnStmt r) {
     if (r->retVal == nullptr) {
         emit_irs_.push_back(ir::Stmt::CreateRet(nullptr));
     } else {
-        emit_irs_.push_back(ir::Stmt::CreateRet(HandleRightVal(r->retVal)));
+        emit_irs_.push_back(
+            ir::Stmt::CreateRet(PtrDeref(HandleRightVal(r->retVal))));
     }
 }
 
@@ -817,7 +825,8 @@ std::shared_ptr<ir::Operand> IRGenerator::HandleRightVal(aA_rightVal r) {
             auto after_label = BlockLabel::CreateEmpty();
 
             auto bool_evaluated = LocalVal::CreateIntPtr(0);
-
+            emit_irs_.push_back(
+                ir::Stmt::CreateAlloca(Operand::FromLocal(bool_evaluated)));
             HandleBoolExpr(r->u.boolExpr, true_label, false_label);
 
             /**
@@ -831,8 +840,6 @@ std::shared_ptr<ir::Operand> IRGenerator::HandleRightVal(aA_rightVal r) {
              * after:
              *   ...
              */
-            emit_irs_.push_back(
-                ir::Stmt::CreateAlloca(Operand::FromLocal(bool_evaluated)));
             emit_irs_.push_back(ir::Stmt::CreateLabel(true_label));
             emit_irs_.push_back(ir::Stmt::CreateStore(
                 Operand::FromIConst(1), Operand::FromLocal(bool_evaluated)));
@@ -841,11 +848,15 @@ std::shared_ptr<ir::Operand> IRGenerator::HandleRightVal(aA_rightVal r) {
             emit_irs_.push_back(ir::Stmt::CreateLabel(false_label));
             emit_irs_.push_back(ir::Stmt::CreateStore(
                 Operand::FromIConst(0), Operand::FromLocal(bool_evaluated)));
-            emit_irs_.push_back(ir::Stmt::CreateJump(false_label));
+            emit_irs_.push_back(ir::Stmt::CreateJump(after_label));
 
             emit_irs_.push_back(ir::Stmt::CreateLabel(after_label));
 
-            return Operand::FromLocal(bool_evaluated);
+            auto bool_val = LocalVal::CreateInt();
+            emit_irs_.push_back(
+                ir::Stmt::CreateLoad(Operand::FromLocal(bool_val),
+                                     Operand::FromLocal(bool_evaluated)));
+            return Operand::FromLocal(bool_val);
         } break;
         default:
             assert(0);
@@ -853,51 +864,413 @@ std::shared_ptr<ir::Operand> IRGenerator::HandleRightVal(aA_rightVal r) {
     }
 }
 
-std::shared_ptr<ir::Operand> IRGenerator::HandleLeftVal(aA_leftVal l) {
-    
+std::shared_ptr<ir::Operand> IRGenerator::HandleArrayExpr(aA_arrayExpr ae) {
+    auto arr = HandleLeftVal(ae->arr);
+    auto new_val = Operand::FromLocal(LocalVal::CreateIntPtr(0));
+    emit_irs_.push_back(
+        ir::Stmt::CreateGep(new_val, arr, HandleIndexExpr(ae->idx)));
+    return new_val;
 }
 
-std::shared_ptr<ir::Operand> IRGenerator::HandleIndexExpr(aA_indexExpr index) {}
+std::shared_ptr<ir::Operand> IRGenerator::HandleMemberExpr(aA_memberExpr ae) {
+    auto s = HandleLeftVal(ae->structId);
+    string type_name;
+    if (s->kind() == OperandKind::kGlobal)
+        type_name = s->inner<GlobalVal>()->struct_name();
+    else if (s->kind() == OperandKind::kLocal)
+        type_name = s->inner<LocalVal>()->struct_name();
+    else
+        assert(0);
+
+    auto member = struct_props_[type_name].mem_props[*ae->memberId];
+    std::shared_ptr<Operand> target = nullptr;
+    switch (member.def.kind) {
+        case RegType::kInt:
+            target = Operand::FromLocal(LocalVal::CreateIntPtr(0));
+            break;
+        case RegType::kIntPtr:
+            target = Operand::FromLocal(LocalVal::CreateIntPtr(member.def.len));
+            break;
+        case RegType::kStruct:
+            target = Operand::FromLocal(
+                LocalVal::CreateStructPtr(0, member.def.structname));
+            break;
+        case RegType::kStructPtr:
+            target = Operand::FromLocal(LocalVal::CreateStructPtr(
+                member.def.len, member.def.structname));
+            break;
+        default:
+            assert(0);
+            break;
+    }
+
+    emit_irs_.push_back(
+        ir::Stmt::CreateGep(target, s, Operand::FromIConst(member.offset)));
+    return target;
+}
+
+std::shared_ptr<ir::Operand> IRGenerator::HandleLeftVal(aA_leftVal l) {
+    auto id = *l->u.id;
+    if (l->kind == A_varValKind) {
+        std::shared_ptr<Operand> lval = nullptr;
+        /**
+         * First resolve within the block.
+         */
+        if (local_vars_.find(id) != local_vars_.end())
+            lval = Operand::FromLocal(local_vars_[id]);
+        else if (global_vars_.find(id) != global_vars_.end())
+            lval = Operand::FromGlobal(global_vars_[id]);
+        else
+            assert(0);
+        return lval;
+    } else if (l->kind == A_arrValKind) {
+        return HandleArrayExpr(l->u.arrExpr);
+    } else if (l->kind == A_memberValKind) {
+        return HandleMemberExpr(l->u.memberExpr);
+    }
+}
+
+std::shared_ptr<ir::Operand> IRGenerator::HandleIndexExpr(aA_indexExpr index) {
+    if (index->kind == A_idIndexKind) {
+        auto idx = LocalVal::CreateInt();
+        if (local_vars_.find(*index->u.id) != local_vars_.end()) {
+            auto src = local_vars_[*index->u.id];
+            emit_irs_.push_back(ir::Stmt::CreateLoad(Operand::FromLocal(idx),
+                                                     Operand::FromLocal(src)));
+        } else if (global_vars_.find(*index->u.id) != global_vars_.end()) {
+            auto src = global_vars_[*index->u.id];
+            emit_irs_.push_back(ir::Stmt::CreateLoad(Operand::FromLocal(idx),
+                                                     Operand::FromGlobal(src)));
+        } else {
+            assert(0);
+        }
+        return Operand::FromLocal(idx);
+    } else {
+        return Operand::FromIConst(index->u.num);
+    }
+}
 
 std::shared_ptr<ir::Operand> IRGenerator::HandleBoolExpr(
     aA_boolExpr b, std::shared_ptr<BlockLabel> true_label,
-    std::shared_ptr<BlockLabel> false_label) {}
+    std::shared_ptr<BlockLabel> false_label) {
+    if ((true_label == nullptr) && (false_label == nullptr)) {
+        auto true_label = BlockLabel::CreateEmpty();
+        auto false_label = BlockLabel::CreateEmpty();
+        auto after_label = BlockLabel::CreateEmpty();
+
+        auto bool_evaluated = LocalVal::CreateIntPtr(0);
+        emit_irs_.push_back(
+            ir::Stmt::CreateAlloca(Operand::FromLocal(bool_evaluated)));
+
+        if (b->kind == A_boolExprType::A_boolBiOpExprKind) {
+            HandleBoolBiOpExpr(b->u.boolBiOpExpr, true_label, false_label);
+        } else if (b->kind == A_boolExprType::A_boolUnitKind) {
+            HandleBoolUnit(b->u.boolUnit, true_label, false_label);
+        } else {
+            assert(0);
+        }
+
+        /**
+         * %bool_evaluated = alloca i32
+         * true:
+         *   store i32 1, i32* %bool_evaluted
+         *   br %after
+         * false:
+         *   store i32 0, i32* %bool_evaluted
+         *   br %after
+         * after:
+         *   ...
+         */
+
+        emit_irs_.push_back(ir::Stmt::CreateLabel(true_label));
+        emit_irs_.push_back(ir::Stmt::CreateStore(
+            Operand::FromIConst(1), Operand::FromLocal(bool_evaluated)));
+        emit_irs_.push_back(ir::Stmt::CreateJump(after_label));
+
+        emit_irs_.push_back(ir::Stmt::CreateLabel(false_label));
+        emit_irs_.push_back(ir::Stmt::CreateStore(
+            Operand::FromIConst(0), Operand::FromLocal(bool_evaluated)));
+        emit_irs_.push_back(ir::Stmt::CreateJump(after_label));
+
+        emit_irs_.push_back(ir::Stmt::CreateLabel(after_label));
+
+        /**
+         * Trying to truncate i32 bool_evaluated into i1
+         */
+
+        auto truncated = LocalVal::CreateInt();
+        auto bool_val = LocalVal::CreateInt();
+        emit_irs_.push_back(ir::Stmt::CreateLoad(
+            Operand::FromLocal(bool_val), Operand::FromLocal(bool_evaluated)));
+        emit_irs_.push_back(ir::Stmt::CreateCmp(
+            ir::RelOpKind::kNe, Operand::FromLocal(bool_val),
+            Operand::FromIConst(0), Operand::FromLocal(truncated)));
+
+        return Operand::FromLocal(truncated);
+
+    } else if (true_label == nullptr || false_label == nullptr) {
+        assert(0);
+    }
+
+    if (b->kind == A_boolExprType::A_boolBiOpExprKind)
+        HandleBoolBiOpExpr(b->u.boolBiOpExpr, true_label, false_label);
+    else if (b->kind == A_boolExprType::A_boolUnitKind)
+        HandleBoolUnit(b->u.boolUnit, true_label, false_label);
+    else
+        assert(0);
+    return nullptr;
+}
 
 void IRGenerator::HandleBoolBiOpExpr(aA_boolBiOpExpr b,
                                      std::shared_ptr<BlockLabel> true_label,
-                                     std::shared_ptr<BlockLabel> false_label) {}
+                                     std::shared_ptr<BlockLabel> false_label) {
+    auto eval_right_label = BlockLabel::CreateEmpty();
+    auto lhs = HandleBoolExpr(b->left, nullptr, nullptr);
+    assert(true_label && false_label);
+    if (b->op == A_and) {
+        emit_irs_.push_back(
+            ir::Stmt::CreateCJump(lhs, eval_right_label, false_label));
+        emit_irs_.push_back(ir::Stmt::CreateLabel(eval_right_label));
+        auto rhs = HandleBoolExpr(b->right, nullptr, nullptr);
+        emit_irs_.push_back(
+            ir::Stmt::CreateCJump(rhs, true_label, false_label));
+    } else if (b->op == A_or) {
+        emit_irs_.push_back(
+            ir::Stmt::CreateCJump(lhs, true_label, eval_right_label));
+        emit_irs_.push_back(ir::Stmt::CreateLabel(eval_right_label));
+        auto rhs = HandleBoolExpr(b->right, nullptr, nullptr);
+        emit_irs_.push_back(
+            ir::Stmt::CreateCJump(rhs, true_label, false_label));
+    } else {
+        assert(0);
+    }
+}
 
 void IRGenerator::HandleBoolUnit(aA_boolUnit b,
                                  std::shared_ptr<BlockLabel> true_label,
-                                 std::shared_ptr<BlockLabel> false_label) {}
+                                 std::shared_ptr<BlockLabel> false_label) {
+    if (b->kind == A_boolUnitType::A_comOpExprKind) {
+        HandleComOpExpr(b->u.comExpr, true_label, false_label);
+    } else if (b->kind == A_boolUnitType::A_boolExprKind) {
+        HandleBoolExpr(b->u.boolExpr, true_label, false_label);
+    } else if (b->kind == A_boolUnitType::A_boolUOpExprKind) {
+        HandleBoolUnit(b->u.boolUOpExpr->cond, false_label, true_label);
+    }
+}
 
 void IRGenerator::HandleComOpExpr(aA_comExpr c,
                                   std::shared_ptr<BlockLabel> true_label,
-                                  std::shared_ptr<BlockLabel> false_label) {}
+                                  std::shared_ptr<BlockLabel> false_label) {
+    auto val = LocalVal::CreateInt();
+    auto lhs = PtrDeref(HandleExprUnit(c->left));
+    auto rhs = PtrDeref(HandleExprUnit(c->right));
+    ir::RelOpKind kind;
+    switch (c->op) {
+        case A_lt:
+            kind = RelOpKind::kLt;
+            break;
+        case A_le:
+            kind = RelOpKind::kLe;
+            break;
+        case A_gt:
+            kind = RelOpKind::kGt;
+            break;
+        case A_ge:
+            kind = RelOpKind::kGe;
+            break;
+        case A_eq:
+            kind = RelOpKind::kEq;
+            break;
+        case A_ne:
+            kind = RelOpKind::kNe;
+            break;
+        default:
+            assert(0);
+            break;
+    }
+    emit_irs_.push_back(
+        ir::Stmt::CreateCmp(kind, lhs, rhs, Operand::FromLocal(val)));
+    emit_irs_.push_back(ir::Stmt::CreateCJump(Operand::FromLocal(val),
+                                              true_label, false_label));
+}
 
 std::shared_ptr<ir::Operand> IRGenerator::HandleArithBiOpExpr(
-    aA_arithBiOpExpr a) {}
+    aA_arithBiOpExpr a) {
+    auto lhs = HandleArithExpr(a->left);
+    auto rhs = HandleArithExpr(a->right);
+    auto res = LocalVal::CreateInt();
+    ir::BiOpKind kind;
+    switch (a->op) {
+        case A_add:
+            kind = ir::BiOpKind::kPlus;
+            break;
+        case A_sub:
+            kind = ir::BiOpKind::KMinus;
+            break;
+        case A_mul:
+            kind = ir::BiOpKind::kMul;
+            break;
+        case A_div:
+            kind = ir::BiOpKind::kDiv;
+            break;
+        default:
+            assert(0);
+            break;
+    }
+    auto biop_stmt =
+        ir::Stmt::CreateBiOp(kind, lhs, rhs, Operand::FromLocal(res));
+    emit_irs_.push_back(biop_stmt);
+    return Operand::FromLocal(res);
+}
 
-std::shared_ptr<ir::Operand> IRGenerator::HandleArithUExpr(aA_arithUExpr a) {}
+std::shared_ptr<ir::Operand> IRGenerator::HandleArithUExpr(aA_arithUExpr a) {
+    auto val = PtrDeref(HandleExprUnit(a->expr));
+    auto res = LocalVal::CreateInt();
+    emit_irs_.push_back(ir::Stmt::CreateBiOp(ir::BiOpKind::KMinus,
+                                             Operand::FromIConst(0), val,
+                                             Operand::FromLocal(res)));
+    return Operand::FromLocal(res);
+}
 
-std::shared_ptr<ir::Operand> IRGenerator::HandleArithExpr(aA_arithExpr a) {}
+std::shared_ptr<ir::Operand> IRGenerator::HandleArithExpr(aA_arithExpr a) {
+    if (a->kind == A_arithExprType::A_arithBiOpExprKind) {
+        return HandleArithBiOpExpr(a->u.arithBiOpExpr);
+    } else if (a->kind == A_arithExprType::A_exprUnitKind) {
+        return PtrDeref(HandleExprUnit(a->u.exprUnit));
+    } else {
+        assert(0);
+    }
+}
 
-std::shared_ptr<ir::Operand> IRGenerator::HandleExprUnit(aA_exprUnit e) {}
+std::shared_ptr<ir::Operand> IRGenerator::HandleExprUnit(aA_exprUnit e) {
+    switch (e->kind) {
+        case A_numExprKind: {
+            return Operand::FromIConst(e->u.num);
+        } break;
+        case A_idExprKind: {
+            auto id = *e->u.id;
+            std::shared_ptr<Operand> val = nullptr;
+            if (local_vars_.find(id) != local_vars_.end())
+                val = Operand::FromLocal(local_vars_[id]);
+            else if (global_vars_.find(id) != global_vars_.end())
+                val = Operand::FromGlobal(global_vars_[id]);
+            else
+                assert(0);
+            return val;
+        } break;
+        case A_arithExprKind: {
+            return HandleArithExpr(e->u.arithExpr);
+        } break;
+        case A_fnCallKind: {
+            std::shared_ptr<Operand> res = nullptr;
+            auto func_name = *e->u.callExpr->fn;
+            switch (func_ret_[func_name].type) {
+                case ReturnType::kInt: {
+                    res = Operand::FromLocal(LocalVal::CreateInt());
+                    break;
+                }
+                case ReturnType::kStruct: {
+                    auto type_name = func_ret_[func_name].structname;
+                    res = Operand::FromLocal(LocalVal::CreateStruct(type_name));
+                    break;
+                }
+                default: {
+                    assert(0);
+                    break;
+                }
+            }
+            vector<std::shared_ptr<Operand>> args;
+            for (const auto& arg : e->u.callExpr->vals)
+                args.push_back(PtrDeref(HandleRightVal(arg)));
+            emit_irs_.push_back(ir::Stmt::CreateCall(func_name, res, args));
+            return res;
+        } break;
+        case A_arrayExprKind: {
+            return HandleArrayExpr(e->u.arrayExpr);
+        } break;
+        case A_memberExprKind: {
+            return HandleMemberExpr(e->u.memberExpr);
+        } break;
+        case A_arithUExprKind: {
+            return HandleArithUExpr(e->u.arithUExpr);
+        } break;
+        default:
+            assert(0);
+            break;
+    }
+}
 
 std::shared_ptr<ir::Func> IRGenerator::GenerateFn(std::shared_ptr<FuncProp> f) {
+    std::list<std::shared_ptr<Block>> blocks;
+    list<shared_ptr<Stmt>> insts;
+    bool flag = false;
+    for (const auto& stmt : f->irs) {
+        if (stmt->type() == StmtKind::kLabel) {
+            if (insts.empty() == false) {
+                blocks.push_back(std::make_shared<ir::Block>(
+                    std::make_shared<list<shared_ptr<Stmt>>>(insts)));
+                insts.clear();
+            }
+            flag = false;
+        }
+        if (flag) continue;
+        if (stmt->type() == StmtKind::kRet ||
+            stmt->type() == StmtKind::kCjump ||
+            stmt->type() == StmtKind::kJump) {
+            flag = true;
+        }
+        insts.push_back(stmt);
+    }
+    if (insts.empty() == false)
+        blocks.push_back(std::make_shared<ir::Block>(
+            std::make_shared<list<shared_ptr<Stmt>>>(insts)));
+
+    return std::make_shared<Func>(f->name, f->ret, f->args, blocks);
 }
 
 void IRGenerator::MoveAlloca(std::shared_ptr<ir::Func> f) {
-    auto first_block = f->blocks().front();
-    for (auto i = ++f->blocks().begin(); i != f->blocks().end(); ++i) {
-        for (auto it = (*i)->instrs().begin(); it != (*i)->instrs().end();) {
+    std::list<std::shared_ptr<Block>> blocks = f->blocks();
+    auto first_block = blocks.front();
+
+    for (auto i = ++(blocks.begin()); i != blocks.end(); i++) {
+        std::shared_ptr<ir::Block> block = (*i);
+        for (auto it = block->instrs()->begin();
+             it != block->instrs()->end();) {
             if ((*it)->type() == StmtKind::kAlloca) {
-                first_block->instrs().insert(++first_block->instrs().begin(),
-                                             *it);
-                it = (*i)->instrs().erase(it);
+                first_block->instrs()->insert(++first_block->instrs()->begin(),
+                                              *it);
+                it = block->instrs()->erase(it);
             } else {
-                ++it;
+                it++;
             }
         }
     }
 }
+
+std::shared_ptr<Operand> IRGenerator::PtrDeref(std::shared_ptr<Operand> ptr) {
+    if (ptr == nullptr) return nullptr;
+    if (ptr->kind() == OperandKind::kIntConst) return ptr;
+    if (ptr->kind() == OperandKind::kLocal) {
+        auto inner = ptr->inner<LocalVal>();
+        if (inner->type() != RegType::kIntPtr) return ptr;
+        if (inner->type() == RegType::kIntPtr) {
+            auto val = LocalVal::CreateInt();
+            emit_irs_.push_back(
+                ir::Stmt::CreateLoad(Operand::FromLocal(val), ptr));
+            return Operand::FromLocal(val);
+        }
+    } else {
+        auto inner = ptr->inner<GlobalVal>();
+        if (inner->type() == RegType::kIntPtr ||
+            inner->type() == RegType::kInt) {
+            auto val = LocalVal::CreateInt();
+            emit_irs_.push_back(
+                ir::Stmt::CreateLoad(Operand::FromLocal(val), ptr));
+            return Operand::FromLocal(val);
+        } else {
+            return ptr;
+        }
+    }
+    return ptr;
+}
+}  // namespace ir

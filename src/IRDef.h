@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cassert>
 #include <list>
 #include <memory>
@@ -40,13 +42,6 @@ class LocalVal {
                                           len, name);
     }
 
-    int num() const { return num_; }
-    RegType type() const { return type_; }
-    const std::string& struct_name() const { return struct_name_; }
-    const std::string& var_name() const { return var_name_; }
-    int len() const { return len_; }
-
-   private:
     LocalVal(int num, RegType type = RegType::kInt, int len = 0,
              const std::string& struct_name = std::string())
         : num_(num),
@@ -54,6 +49,14 @@ class LocalVal {
           struct_name_(struct_name),
           len_(len),
           var_name_("") {}
+
+    int num() const { return num_; }
+    RegType type() const { return type_; }
+    const std::string& struct_name() const { return struct_name_; }
+    const std::string& var_name() const { return var_name_; }
+    int len() const { return len_; }
+
+   private:
     int num_;
     RegType type_;
     std::string struct_name_;
@@ -72,6 +75,7 @@ struct ValDef {
 
 class BlockLabel {
    public:
+    std::string name() { return name_; }
     static std::shared_ptr<BlockLabel> CreateEmpty() {
         return std::make_shared<BlockLabel>(
             "bb" + std::to_string(GetNextLabelIndex()));
@@ -80,36 +84,40 @@ class BlockLabel {
     static std::shared_ptr<BlockLabel> CreateFrom(const std::string& name) {
         return std::make_shared<BlockLabel>(name);
     }
+    BlockLabel(std::string name) : name_(name) {}
 
    private:
-    explicit BlockLabel(std::string name) : name_(name) {}
     std::string name_;
 };
 
 class GlobalVal {
    public:
-    static std::shared_ptr<GlobalVal> GlobalVal::CreateInt(
+    static std::shared_ptr<GlobalVal> CreateInt(
         std::shared_ptr<BlockLabel> name) {
         return std::make_shared<GlobalVal>(name, RegType::kInt);
     }
 
-    static std::shared_ptr<GlobalVal> GlobalVal::CreateIntPtr(
+    static std::shared_ptr<GlobalVal> CreateIntPtr(
         std::shared_ptr<BlockLabel> name, int len) {
         return std::make_shared<GlobalVal>(name, RegType::kIntPtr, len);
     }
 
-    static std::shared_ptr<GlobalVal> GlobalVal::CreateStruct(
+    static std::shared_ptr<GlobalVal> CreateStruct(
         std::shared_ptr<BlockLabel> name, const std::string& struct_name) {
         return std::make_shared<GlobalVal>(name, RegType::kStruct, 0,
                                            struct_name);
     }
 
-    static std::shared_ptr<GlobalVal> GlobalVal::CreateStructPtr(
+    static std::shared_ptr<GlobalVal> CreateStructPtr(
         std::shared_ptr<BlockLabel> name, int len,
         const std::string& struct_name) {
         return std::make_shared<GlobalVal>(name, RegType::kStructPtr, len,
                                            struct_name);
     }
+
+    GlobalVal(std::shared_ptr<BlockLabel> name, RegType type, int len = 0,
+              const std::string& struct_name = std::string(""))
+        : name_(name), type_(type), len_(len), struct_name_(struct_name) {}
 
     std::shared_ptr<BlockLabel> name() const { return name_; }
     RegType type() const { return type_; }
@@ -117,10 +125,6 @@ class GlobalVal {
     int len() const { return len_; }
 
    private:
-    explicit GlobalVal(std::shared_ptr<BlockLabel> name, RegType type, int len,
-                       const std::string& struct_name)
-        : name_(name), type_(type), len_(len), struct_name_(struct_name) {}
-
     std::shared_ptr<BlockLabel> name_;
     RegType type_;
     int len_;
@@ -129,17 +133,22 @@ class GlobalVal {
 
 enum class OperandKind { kLocal, kGlobal, kIntConst };
 
+struct Integer {
+    Integer(int i) : inner(i) {}
+    int inner;
+};
+
 struct Operand {
-    using InnerType = std::variant<std::shared_ptr<LocalVal>,
-                                   std::shared_ptr<GlobalVal>, int>;
+    using InnerType =
+        std::variant<std::shared_ptr<LocalVal>, std::shared_ptr<GlobalVal>,
+                     std::shared_ptr<Integer>>;
 
    public:
     static std::shared_ptr<Operand> FromLocal(std::shared_ptr<LocalVal> reg) {
         return std::make_shared<Operand>(OperandKind::kLocal, reg);
     }
 
-    static std::shared_ptr<Operand> FromGlobal(
-        std::shared_ptr<GlobalVal> reg) {
+    static std::shared_ptr<Operand> FromGlobal(std::shared_ptr<GlobalVal> reg) {
         return std::make_shared<Operand>(OperandKind::kGlobal, reg);
     }
 
@@ -147,34 +156,25 @@ struct Operand {
         return std::make_shared<Operand>(OperandKind::kIntConst, iconst);
     }
 
-    OperandKind kind() const {
-        return kind_;
-    }
+    OperandKind kind() const { return kind_; }
 
-    InnerType inner() const {
-        switch (kind_) {
-            case OperandKind::kLocal:
-                return numbered_reg_;
-            case OperandKind::kGlobal:
-                return named_reg_;
-            case OperandKind::kIntConst:
-                return iconst_;
+    template <typename T>
+    std::shared_ptr<T> inner() const {
+        if (auto ptr = std::get_if<std::shared_ptr<T>>(&inner_)) {
+            return *ptr;
         }
-        throw std::runtime_error("Unknown OperandKind");
+        return nullptr;
     }
+    explicit Operand(OperandKind kind, std::shared_ptr<LocalVal> inner)
+        : kind_(kind), inner_(inner) {}
+    explicit Operand(OperandKind kind, std::shared_ptr<GlobalVal> inner)
+        : kind_(kind), inner_(inner) {}
+    explicit Operand(OperandKind kind, int inner)
+        : kind_(kind), inner_(std::make_shared<Integer>(inner)) {}
 
    private:
-    explicit Operand(OperandKind kind, std::shared_ptr<LocalVal> inner)
-        : kind_(kind), numbered_reg_(inner) {}
-    explicit Operand(OperandKind kind, std::shared_ptr<GlobalVal> inner)
-        : kind_(kind), named_reg_(inner) {}
-    explicit Operand(OperandKind kind, int inner)
-        : kind_(kind), iconst_(inner) {}
-
     OperandKind kind_;
-    std::shared_ptr<LocalVal> numbered_reg_;
-    std::shared_ptr<GlobalVal> named_reg_;
-    int iconst_;
+    InnerType inner_;
 };
 
 enum class ReturnType { kInt, kStruct, kVoid };
@@ -214,14 +214,6 @@ struct GlobalDef {
         : name(_name), def(_def), init(_init) {}
 };
 
-#include <memory>
-#include <string>
-#include <type_traits>
-#include <variant>
-#include <vector>
-
-enum class DefKind { kStruct, kFunc, kGlobal };
-
 using DefVariant =
     std::variant<std::shared_ptr<FuncDecl>, std::shared_ptr<StructDef>,
                  std::shared_ptr<GlobalDef>>;
@@ -254,9 +246,9 @@ class TopLevelDef {
         return nullptr;
     }
 
-   private:
     explicit TopLevelDef(DefKind kind) : kind_(kind) {}
 
+   private:
     template <typename T, typename... Args>
     static std::shared_ptr<TopLevelDef> CreateDef(DefKind kind,
                                                   Args&&... args) {
@@ -277,14 +269,20 @@ enum class BiOpKind {
 };
 
 class BiOp {
+   public:
+    BiOpKind kind() { return kind_; }
+    std::shared_ptr<Operand> left() { return left_; }
+    std::shared_ptr<Operand> right() { return right_; }
+    std::shared_ptr<Operand> dst() { return dst_; }
+    BiOp(BiOpKind op, std::shared_ptr<Operand> left,
+         std::shared_ptr<Operand> right, std::shared_ptr<Operand> dst)
+        : kind_(op), left_(left), right_(right), dst_(dst) {}
+
+   private:
     BiOpKind kind_;
     std::shared_ptr<Operand> left_;
     std::shared_ptr<Operand> right_;
     std::shared_ptr<Operand> dst_;
-
-    BiOp(BiOpKind op, std::shared_ptr<Operand> left,
-         std::shared_ptr<Operand> right, std::shared_ptr<Operand> dst)
-        : kind_(op), left_(left), right_(right), dst_(dst) {}
 };
 
 enum class RelOpKind {
@@ -316,6 +314,8 @@ enum class StmtKind {
 
 class Load {
    public:
+    std::shared_ptr<Operand> dst() { return dst_; }
+    std::shared_ptr<Operand> ptr() { return ptr_; }
     Load(std::shared_ptr<Operand> dst, std::shared_ptr<Operand> ptr)
         : dst_(dst), ptr_(ptr) {}
 
@@ -326,6 +326,8 @@ class Load {
 
 class Store {
    public:
+    std::shared_ptr<Operand> src() { return src_; }
+    std::shared_ptr<Operand> ptr() { return ptr_; }
     Store(std::shared_ptr<Operand> src, std::shared_ptr<Operand> ptr)
         : src_(src), ptr_(ptr) {}
 
@@ -354,6 +356,10 @@ class Jump {
 
 class Cmp {
    public:
+    RelOpKind kind() { return kind_; }
+    std::shared_ptr<Operand> left() { return left_; }
+    std::shared_ptr<Operand> right() { return right_; }
+    std::shared_ptr<Operand> dst() { return dst_; }
     Cmp(RelOpKind kind, std::shared_ptr<Operand> left,
         std::shared_ptr<Operand> right, std::shared_ptr<Operand> dst)
         : kind_(kind), left_(left), right_(right), dst_(dst) {}
@@ -367,6 +373,7 @@ class Cmp {
 
 class CJump {
    public:
+    std::shared_ptr<Operand> dst() { return dst_; }
     std::shared_ptr<BlockLabel> true_label() { return true_label_; }
     std::shared_ptr<BlockLabel> false_label() { return false_label_; }
     CJump(std::shared_ptr<Operand> dst, std::shared_ptr<BlockLabel> true_label,
@@ -381,6 +388,8 @@ class CJump {
 
 class Move {
    public:
+    std::shared_ptr<Operand> src() { return src_; }
+    std::shared_ptr<Operand> dst() { return dst_; }
     Move(std::shared_ptr<Operand> src, std::shared_ptr<Operand> dst)
         : src_(src), dst_(dst) {}
 
@@ -391,6 +400,9 @@ class Move {
 
 class Call {
    public:
+    std::string fun() { return fun_; }
+    std::shared_ptr<Operand> res() { return res_; }
+    std::vector<std::shared_ptr<Operand>> args() { return args_; }
     Call(const std::string& fun, std::shared_ptr<Operand> res,
          const std::vector<std::shared_ptr<Operand>>& args)
         : fun_(fun), res_(res), args_(args) {}
@@ -403,6 +415,8 @@ class Call {
 
 class VoidCall {
    public:
+    std::string fun() { return fun_; }
+    std::vector<std::shared_ptr<Operand>> args() { return args_; }
     VoidCall(const std::string& fun,
              const std::vector<std::shared_ptr<Operand>>& args)
         : fun_(fun), args_(args) {}
@@ -414,6 +428,7 @@ class VoidCall {
 
 class Ret {
    public:
+    std::shared_ptr<Operand> ret() { return ret_; }
     Ret(std::shared_ptr<Operand> ret) : ret_(ret) {}
 
    private:
@@ -422,6 +437,12 @@ class Ret {
 
 class Phi {
    public:
+    std::shared_ptr<Operand> dst() { return dst_; }
+    std::vector<
+        std::pair<std::shared_ptr<Operand>, std::shared_ptr<BlockLabel>>>
+    phis() {
+        return phis_;
+    }
     Phi(std::shared_ptr<Operand> dst,
         const std::vector<std::pair<std::shared_ptr<Operand>,
                                     std::shared_ptr<BlockLabel>>>& phis)
@@ -436,6 +457,7 @@ class Phi {
 
 class Alloca {
    public:
+    std::shared_ptr<Operand> dst() { return dst_; }
     Alloca(std::shared_ptr<Operand> dst) : dst_(dst) {}
 
    private:
@@ -444,6 +466,9 @@ class Alloca {
 
 class Gep {
    public:
+    std::shared_ptr<Operand> new_ptr() { return new_ptr_; }
+    std::shared_ptr<Operand> base_ptr() { return base_ptr_; }
+    std::shared_ptr<Operand> index() { return index_; }
     Gep(std::shared_ptr<Operand> new_ptr, std::shared_ptr<Operand> base_ptr,
         std::shared_ptr<Operand> index)
         : new_ptr_(new_ptr), base_ptr_(base_ptr), index_(index) {}
@@ -558,37 +583,37 @@ class Stmt {
 
     template <typename T>
     std::shared_ptr<T> inner() {
-        if (auto ptr = std::get_if<std::shared_ptr<T>>(&stmt_)) {
-            return ptr;
+        if (std::shared_ptr<T>* ptr = std::get_if<std::shared_ptr<T>>(&stmt_)) {
+            return *ptr;
         }
         return nullptr;
     }
 
     StmtKind type() const { return type_; }
 
+    explicit Stmt(StmtKind type, StmtVariant stmt)
+        : type_(type), stmt_(std::move(stmt)) {}
+
    private:
     StmtKind type_;
     StmtVariant stmt_;
-
-    explicit Stmt(StmtKind type, StmtVariant stmt)
-        : type_(type), stmt_(std::move(stmt)) {}
 };
 
 class Block {
    public:
-    std::list<std::shared_ptr<Stmt>> instrs() { return instrs_; }
+    std::shared_ptr<std::list<std::shared_ptr<Stmt>>> instrs() { return instrs_; }
     Block(std::shared_ptr<BlockLabel> label,
           const std::unordered_set<std::shared_ptr<BlockLabel>>& succs,
-          const std::list<std::shared_ptr<Stmt>>& instrs)
+          const std::shared_ptr<std::list<std::shared_ptr<Stmt>>>& instrs)
         : label_(label), succs_(succs), instrs_(instrs) {}
 
-    Block(const std::list<std::shared_ptr<Stmt>> instrs) {
-        auto label_ins = instrs.front();
+    Block(const std::shared_ptr<std::list<std::shared_ptr<Stmt>>> instrs) {
+        auto label_ins = instrs->front();
         if (label_ins->type() != StmtKind::kLabel) {
             assert(0);
         }
         this->label_ = label_ins->inner<Label>()->label();
-        auto jump_ins = instrs.back();
+        auto jump_ins = instrs->back();
         if (jump_ins->type() == StmtKind::kCjump) {
             this->succs_.emplace(jump_ins->inner<CJump>()->true_label());
             this->succs_.emplace(jump_ins->inner<CJump>()->false_label());
@@ -604,11 +629,14 @@ class Block {
    private:
     std::shared_ptr<BlockLabel> label_;
     std::unordered_set<std::shared_ptr<BlockLabel>> succs_;
-    std::list<std::shared_ptr<Stmt>> instrs_;
+    std::shared_ptr<std::list<std::shared_ptr<Stmt>>> instrs_;
 };
 
 class Func {
    public:
+    std::string name() { return name_; }
+    FuncType ret() { return ret_; }
+    std::vector<std::shared_ptr<LocalVal>> args() { return args_; }
     std::list<std::shared_ptr<Block>> blocks() { return blocks_; }
     Func(const std::string& name, FuncType ret,
          const std::vector<std::shared_ptr<LocalVal>> args,
@@ -624,6 +652,8 @@ class Func {
 
 class Prog {
    public:
+    std::vector<std::shared_ptr<TopLevelDef>> defs() { return defs_; }
+    std::vector<std::shared_ptr<Func>> funcs() { return funcs_; }
     Prog(const std::vector<std::shared_ptr<TopLevelDef>>& defs,
          const std::vector<std::shared_ptr<Func>>& funcs)
         : defs_(defs), funcs_(funcs) {}

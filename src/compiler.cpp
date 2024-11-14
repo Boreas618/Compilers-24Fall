@@ -6,7 +6,6 @@
 #include "TeaplAst.h"
 #include "TeaplaAst.h"
 #include "TypeCheck.h"
-#include "llvm_ir.h"
 #include "printLLVM.h"
 #include "y.tab.hpp"
 
@@ -43,13 +42,9 @@ int main(int argc, char* argv[]) {
 
     freopen(argv[1], "r", stdin);
     ofstream ASTStream;
-    // ASTStream.open(file_name+".ast");
-
     yyparse();
 
     aroot = aA_Program(root);
-    // print_aA_Program(aroot, ASTStream);
-    // ASTStream.close();
 
 #if TYPE_CHECK
     TypeChecker checker(std::cout);
@@ -58,8 +53,9 @@ int main(int argc, char* argv[]) {
 
     std::ofstream llvm_stream;
     llvm_stream.open(file_name + ".ll");
-    auto prog = ast2llvm(a_root);
-    PrintLlProg(llvm_stream, prog);
+    IRGenerator ir_generator;
+    auto prog = ir_generator.Generate(aroot);
+    printL_prog(llvm_stream, prog);
     llvm_stream.close();
 
     return 0;

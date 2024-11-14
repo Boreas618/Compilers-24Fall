@@ -14,7 +14,7 @@ $(TESTCASE_DIR)/%.ll: $(TESTCASE_DIR)/%.tea compiler
 	@./test-functional.sh $*
 	@echo 
 
-compiler: y.tab.o lex.yy.o TeaplAst.o TeaplaAst.o PrintTeaplaAst.o compiler.o  llvm_ir.o ast2llvm.o printLLVM.o temp.o
+compiler: y.tab.o lex.yy.o TeaplAst.o TeaplaAst.o PrintTeaplaAst.o compiler.o IRGenerator.o printLLVM.o
 	$(CXX) $(CXXFLAGS) -o compiler $^ 
 
 y.tab.cpp: parser.yacc TeaplAst.h 
@@ -46,20 +46,18 @@ TeaplaAst.o: TeaplaAst.cpp TeaplaAst.h
 PrintTeaplaAst.o: PrintTeaplaAst.cpp PrintTeaplaAst.h
 	$(CXX) $(CXXFLAGS) -c $<
 
-compiler.o: compiler.cpp TeaplAst.o TeaplaAst.o PrintTeaplaAst.o y.tab.o lex.yy.o llvm_ir.o ast2llvm.o printLLVM.o temp.o
+compiler.o: compiler.cpp TeaplAst.o TeaplaAst.o PrintTeaplaAst.o y.tab.o lex.yy.o IRGenerator.o printLLVM.o
 	$(CXX) $(CXXFLAGS) -c $<
 
-llvm_ir.o: llvm_ir.cpp llvm_ir.h temp.cpp temp.h
+# IRDef.o: IRDef.h
+#	$(CXX) $(CXXFLAGS) -c $<
+
+IRGenerator.o: IRGenerator.cpp IRGenerator.h IRDef.h
 	$(CXX) $(CXXFLAGS) -c $<
 
-ast2llvm.o: ast2llvm.cpp ast2llvm.h llvm_ir.cpp llvm_ir.h temp.cpp temp.h
+printLLVM.o: printLLVM.cpp printLLVM.h IRDef.h
 	$(CXX) $(CXXFLAGS) -c $<
 
-printLLVM.o: printLLVM.cpp printLLVM.h llvm_ir.cpp llvm_ir.h temp.cpp temp.h
-	$(CXX) $(CXXFLAGS) -c $<
-
-temp.o: temp.cpp temp.h
-	$(CXX) $(CXXFLAGS) -c $<
 
 clean:
 	rm *.o *.output y.tab.cpp y.tab.hpp lex.yy.cpp compiler tests/*.ast tests/*.ll output/*.ll output/*.out
