@@ -16,7 +16,7 @@ make
 
 ## 上手
 
-在 `compiler.cpp` 里可以看到，生成 AST 后调用 `check_Prog` 进行类型检查，你在 `check_Prog` 函数中拿到的即是整个程序的 AST 的 root。本次实验的内容即是 __补全 `TypeCheck.h` 和 `TypeCheck.cpp` 文件以实现类型检查__；这两个文件里已经定义了一些数据结构和函数，给出了类型检查的整体框架；你可能还需要额外定义自己的数据结构。如果检查到了类型错误，请调用 `error_print` 输出错误的位置和原因，这个函数定义在 `TypeCheck.cpp` 里。
+在 `compiler.cpp` 里可以看到，生成 AST 后调用 `check_Prog` 进行类型检查，你在 `check_Prog` 函数中拿到的即是整个程序的 AST 的 root。本次实验的内容即是 __补全 `type_checker.hh` 和 `TypeCheck.cpp` 文件以实现类型检查__；这两个文件里已经定义了一些数据结构和函数，给出了类型检查的整体框架；你可能还需要额外定义自己的数据结构。如果检查到了类型错误，请调用 `error_print` 输出错误的位置和原因，这个函数定义在 `TypeCheck.cpp` 里。
 
 实验一中的 `PrintTeaplaAst.cpp` 能帮你更直观地分析程序，定位可能出现问题的位置，提高你编码和debug的效率。
 

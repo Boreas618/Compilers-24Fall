@@ -14,50 +14,50 @@ $(TESTCASE_DIR)/%.ll: $(TESTCASE_DIR)/%.tea compiler
 	@./test-functional.sh $*
 	@echo 
 
-compiler: y.tab.o lex.yy.o TeaplAst.o TeaplaAst.o PrintTeaplaAst.o compiler.o IRGenerator.o printLLVM.o TypeCheck.o
+compiler: y.tab.o lex.yy.o teapl_ast.o teapl_aast.o ast_printer.o compiler.o ir_generator.o ir_printer.o type_checker.o
 	$(CXX) $(CXXFLAGS) -o compiler $^ 
 
-y.tab.cpp: parser.yacc TeaplAst.h 
-#	yacc --verbose --debug -d $< -o y.tab.cpp
-	yacc -o y.tab.cpp -d $< -v --debug
+y.tab.cc: parser.yacc teapl_ast.hh 
+#	yacc --verbose --debug -d $< -o y.tab.cc
+	yacc -o y.tab.cc -d $< -v --debug
 
 y.tab.hpp: parser.yacc
-#	yacc --verbose --debug -d $< -o y.tab.cpp
-	yacc -o y.tab.cpp -d $< -v --debug
+#	yacc --verbose --debug -d $< -o y.tab.cc
+	yacc -o y.tab.cc -d $< -v --debug
 
-lex.yy.cpp: lexer.lex y.tab.hpp y.tab.cpp
-	lex -o lex.yy.cpp $< 
+lex.yy.cc: lexer.lex y.tab.hpp y.tab.cc
+	lex -o lex.yy.cc $< 
 
-y.tab.o: y.tab.cpp y.tab.hpp
+y.tab.o: y.tab.cc y.tab.hpp
 	$(CXX) $(CXXFLAGS) -c $<
 
-lex.yy.o: lex.yy.cpp y.tab.hpp
+lex.yy.o: lex.yy.cc y.tab.hpp
 	$(CXX) $(CXXFLAGS) -c $<
 
-TypeCheck.o: TypeCheck.cpp TypeCheck.h
+type_checker.o: type_checker.cc type_checker.hh
 	$(CXX) $(CXXFLAGS) -c $<
 
-TeaplAst.o: TeaplAst.cpp TeaplAst.h
+teapl_ast.o: teapl_ast.cc teapl_ast.hh
 	$(CXX) $(CXXFLAGS) -c $<
 
-TeaplaAst.o: TeaplaAst.cpp TeaplaAst.h
+teapl_aast.o: teapl_aast.cc teapl_aast.hh
 	$(CXX) $(CXXFLAGS) -c $<
 
-PrintTeaplaAst.o: PrintTeaplaAst.cpp PrintTeaplaAst.h
+ast_printer.o: ast_printer.cc ast_printer.hh
 	$(CXX) $(CXXFLAGS) -c $<
 
-compiler.o: compiler.cpp TeaplAst.o TeaplaAst.o PrintTeaplaAst.o y.tab.o lex.yy.o IRGenerator.o printLLVM.o
+compiler.o: compiler.cc teapl_ast.o teapl_aast.o ast_printer.o y.tab.o lex.yy.o ir_generator.o ir_printer.o
 	$(CXX) $(CXXFLAGS) -c $<
 
-# IRDef.o: IRDef.h
+# IRDef.o: ir_def.hh
 #	$(CXX) $(CXXFLAGS) -c $<
 
-IRGenerator.o: IRGenerator.cpp IRGenerator.h IRDef.h
+ir_generator.o: ir_generator.cc ir_generator.hh ir_def.hh
 	$(CXX) $(CXXFLAGS) -c $<
 
-printLLVM.o: printLLVM.cpp printLLVM.h IRDef.h
+ir_printer.o: ir_printer.cc ir_printer.hh ir_def.hh
 	$(CXX) $(CXXFLAGS) -c $<
 
 
 clean:
-	rm *.o *.output y.tab.cpp y.tab.hpp lex.yy.cpp compiler tests/*.ast tests/*.ll output/*.ll output/*.out
+	rm *.o *.output y.tab.cc y.tab.hpp lex.yy.cc compiler tests/*.ast tests/*.ll output/*.ll output/*.out
