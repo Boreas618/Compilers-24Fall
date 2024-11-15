@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "teapl_ast.hh"
-#include "y.tab.hpp"
+#include "y.tab.hh"
 extern int line, col;
 int c;
 int calc(const char *s, int len);

@@ -7,7 +7,7 @@
 #include "teapl_aast.hh"
 #include "type_checker.hh"
 #include "ir_printer.hh"
-#include "y.tab.hpp"
+#include "y.tab.hh"
 
 #define YACCDEBUG 0
 #define TYPE_CHECK 0
