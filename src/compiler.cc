@@ -4,6 +4,7 @@
 #include "ast_printer.hh"
 #include "ir_generator.hh"
 #include "ir_printer.hh"
+#include "ssa.hh"
 #include "teapl_aast.hh"
 #include "teapl_ast.hh"
 #include "type_checker.hh"
@@ -76,6 +77,8 @@ int main(int argc, char* argv[]) {
 
     IRGenerator ir_generator;
     auto prog = ir_generator.Generate(aroot);
+    SSAWorker ssa;
+    prog = ssa.Launch(prog);
     printL_prog(llvm_stream, prog);
     llvm_stream.close();
 

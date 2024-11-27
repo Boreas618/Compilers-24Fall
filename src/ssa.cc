@@ -35,14 +35,21 @@ Box<ir::Prog> SSAWorker::Launch(Box<ir::Prog> prog) {
         block_graph->GenerateSingleSourceGraph(graph.nodes().at(0), fun);
 
         liveness_.Launch(graph.nodes().at(0), graph, fun->args());
+        liveness_.DisplayLiveness(stdout, graph);
+
+        exit(0);
+
+        for (const auto& [id, node] : block_graph->graph().nodes()) {
+            reverse_graph_[node->element()] = node;
+        }
 
         Dominators(graph);
         DeriveTreeDominators(graph);
         DeriveDominaceFroniters(graph, graph.nodes().at(0));
 
-        PlacePhiFunctions(graph, fun);
-        Rename(graph);
-        CombineAddr(fun);
+        // PlacePhiFunctions(graph, fun);
+        // Rename(graph);
+        // CombineAddr(fun);
     }
     return prog;
 }
@@ -227,7 +234,27 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
 }
 
 void SSAWorker::Dominators(utils::Graph<Box<ir::Block>>& bg) {
-    //   Todo
+    assert(dominators_.size() == 0);
+    auto sorted_nodes = bg.TopologicalSort();
+#ifdef DEBUG
+    int index = 0;
+#endif
+    for (const auto& node : sorted_nodes) {
+#ifdef DEBUG
+        assert(node->in_degree() <= index);
+        index++;
+#endif
+
+        std::unordered_set<Box<ir::Block>> dom;
+        for (const auto& id : node->predecessors()) {
+            auto pre_node = bg.nodes().at(id);
+            assert(dominators_.find(pre_node->element()) != dominators_.end());
+            dom =
+                common::set_intersection(dominators_[pre_node->element()], dom);
+        }
+        dom.insert(node->element());
+        dominators_[node->element()] = dom;
+    }
 }
 
 void SSAWorker::PrintDominators() {
@@ -248,7 +275,7 @@ void SSAWorker::PrintDominatorTree() {
     printf("Dominator tree:\n");
     for (auto x : tree_dominators_) {
         printf("%s ", x.first->label()->name().c_str());
-        for (auto t : x.second.succs) {
+        for (auto t : x.second->succs) {
             printf("%s ", t->label()->name().c_str());
         }
         printf("}\n\n");
@@ -269,12 +296,61 @@ void SSAWorker::PrintDominaceFroniters() {
 }
 
 void SSAWorker::DeriveTreeDominators(Graph<Box<ir::Block>>& bg) {
-    //   Todo
+    std::unordered_map<Box<ir::Block>, Box<ir::Block>> idom_map;
+    for (const auto& [node, dominators] : dominators_) {
+        std::unordered_set<Box<ir::Block>> rule_out;
+        for (const auto& dominator : dominators) {
+            if (dominator == node) continue;
+            auto strict_dominate_set = dominators_[dominator];
+            strict_dominate_set.erase(dominator);
+            rule_out = common::set_union(rule_out, strict_dominate_set);
+        }
+        for (const auto& dominator : dominators) {
+            if (dominator == node) continue;
+            if (rule_out.find(dominator) != rule_out.end()) continue;
+            idom_map[node] = dominator;
+        }
+    }
+
+    for (const auto& [key, value] : idom_map) {
+        if (tree_dominators_.find(key) == tree_dominators_.end()) {
+            tree_dominators_[key] = std::make_shared<ImmediateDominator>();
+        }
+        if (tree_dominators_.find(value) == tree_dominators_.end()) {
+            tree_dominators_[value] = std::make_shared<ImmediateDominator>();
+        }
+        assert(tree_dominators_[key]->pred == nullptr);
+        tree_dominators_[key]->pred = value;
+        tree_dominators_[value]->succs.insert(key);
+    }
 }
 
 void SSAWorker::DeriveDominaceFroniters(Graph<Box<ir::Block>>& bg,
                                         Box<Node<Box<ir::Block>>> r) {
-    //   Todo
+    std::unordered_set<Box<ir::Block>> df;
+    for (const auto& id : r->successors()) {
+        auto node = bg.nodes().at(id);
+        if (dominators_[node->element()].find(r->element()) ==
+            dominators_[node->element()].end()) {
+            df.insert(node->element());
+        }
+    }
+
+    for (const auto& child : tree_dominators_[r->element()]->succs) {
+        if (dominance_frontiers_.find(child) == dominance_frontiers_.end()) {
+            DeriveDominaceFroniters(bg, reverse_graph_[child]);
+        }
+        for (const auto& up : dominance_frontiers_[child]) {
+            auto strict_dominators = dominators_[up];
+            strict_dominators.erase(up);
+            auto dnn = tree_dominators_[child]->pred;
+            if (strict_dominators.find(dnn) == strict_dominators.end()) {
+                df.insert(up);
+            }
+        }
+    }
+
+    dominance_frontiers_[r->element()] = df;
 }
 
 // 只对标量做
@@ -282,7 +358,7 @@ void PlacePhiFunctions(Graph<Box<ir::Block>>& bg, Box<ir::Func> fun) {
     //   Todo
 }
 
-static list<Box<ir::Operand>> get_def_int_operand(Box<ir::Stmt> stm) {
+/*static list<Box<ir::Operand>> get_def_int_operand(Box<ir::Stmt> stm) {
     list<Box<ir::Operand>> ret1 = get_def_operand(stm), ret2;
     for (auto AS_op : ret1) {
         if ((**AS_op).u.TEMP->type == TempType::INT_TEMP) {
@@ -311,3 +387,4 @@ static void Rename_temp(GRAPH::Graph<LLVMIR::L_block*>& bg,
 void Rename(GRAPH::Graph<LLVMIR::L_block*>& bg) {
     //   Todo
 }
+*/

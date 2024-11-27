@@ -17,6 +17,9 @@ using utils::Graph;
 using utils::Node;
 
 struct ImmediateDominator {
+    ImmediateDominator() {}
+    ImmediateDominator(Box<ir::Block> pred, unordered_set<Box<ir::Block>> succs)
+        : pred(pred), succs(succs) {}
     Box<ir::Block> pred;
     unordered_set<Box<ir::Block>> succs;
 };
@@ -42,7 +45,7 @@ class SSAWorker {
     liveness::LivenessAnalysis liveness_;
 
     unordered_map<Box<ir::Block>, unordered_set<Box<ir::Block>>> dominators_;
-    unordered_map<Box<ir::Block>, ImmediateDominator> tree_dominators_;
+    unordered_map<Box<ir::Block>, Box<ImmediateDominator>> tree_dominators_;
     unordered_map<Box<ir::Block>, unordered_set<Box<ir::Block>>>
         dominance_frontiers_;
     unordered_map<Box<ir::Block>, Box<Node<Box<ir::Block>>>> reverse_graph_;

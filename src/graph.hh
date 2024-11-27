@@ -13,7 +13,8 @@ namespace utils {
 
 enum class NodeColor {
     kNone = 0,
-    kSSGVisted = 1  // Visited when generating single source graph.
+    kSSGVisted = 1,  // Visited when generating single source graph.
+    kDFSVisted = 1 << 1
 };
 
 using NodeSet = std::set<int>;
@@ -51,6 +52,10 @@ class Graph {
     Graph() : node_count_(0) {}
 
     const std::map<int, Box<Node<T>>>& nodes() const { return nodes_; }
+
+    void TopologicalSortUtil(Box<Node<T>> node, std::set<Box<Node<T>>>& visited,
+                             std::vector<Box<Node<T>>>& result);
+    std::vector<Box<Node<T>>> TopologicalSort();
 
     Box<Node<T>> AddNode(T info);
     void RemoveNode(Box<Node<T>> node);

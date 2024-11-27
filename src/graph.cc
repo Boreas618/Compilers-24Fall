@@ -40,4 +40,32 @@ template <typename T>
 bool Graph<T>::HasEdge(const Box<Node<T>> from, const Box<Node<T>> to) const {
     return from->successors().count(to->key()) > 0;
 }
+
+template <typename T>
+void Graph<T>::TopologicalSortUtil(Box<Node<T>> node,
+                                   std::set<Box<Node<T>>>& visited,
+                                   std::vector<Box<Node<T>>>& result) {
+    for (const auto id : node->successors()) {
+        if (!visited.count(id)) {
+            TopologicalSortUtil(node, visited, result);
+        }
+    }
+    result.push_back(node);
+    visited.insert(node);
+}
+
+template <typename T>
+std::vector<Box<Node<T>>> Graph<T>::TopologicalSort() {
+    std::vector<Box<Node<T>>> result;
+    std::set<Box<Node<T>>> visited;
+
+    for (const auto& [_, node] : nodes_) {
+        if (!visited.count(node->id())) {
+            TopologicalSortUtil(node, visited, result);
+        }
+    }
+    std::reverse(result.begin(), result.end());
+    return result;
+}
+
 }  // namespace utils
