@@ -77,7 +77,7 @@ class LocalVal : public IRValue {
                                           len, name);
     }
 
-    LocalVal(int num, RegType type = RegType::kInt, int len = 0,
+    LocalVal(int num = 0, RegType type = RegType::kInt, int len = 0,
              const std::string& struct_name = std::string())
         : IRValue(type, len, struct_name), num_(num), var_name_("") {}
 
@@ -88,6 +88,40 @@ class LocalVal : public IRValue {
     int num_;
     std::string var_name_;
 };
+
+using LocalValSet = std::unordered_set<Box<LocalVal>>;
+
+Box<LocalValSet> LocalValSetUnion(const LocalValSet& s1,
+                                  const LocalValSet& s2) {
+    auto ret = std::make_shared<LocalValSet>();
+    for (const auto& val : s1) ret->emplace(val);
+    for (const auto& val : s2) ret->emplace(val);
+    return ret;
+}
+
+Box<LocalValSet> LocalValSetDiff(const LocalValSet& s1, const LocalValSet& s2) {
+    auto ret = std::make_shared<LocalValSet>();
+    for (const auto& val : s1) {
+        if (s2.find(val) == s2.end()) {
+            ret->emplace(val);
+        }
+    }
+    return ret;
+}
+
+bool LocalValSetEq(const LocalValSet& s1, const LocalValSet& s2) {
+    if (s1.size() != s2.size()) {
+        return false;
+    }
+    for (const auto& val : s1) {
+        if (s2.find(val) == s2.end()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void LocalValRemove(LocalValSet& sl, Box<LocalVal> t) { sl.erase(t); }
 
 struct ValDef {
     RegType kind;
@@ -193,6 +227,14 @@ struct Operand {
             default:
                 return nullptr;
         }
+    }
+
+    template <typename T>
+    std::shared_ptr<T> inner() {
+        if (std::shared_ptr<T> ptr = std::get_if<std::shared_ptr<T>>(inner_)) {
+            return ptr;
+        }
+        return nullptr;
     }
 
     explicit Operand(OperandKind kind, std::shared_ptr<LocalVal> inner)
@@ -631,6 +673,8 @@ class Stmt {
 
 class Block {
    public:
+    std::shared_ptr<BlockLabel> label() { return label_; }
+    std::unordered_set<std::shared_ptr<BlockLabel>> succs() { return succs_; }
     std::shared_ptr<std::list<std::shared_ptr<Stmt>>> instrs() {
         return instrs_;
     }
@@ -661,6 +705,8 @@ class Block {
    private:
     std::shared_ptr<BlockLabel> label_;
     std::unordered_set<std::shared_ptr<BlockLabel>> succs_;
+
+    // TODO: instrs_ do not have to be wrapped in a shared_ptr.
     std::shared_ptr<std::list<std::shared_ptr<Stmt>>> instrs_;
 };
 
@@ -668,8 +714,8 @@ class Func {
    public:
     std::string name() { return name_; }
     FuncType ret() { return ret_; }
-    std::vector<std::shared_ptr<LocalVal>> args() { return args_; }
-    std::list<std::shared_ptr<Block>> blocks() { return blocks_; }
+    std::vector<std::shared_ptr<LocalVal>>& args() { return args_; }
+    std::list<std::shared_ptr<Block>>& blocks() { return blocks_; }
     Func(const std::string& name, FuncType ret,
          const std::vector<std::shared_ptr<LocalVal>> args,
          const std::list<std::shared_ptr<Block>>& blocks)

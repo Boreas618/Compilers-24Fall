@@ -1,16 +1,17 @@
 #include <fstream>
 #include <iostream>
 
-#include "ir_generator.hh"
 #include "ast_printer.hh"
-#include "teapl_ast.hh"
-#include "teapl_aast.hh"
-#include "type_checker.hh"
+#include "ir_generator.hh"
 #include "ir_printer.hh"
+#include "teapl_aast.hh"
+#include "teapl_ast.hh"
+#include "type_checker.hh"
 #include "y.tab.hh"
 
-#define YACCDEBUG 0
+#define YACC_DEBUG 0
 #define TYPE_CHECK 0
+#define LEGACY_AST 1
 
 using namespace std;
 using namespace ir;
@@ -25,7 +26,11 @@ A_program root;
 aA_program aroot;
 
 int main(int argc, char* argv[]) {
-#if YACCDEBUG
+    if (argc < 2) {
+        cerr << "Usage: " << argv[0] << " <input_file>" << endl;
+        return EXIT_FAILURE;
+    }
+#if YACC_DEBUG
     yydebug = 1;
 #endif
 
@@ -33,26 +38,42 @@ int main(int argc, char* argv[]) {
     col = 1;
 
     string input_name = argv[1];
-    auto dot_pos = input_name.find('.');
-    if (dot_pos == input_name.npos) {
-        cout << "input error";
-        return -1;
+    size_t dot_pos = input_name.find('.');
+    if (dot_pos == string::npos) {
+        cerr << "Error: Input file must have an extension." << endl;
+        return EXIT_FAILURE;
     }
+
     string file_name(input_name.substr(0, dot_pos));
 
-    freopen(argv[1], "r", stdin);
-    ofstream ASTStream;
-    yyparse();
+    if (freopen(argv[1], "r", stdin) == nullptr) {
+        cerr << "Error: Failed to open input file " << argv[1] << endl;
+        return EXIT_FAILURE;
+    }
 
+    if (yyparse() != 0) {
+        cerr << "Error: Parsing failed." << endl;
+        return EXIT_FAILURE;
+    }
+
+#if LEGACY_AST
     aroot = aA_Program(root);
+#elif
+    aroot = ast::Program(root);
+#endif
 
 #if TYPE_CHECK
     TypeChecker checker(std::cout);
     checker.CheckProgram(aroot);
 #endif
 
-    std::ofstream llvm_stream;
-    llvm_stream.open(file_name + ".ll");
+    ofstream llvm_stream(file_name + ".ll");
+    if (!llvm_stream) {
+        cerr << "Error: Failed to open output file " << file_name << ".ll"
+             << endl;
+        return EXIT_FAILURE;
+    }
+
     IRGenerator ir_generator;
     auto prog = ir_generator.Generate(aroot);
     printL_prog(llvm_stream, prog);
