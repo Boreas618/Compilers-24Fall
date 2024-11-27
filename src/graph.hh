@@ -11,6 +11,9 @@
 
 namespace utils {
 
+template <typename T>
+class Graph;
+
 enum class NodeColor {
     kNone = 0,
     kSSGVisted = 1,  // Visited when generating single source graph.
@@ -22,24 +25,21 @@ using NodeSet = std::set<int>;
 template <typename T>
 class Node {
    public:
-    Node(int id, Box<Graph<T>> graph, T element,
-         NodeColor color = NodeColor::kNone)
-        : id_(id),
-          graph_(std::move(graph)),
-          element_(std::move(element)),
-          color_(color) {}
+    Node(int id, Graph<T>* graph, T element, NodeColor color = NodeColor::kNone)
+        : id_(id), graph_(graph), element_(std::move(element)), color_(color) {}
 
     T element() const { return element_; }
-    const NodeSet& successors() const { return successors_; }
-    const NodeSet& predecessors() const { return predecessors_; }
+    Graph<T>* graph() const { return graph_; }
+    NodeSet& successors() { return successors_; }
+    NodeSet& predecessors() { return predecessors_; }
     int id() const { return id_; }
-    int out_degree() { return successors_.size(); }
-    int in_degree() { return predecessors_.size(); }
+    int out_degree() { return successors().size(); }
+    int in_degree() { return predecessors().size(); }
     NodeColor& color() { return color_; }
 
    private:
     int id_;
-    Box<Graph<T>> graph_;
+    Graph<T>* graph_;
     NodeSet successors_;
     NodeSet predecessors_;
     T element_;
@@ -53,7 +53,7 @@ class Graph {
 
     const std::map<int, Box<Node<T>>>& nodes() const { return nodes_; }
 
-    void TopologicalSortUtil(Box<Node<T>> node, std::set<Box<Node<T>>>& visited,
+    void TopologicalSortUtil(Box<Node<T>> node, std::set<int>& visited,
                              std::vector<Box<Node<T>>>& result);
     std::vector<Box<Node<T>>> TopologicalSort();
 
@@ -68,4 +68,67 @@ class Graph {
     int node_count_;
 };
 
+template <typename T>
+Box<Node<T>> Graph<T>::AddNode(T value) {
+    auto node = std::make_shared<Node<T>>(node_count_++, this, std::move(value),
+                                          NodeColor::kNone);
+    nodes_.emplace(node->id(), node);
+    return node;
+}
+
+template <typename T>
+void Graph<T>::RemoveNode(Box<Node<T>> node) {
+    //assert(node->out_degree() == 0);
+    //assert(node->in_degree() == 0);
+    nodes_.erase(node->id());
+}
+
+template <typename T>
+void Graph<T>::AddEdge(Box<Node<T>> from, Box<Node<T>> to) {
+    assert(from);
+    assert(to);
+    assert(from->graph() == to->graph());
+
+    if (HasEdge(from, to)) return;
+    to->predecessors().insert(from->id());
+    from->successors().insert(to->id());
+}
+
+template <typename T>
+void Graph<T>::RemoveEdge(Box<Node<T>> from, Box<Node<T>> to) {
+    assert(from && to);
+    to->predecessors().erase(from->id());
+    from->successors().erase(to->id());
+}
+
+template <typename T>
+bool Graph<T>::HasEdge(const Box<Node<T>> from, const Box<Node<T>> to) const {
+    return from->successors().count(to->id()) > 0;
+}
+
+template <typename T>
+void Graph<T>::TopologicalSortUtil(Box<Node<T>> node, std::set<int>& visited,
+                                   std::vector<Box<Node<T>>>& result) {
+    for (const auto id : node->successors()) {
+        if (!visited.count(id)) {
+            TopologicalSortUtil(node, visited, result);
+        }
+    }
+    result.push_back(node);
+    visited.insert(node->id());
+}
+
+template <typename T>
+std::vector<Box<Node<T>>> Graph<T>::TopologicalSort() {
+    std::vector<Box<Node<T>>> result;
+    std::set<int> visited;
+
+    for (const auto& [_, node] : nodes_) {
+        if (!visited.count(node->id())) {
+            TopologicalSortUtil(node, visited, result);
+        }
+    }
+    std::reverse(result.begin(), result.end());
+    return result;
+}
 }  // namespace utils

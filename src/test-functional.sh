@@ -1,5 +1,5 @@
 #!/bin/bash
-func_testcase_dir=$(realpath $(dirname "$0")/./tests)
+func_testcase_dir=$(realpath $(dirname "$0")/./tests/private)
 
 test_single() {
 	test_file=$(python -c "import os.path; print(os.path.relpath('$func_testcase_dir/$1.tea', '$func_testcase_dir'))")
@@ -8,6 +8,7 @@ test_single() {
 	echo -n $test_name
 	echo ": "
 
+	echo "./compiler $func_testcase_dir/$test_name.tea"
 	./compiler $func_testcase_dir/$test_name.tea
 	if [ $? != 0 ]; then
 		echo fail; exit 0

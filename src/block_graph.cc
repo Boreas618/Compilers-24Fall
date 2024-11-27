@@ -67,6 +67,7 @@ void BlockGraph::GenerateSingleSourceGraph(Box<Node<Box<ir::Block>>> root,
 
     for (const auto& succ : root->successors()) {
         const auto& node = graph_.nodes().at(succ);
+        node->color() = NodeColor::kSSGVisted;
         fringe.push_back(node);
     }
 
@@ -83,15 +84,21 @@ void BlockGraph::GenerateSingleSourceGraph(Box<Node<Box<ir::Block>>> root,
     }
 
     // Remove unapproachable code.
+    std::list<Box<utils::Node<Box<ir::Block>>>> to_delete;
     for (auto& [id, node] : graph_.nodes()) {
         if (node->color() == NodeColor::kNone) {
             /**
              * Relax — smart pointers and RAII are here to manage heap cleanup
              * for you.
              */
-            graph_.RemoveNode(node);
             func->blocks().remove(node->element());
+            to_delete.push_back(node);
         }
+    }
+    while (to_delete.size()) {
+        auto candidate = to_delete.front();
+        to_delete.pop_front();
+        graph_.RemoveNode(candidate);
     }
 }
 

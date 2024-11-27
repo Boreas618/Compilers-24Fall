@@ -8,6 +8,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "common.hh"
+
 namespace ir {
 enum class RegType { kInt, kIntPtr, kStruct, kStructPtr };
 
@@ -90,38 +92,6 @@ class LocalVal : public IRValue {
 };
 
 using LocalValSet = std::unordered_set<Box<LocalVal>>;
-
-Box<LocalValSet> LocalValSetUnion(const LocalValSet& s1,
-                                  const LocalValSet& s2) {
-    auto ret = std::make_shared<LocalValSet>();
-    for (const auto& val : s1) ret->emplace(val);
-    for (const auto& val : s2) ret->emplace(val);
-    return ret;
-}
-
-Box<LocalValSet> LocalValSetDiff(const LocalValSet& s1, const LocalValSet& s2) {
-    auto ret = std::make_shared<LocalValSet>();
-    for (const auto& val : s1) {
-        if (s2.find(val) == s2.end()) {
-            ret->emplace(val);
-        }
-    }
-    return ret;
-}
-
-bool LocalValSetEq(const LocalValSet& s1, const LocalValSet& s2) {
-    if (s1.size() != s2.size()) {
-        return false;
-    }
-    for (const auto& val : s1) {
-        if (s2.find(val) == s2.end()) {
-            return false;
-        }
-    }
-    return true;
-}
-
-void LocalValRemove(LocalValSet& sl, Box<LocalVal> t) { sl.erase(t); }
 
 struct ValDef {
     RegType kind;
@@ -230,9 +200,9 @@ struct Operand {
     }
 
     template <typename T>
-    std::shared_ptr<T> inner() {
-        if (std::shared_ptr<T> ptr = std::get_if<std::shared_ptr<T>>(inner_)) {
-            return ptr;
+    std::shared_ptr<T> inner_generic() {
+        if (std::shared_ptr<T>* ptr = std::get_if<std::shared_ptr<T>>(&inner_)) {
+            return *ptr;
         }
         return nullptr;
     }
@@ -675,9 +645,10 @@ class Block {
    public:
     std::shared_ptr<BlockLabel> label() { return label_; }
     std::unordered_set<std::shared_ptr<BlockLabel>> succs() { return succs_; }
-    std::shared_ptr<std::list<std::shared_ptr<Stmt>>> instrs() {
+    std::shared_ptr<std::list<std::shared_ptr<Stmt>>>& instrs() {
         return instrs_;
     }
+
     Block(std::shared_ptr<BlockLabel> label,
           const std::unordered_set<std::shared_ptr<BlockLabel>>& succs,
           const std::shared_ptr<std::list<std::shared_ptr<Stmt>>>& instrs)

@@ -9,6 +9,38 @@
 
 using namespace liveness;
 
+Box<LocalValSet> LocalValSetUnion(const LocalValSet& s1,
+                                  const LocalValSet& s2) {
+    auto ret = std::make_shared<LocalValSet>();
+    for (const auto& val : s1) ret->emplace(val);
+    for (const auto& val : s2) ret->emplace(val);
+    return ret;
+}
+
+Box<LocalValSet> LocalValSetDiff(const LocalValSet& s1, const LocalValSet& s2) {
+    auto ret = std::make_shared<LocalValSet>();
+    for (const auto& val : s1) {
+        if (s2.find(val) == s2.end()) {
+            ret->emplace(val);
+        }
+    }
+    return ret;
+}
+
+bool LocalValSetEq(const LocalValSet& s1, const LocalValSet& s2) {
+    if (s1.size() != s2.size()) {
+        return false;
+    }
+    for (const auto& val : s1) {
+        if (s2.find(val) == s2.end()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void LocalValRemove(LocalValSet& sl, Box<ir::LocalVal> t) { sl.erase(t); }
+
 list<Box<Operand>> LivenessAnalysis::GetOps(Box<ir::Stmt> stm, OpKind type) {
     list<Box<Operand>> op_list;
     switch (stm->type()) {
@@ -137,7 +169,7 @@ list<Box<ir::LocalVal>> LivenessAnalysis::GetValsOf(Box<ir::Stmt> stm,
     list<Box<ir::LocalVal>> local_vals;
     for (auto op : ops) {
         if (op->kind() == ir::OperandKind::kLocal) {
-            local_vals.push_back(op->inner<ir::LocalVal>());
+            local_vals.push_back(op->inner_generic<ir::LocalVal>());
         } else {
             // For now we simply discard the global values.
         }
@@ -170,11 +202,13 @@ void LivenessAnalysis::GetUseDef(Box<Node<Box<ir::Block>>> r,
             const auto& use_vals = GetValsOf(stmt, OpKind::kUse);
             const auto& def_vals = GetValsOf(stmt, OpKind::kDef);
             for (const auto& val : use_vals) {
+                if (val->type() != ir::RegType::kInt) continue;
                 if (def_set.find(val) == def_set.end()) {
                     use_set.insert(val);
                 }
             }
             for (const auto& val : def_vals) {
+                if (val->type() != ir::RegType::kInt) continue;
                 def_set.insert(val);
             }
         }
@@ -185,13 +219,15 @@ bool LivenessAnalysis::LivenessIteration(Box<Node<Box<ir::Block>>> r,
                                          Graph<Box<ir::Block>>& bg) {
     bool ret = false;
     for (auto [key, node] : bg.nodes()) {
-        auto& def_set = GetDefSetOf(node);
-        auto& use_set = GetUseSetOf(node);
-        auto& in_set = GetInSetOf(node);
-        auto& out_set = GetOutSetOf(node);
+        auto def_set = GetDefSetOf(node);
+        auto use_set = GetUseSetOf(node);
+        auto in_set = GetInSetOf(node);
+        auto out_set = GetOutSetOf(node);
 
         auto origin_in = in_set;
         auto origin_out = out_set;
+
+        assert(&origin_in != &in_set);
 
         /**
          * Calculation of Liveness:
@@ -209,17 +245,18 @@ bool LivenessAnalysis::LivenessIteration(Box<Node<Box<ir::Block>>> r,
          * a’s value is needed even on entry to n.
          */
 
-        in_set = *ir::LocalValSetUnion(
-            in_set, *std::move(LocalValSetDiff(out_set, def_set)));
+        in_set = *LocalValSetUnion(use_set, *LocalValSetDiff(out_set, def_set));
 
         auto bg_nodes = bg.nodes();
         for (auto s : node->successors()) {
             auto successor = bg_nodes[s];
-            out_set = *ir::LocalValSetUnion(out_set, GetInSetOf(successor));
+            out_set = *LocalValSetUnion(out_set, GetInSetOf(successor));
         }
 
         if (!LocalValSetEq(in_set, origin_in) ||
             !LocalValSetEq(out_set, origin_out)) {
+            GetInSetOf(node) = in_set;
+            GetOutSetOf(node) = out_set;
             ret = true;
         }
     }
@@ -273,5 +310,8 @@ void LivenessAnalysis::Launch(Box<Node<Box<ir::Block>>> r,
     GetUseDef(r, bg, args);
     iter_num_ = 0;
     bool changed = true;
-    while (changed) changed = LivenessIteration(r, bg);
+    while (changed) {
+        iter_num_++;
+        changed = LivenessIteration(r, bg);
+    }
 }

@@ -29,9 +29,11 @@ Box<ir::Prog> SSAWorker::Launch(Box<ir::Prog> prog) {
         ResetTables();
         CombineAddr(fun);
         PointerToReg(fun);
+        printL_prog(std::cout, prog);
 
         auto block_graph = BlockGraph::FromBlocks(fun->blocks());
         auto graph = block_graph->graph();
+
         block_graph->GenerateSingleSourceGraph(graph.nodes().at(0), fun);
 
         liveness_.Launch(graph.nodes().at(0), graph, fun->args());
@@ -72,9 +74,9 @@ void SSAWorker::CombineAddr(Box<ir::Func> fun) {
                 LivenessAnalysis::GetOps(stm, liveness::OpKind::kAll);
             for (auto op : op_list) {
                 if (op->kind() == ir::OperandKind::kLocal) {
-                    local_set[op->inner<ir::LocalVal>()].insert(op);
+                    local_set[op->inner_generic<ir::LocalVal>()].insert(op);
                 } else if (op->kind() == ir::OperandKind::kGlobal) {
-                    global_set[op->inner<ir::GlobalVal>()].insert(op);
+                    global_set[op->inner_generic<ir::GlobalVal>()].insert(op);
                 }
             }
         }
@@ -111,7 +113,7 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
      * already been mapped in the map. We can directly move `src` to the
      * underlying local variable of `ptr`.
      */
-    std::unordered_map<Box<ir::Operand>, Box<ir::Operand>> alias_map;
+    std::unordered_map<Box<ir::LocalVal>, Box<ir::LocalVal>> alias_map;
 
     /**
      * First derive the `alias_map` by scanning the blocks.
@@ -125,13 +127,13 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
                      */
                     if (inst->inner<ir::Alloca>()
                             ->dst()
-                            ->inner<ir::LocalVal>() == nullptr) {
+                            ->inner_generic<ir::LocalVal>() == nullptr) {
                         throw std::runtime_error(
                             "Attempting to alloca to an illegal operand.");
                     }
                     if (inst->inner<ir::Alloca>()
                             ->dst()
-                            ->inner<ir::LocalVal>()
+                            ->inner_generic<ir::LocalVal>()
                             ->len() != 0) {
                         break;
                     }
@@ -139,7 +141,8 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
                     auto dst_prev = inst->inner<ir::Alloca>()->dst();
                     auto dst_next =
                         Operand::FromLocal(ir::LocalVal::CreateInt());
-                    alias_map[dst_prev] = dst_next;
+                    alias_map[dst_prev->inner_generic<ir::LocalVal>()] =
+                        dst_next->inner_generic<ir::LocalVal>();
                 } break;
                 case ir::StmtKind::kLoad: {
                     /**
@@ -151,7 +154,10 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
                         break;
                     }
 
-                    auto ptr_next = alias_map[inst->inner<ir::Load>()->ptr()];
+                    auto ptr_next =
+                        alias_map[inst->inner<ir::Load>()
+                                      ->ptr()
+                                      ->inner_generic<ir::LocalVal>()];
 
                     /**
                      * The pointer `ptr` may be generated using `getelementptr`,
@@ -159,7 +165,10 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
                      * behavior.
                      */
                     if (ptr_next != nullptr) {
-                        alias_map[inst->inner<ir::Load>()->dst()] = ptr_next;
+                        alias_map[inst->inner<ir::Load>()
+                                      ->dst()
+                                      ->inner_generic<ir::LocalVal>()] =
+                            ptr_next;
                     }
                 } break;
                 default:
@@ -168,12 +177,15 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
         }
     }
 
-    auto fix_operands = [&alias_map](auto& ops) {
-        for (auto& op : ops) {
+    auto fix_operands = [&alias_map](std::list<Box<ir::Operand>>& ops) {
+        for (Box<ir::Operand>& op : ops) {
             if (op->kind() == ir::OperandKind::kLocal &&
-                op->inner<ir::LocalVal>()->type() == ir::RegType::kInt &&
-                (alias_map.find(op) != alias_map.end())) {
-                op = alias_map[op];
+                op->inner_generic<ir::LocalVal>()->type() ==
+                    ir::RegType::kInt &&
+                (alias_map.find(op->inner_generic<ir::LocalVal>()) !=
+                 alias_map.end())) {
+                *op = *Operand::FromLocal(
+                    alias_map[op->inner_generic<ir::LocalVal>()]);
             }
         }
     };
@@ -192,44 +204,70 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
      * originating from `load` cannot be processed correctly.
      */
     for (auto& block : fun->blocks()) {
+        auto instrs = std::make_shared<std::list<std::shared_ptr<ir::Stmt>>>();
         for (auto& inst : *block->instrs()) {
             auto ops = LivenessAnalysis::GetOps(inst, liveness::OpKind::kAll);
-
+            std::shared_ptr<ir::Stmt> new_inst = nullptr;
             switch (inst->type()) {
                 case ir::StmtKind::kAlloca: {
                     if (IsMemVariable(inst)) {
                         auto dst_next =
-                            alias_map[inst->inner<ir::Alloca>()->dst()];
+                            alias_map[inst->inner<ir::Alloca>()
+                                          ->dst()
+                                          ->inner_generic<ir::LocalVal>()];
                         auto src = Operand::FromIConst(0);
-                        inst = std::move(ir::Stmt::CreateMove(src, dst_next));
+                        new_inst = ir::Stmt::CreateMove(
+                            src, Operand::FromLocal(dst_next));
                     } else {
                         fix_operands(ops);
                     }
                 } break;
                 case ir::StmtKind::kLoad: {
-                    continue;
+                    if (inst->inner<ir::Load>()->ptr()->kind() !=
+                            ir::OperandKind::kLocal ||
+                        alias_map[inst->inner<ir::Load>()
+                                      ->ptr()
+                                      ->inner_generic<ir::LocalVal>()] ==
+                            nullptr) {
+                        new_inst = inst;
+                    }
                 } break;
                 case ir::StmtKind::kStore: {
                     if (inst->inner<ir::Store>()->ptr()->kind() !=
                         ir::OperandKind::kLocal) {
                         fix_operands(ops);
+                        new_inst = inst;
                         break;
                     }
-                    auto ptr_next = alias_map[inst->inner<ir::Store>()->ptr()];
+                    auto ptr_next =
+                        alias_map[inst->inner<ir::Store>()
+                                      ->ptr()
+                                      ->inner_generic<ir::LocalVal>()];
                     if (ptr_next == nullptr) {
                         fix_operands(ops);
                         break;
                     }
-                    auto src_real = alias_map[inst->inner<ir::Store>()->src()];
-                    auto src =
-                        src_real ? src_real : inst->inner<ir::Store>()->src();
-                    inst = std::move(ir::Stmt::CreateMove(src, ptr_next));
+                    auto src_real =
+                        alias_map[inst->inner<ir::Store>()
+                                      ->src()
+                                      ->inner_generic<ir::LocalVal>()];
+                    auto src = src_real ? src_real
+                                        : inst->inner<ir::Store>()
+                                              ->src()
+                                              ->inner_generic<ir::LocalVal>();
+                    new_inst = ir::Stmt::CreateMove(
+                        Operand::FromLocal(src), Operand::FromLocal(ptr_next));
                 } break;
                 default: {
                     fix_operands(ops);
+                    new_inst = inst;
                 } break;
             }
+            if (new_inst != nullptr) {
+                instrs->push_back(new_inst);
+            }
         }
+        block->instrs() = instrs;
     }
 }
 

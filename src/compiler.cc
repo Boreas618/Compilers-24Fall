@@ -78,6 +78,8 @@ int main(int argc, char* argv[]) {
     IRGenerator ir_generator;
     auto prog = ir_generator.Generate(aroot);
     SSAWorker ssa;
+    printL_prog(llvm_stream, prog);
+    
     prog = ssa.Launch(prog);
     printL_prog(llvm_stream, prog);
     llvm_stream.close();
