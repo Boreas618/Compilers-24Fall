@@ -41,6 +41,11 @@ class LivenessAnalysis {
     static list<Box<Operand>> GetOps(Box<ir::Stmt> stm, OpKind type);
     static list<Box<ir::LocalVal>> GetValsOf(Box<ir::Stmt> stm, OpKind type);
 
+    void GetUseDefNext(Box<Node<Box<ir::Block>>> r, Graph<Box<ir::Block>>& bg,
+                       std::vector<Box<ir::LocalVal>>& args);
+    bool LivenessIterationNext(Box<Node<Box<ir::Block>>> r,
+                                                 Graph<Box<ir::Block>>& bg);
+
    private:
     void Init();
     bool LivenessIteration(Box<Node<Box<ir::Block>>> r,

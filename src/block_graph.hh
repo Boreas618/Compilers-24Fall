@@ -22,6 +22,8 @@ class BlockGraph {
     void DepthFirstSearch(Box<Node<Box<ir::Block>>> root);
     void GenerateSingleSourceGraph(Box<Node<Box<ir::Block>>> root,
                                    Box<ir::Func> func);
+    void GenerateSingleSourceGraphNext(Box<Node<Box<ir::Block>>> root,
+                                       Box<ir::Func> func);
 
    private:
     void AddEdge(Box<ir::Block> from, Box<ir::Block> to);

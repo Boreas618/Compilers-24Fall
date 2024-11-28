@@ -42,6 +42,7 @@ class SSAWorker {
     void RenameLocal(
         Graph<Box<ir::Block>>& bg, Box<Node<Box<ir::Block>>> n,
         unordered_map<Box<ir::LocalVal>, std::stack<Box<ir::LocalVal>>>& Stack);
+    void PointerToRegNext(Box<ir::Func> fun);
 
     void PrintDominators();
     void PrintDominatorTree();
@@ -50,6 +51,7 @@ class SSAWorker {
     liveness::LivenessAnalysis liveness_;
 
     unordered_map<Box<ir::Block>, unordered_set<Box<ir::Block>>> dominators_;
+    unordered_map<int, std::vector<int>> dominators_int_;
     unordered_map<Box<ir::Block>, Box<ImmediateDominator>> tree_dominators_;
     unordered_map<Box<ir::Block>, unordered_set<Box<ir::Block>>>
         dominance_frontiers_;
