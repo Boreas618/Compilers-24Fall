@@ -63,6 +63,7 @@ void BlockGraph::AddEdge(Box<ir::Block> from, Box<ir::Block> to) {
 void BlockGraph::GenerateSingleSourceGraph(Box<Node<Box<ir::Block>>> root,
                                            Box<ir::Func> func) {
     auto current_node = root;
+    root->color() = NodeColor::kSSGVisted;
     std::list<Box<Node<Box<ir::Block>>>> fringe;
 
     for (const auto& succ : root->successors()) {

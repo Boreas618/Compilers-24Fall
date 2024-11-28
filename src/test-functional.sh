@@ -13,7 +13,8 @@ test_single() {
 	if [ $? != 0 ]; then
 		echo fail; exit 0
 	fi
-    llvm-link ./tests/$test_name.ll sylib.ll -S -o ./output/$test_name.ll
+
+    llvm-link $func_testcase_dir/$test_name.ll $func_testcase_dir/../../sylib.ll -S -o ./output/$test_name.ll
 	if [ $? != 0 ]; then
 		echo "fail to link"; exit 0
 	fi

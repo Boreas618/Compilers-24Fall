@@ -109,26 +109,38 @@ bool Graph<T>::HasEdge(const Box<Node<T>> from, const Box<Node<T>> to) const {
 template <typename T>
 void Graph<T>::TopologicalSortUtil(Box<Node<T>> node, std::set<int>& visited,
                                    std::vector<Box<Node<T>>>& result) {
-    for (const auto id : node->successors()) {
-        if (!visited.count(id)) {
-            TopologicalSortUtil(node, visited, result);
-        }
+    if (visited.count(node->id())) {
+        return;  // Node is already visited
     }
+
+    visited.insert(node->id());  // Mark the node as visited
+
+    // Recur for all the successors (children) of the node
+    for (int successor_id : node->successors()) {
+        Box<Node<T>> successor = nodes_.at(successor_id);
+        TopologicalSortUtil(successor, visited, result);
+    }
+
+    // Push the current node to the result stack (postorder)
     result.push_back(node);
-    visited.insert(node->id());
 }
 
 template <typename T>
 std::vector<Box<Node<T>>> Graph<T>::TopologicalSort() {
-    std::vector<Box<Node<T>>> result;
     std::set<int> visited;
+    std::vector<Box<Node<T>>> result;
 
-    for (const auto& [_, node] : nodes_) {
-        if (!visited.count(node->id())) {
+    // Perform DFS for each node to ensure all components are visited
+    for (const auto& pair : nodes_) {
+        Box<Node<T>> node = pair.second;
+        if (visited.count(node->id()) == 0) {
             TopologicalSortUtil(node, visited, result);
         }
     }
+
+    // The result is in reverse order (postorder), so we reverse it to get topological order
     std::reverse(result.begin(), result.end());
+
     return result;
 }
 }  // namespace utils

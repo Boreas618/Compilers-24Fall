@@ -29,7 +29,6 @@ Box<ir::Prog> SSAWorker::Launch(Box<ir::Prog> prog) {
         ResetTables();
         CombineAddr(fun);
         PointerToReg(fun);
-        printL_prog(std::cout, prog);
 
         auto block_graph = BlockGraph::FromBlocks(fun->blocks());
         auto graph = block_graph->graph();
@@ -37,21 +36,24 @@ Box<ir::Prog> SSAWorker::Launch(Box<ir::Prog> prog) {
         block_graph->GenerateSingleSourceGraph(graph.nodes().at(0), fun);
 
         liveness_.Launch(graph.nodes().at(0), graph, fun->args());
-        liveness_.DisplayLiveness(stdout, graph);
-
-        exit(0);
+        // liveness_.DisplayLiveness(stdout, graph);
 
         for (const auto& [id, node] : block_graph->graph().nodes()) {
             reverse_graph_[node->element()] = node;
         }
 
         Dominators(graph);
+        // PrintDominators();
         DeriveTreeDominators(graph);
+        // PrintDominatorTree();
         DeriveDominaceFroniters(graph, graph.nodes().at(0));
+        // PrintDominaceFroniters();
 
-        // PlacePhiFunctions(graph, fun);
-        // Rename(graph);
-        // CombineAddr(fun);
+        PlacePhiFunctions(graph, fun);
+        // printL_prog(std::cout, prog);
+
+        Rename(graph);
+        CombineAddr(fun);
     }
     return prog;
 }
@@ -60,8 +62,9 @@ static bool IsMemVariable(Box<ir::Stmt> stm) {
     auto alloca_stmt = stm->inner<ir::Alloca>();
     return stm->type() == ir::StmtKind::kAlloca &&
            alloca_stmt->dst()->kind() == ir::OperandKind::kLocal &&
-           alloca_stmt->dst()->inner()->type() == ir::RegType::kIntPtr &&
-           alloca_stmt->dst()->inner()->len() == 0;
+           alloca_stmt->dst()->inner_generic<ir::LocalVal>()->type() ==
+               ir::RegType::kIntPtr &&
+           alloca_stmt->dst()->inner_generic<ir::LocalVal>()->len() == 0;
 }
 
 void SSAWorker::CombineAddr(Box<ir::Func> fun) {
@@ -134,6 +137,12 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
                     if (inst->inner<ir::Alloca>()
                             ->dst()
                             ->inner_generic<ir::LocalVal>()
+                            ->type() != ir::RegType::kIntPtr) {
+                        break;
+                    }
+                    if (inst->inner<ir::Alloca>()
+                            ->dst()
+                            ->inner_generic<ir::LocalVal>()
                             ->len() != 0) {
                         break;
                     }
@@ -184,6 +193,7 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
                     ir::RegType::kInt &&
                 (alias_map.find(op->inner_generic<ir::LocalVal>()) !=
                  alias_map.end())) {
+                assert(alias_map[op->inner_generic<ir::LocalVal>()]);
                 *op = *Operand::FromLocal(
                     alias_map[op->inner_generic<ir::LocalVal>()]);
             }
@@ -217,9 +227,14 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
                                           ->inner_generic<ir::LocalVal>()];
                         auto src = Operand::FromIConst(0);
                         new_inst = ir::Stmt::CreateMove(
-                            src, Operand::FromLocal(dst_next));
+                            std::move(src), Operand::FromLocal(dst_next));
                     } else {
-                        fix_operands(ops);
+                        new_inst = inst;
+                        assert(new_inst->inner<ir::Alloca>()
+                                   ->dst()
+                                   ->inner_generic<ir::LocalVal>()
+                                   ->type() != ir::RegType::kInt);
+                        // fix_operands(ops);
                     }
                 } break;
                 case ir::StmtKind::kLoad: {
@@ -255,8 +270,23 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
                                         : inst->inner<ir::Store>()
                                               ->src()
                                               ->inner_generic<ir::LocalVal>();
-                    new_inst = ir::Stmt::CreateMove(
-                        Operand::FromLocal(src), Operand::FromLocal(ptr_next));
+
+                    /**
+                     * A quite ugly patch here.
+                     */
+                    auto src_fix = inst->inner<ir::Store>()
+                                       ->src()
+                                       ->inner_generic<ir::Integer>();
+
+                    if (src) {
+                        new_inst =
+                            ir::Stmt::CreateMove(Operand::FromLocal(src),
+                                                 Operand::FromLocal(ptr_next));
+                    } else {
+                        new_inst = ir::Stmt::CreateMove(
+                            Operand::FromIConst(src_fix->inner()),
+                            Operand::FromLocal(ptr_next));
+                    }
                 } break;
                 default: {
                     fix_operands(ops);
@@ -274,24 +304,41 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
 void SSAWorker::Dominators(utils::Graph<Box<ir::Block>>& bg) {
     assert(dominators_.size() == 0);
     auto sorted_nodes = bg.TopologicalSort();
-#ifdef DEBUG
-    int index = 0;
-#endif
-    for (const auto& node : sorted_nodes) {
-#ifdef DEBUG
-        assert(node->in_degree() <= index);
-        index++;
-#endif
 
+    std::unordered_set<Box<ir::Block>> all_nodes;
+    for (const auto& node : sorted_nodes) {
+        all_nodes.insert(node->element());
+    }
+
+    for (const auto& node : sorted_nodes) {
         std::unordered_set<Box<ir::Block>> dom;
-        for (const auto& id : node->predecessors()) {
-            auto pre_node = bg.nodes().at(id);
-            assert(dominators_.find(pre_node->element()) != dominators_.end());
-            dom =
-                common::set_intersection(dominators_[pre_node->element()], dom);
+        if (node->in_degree() != 0) {
+            dom = common::set_union(dom, all_nodes);
+        } else {
+            dom.insert(node->element());
         }
-        dom.insert(node->element());
         dominators_[node->element()] = dom;
+    }
+
+    /**
+     * Note that the graph can be cyclic.
+     */
+    bool changed = true;
+    while (changed) {
+        changed = false;
+        for (const auto& node : sorted_nodes) {
+            auto dom = dominators_[node->element()];
+            for (const auto& id : node->predecessors()) {
+                auto pre_node = bg.nodes().at(id);
+                dom = common::set_intersection(dominators_[pre_node->element()],
+                                               dom);
+            }
+            dom.insert(node->element());
+            if (!common::set_equal(dominators_[node->element()], dom)) {
+                changed = true;
+            }
+            dominators_[node->element()] = dom;
+        }
     }
 }
 
@@ -312,11 +359,11 @@ void SSAWorker::PrintDominators() {
 void SSAWorker::PrintDominatorTree() {
     printf("Dominator tree:\n");
     for (auto x : tree_dominators_) {
-        printf("%s ", x.first->label()->name().c_str());
+        printf("%s : ", x.first->label()->name().c_str());
         for (auto t : x.second->succs) {
             printf("%s ", t->label()->name().c_str());
         }
-        printf("}\n\n");
+        printf("\n\n");
     }
 }
 void SSAWorker::PrintDominaceFroniters() {
@@ -334,6 +381,13 @@ void SSAWorker::PrintDominaceFroniters() {
 }
 
 void SSAWorker::DeriveTreeDominators(Graph<Box<ir::Block>>& bg) {
+    for (const auto& [id, node] : bg.nodes()) {
+        tree_dominators_[node->element()] =
+            std::make_shared<ImmediateDominator>();
+        tree_dominators_[node->element()]->succs =
+            unordered_set<Box<ir::Block>>();
+    }
+
     std::unordered_map<Box<ir::Block>, Box<ir::Block>> idom_map;
     for (const auto& [node, dominators] : dominators_) {
         std::unordered_set<Box<ir::Block>> rule_out;
@@ -352,10 +406,12 @@ void SSAWorker::DeriveTreeDominators(Graph<Box<ir::Block>>& bg) {
 
     for (const auto& [key, value] : idom_map) {
         if (tree_dominators_.find(key) == tree_dominators_.end()) {
-            tree_dominators_[key] = std::make_shared<ImmediateDominator>();
+            tree_dominators_[key] =
+                std::move(std::make_shared<ImmediateDominator>());
         }
         if (tree_dominators_.find(value) == tree_dominators_.end()) {
-            tree_dominators_[value] = std::make_shared<ImmediateDominator>();
+            tree_dominators_[value] =
+                std::move(std::make_shared<ImmediateDominator>());
         }
         assert(tree_dominators_[key]->pred == nullptr);
         tree_dominators_[key]->pred = value;
@@ -374,16 +430,19 @@ void SSAWorker::DeriveDominaceFroniters(Graph<Box<ir::Block>>& bg,
         }
     }
 
-    for (const auto& child : tree_dominators_[r->element()]->succs) {
-        if (dominance_frontiers_.find(child) == dominance_frontiers_.end()) {
-            DeriveDominaceFroniters(bg, reverse_graph_[child]);
-        }
-        for (const auto& up : dominance_frontiers_[child]) {
-            auto strict_dominators = dominators_[up];
-            strict_dominators.erase(up);
-            auto dnn = tree_dominators_[child]->pred;
-            if (strict_dominators.find(dnn) == strict_dominators.end()) {
-                df.insert(up);
+    if (tree_dominators_[r->element()]->succs.size()) {
+        for (const auto& child : tree_dominators_[r->element()]->succs) {
+            if (dominance_frontiers_.find(child) ==
+                dominance_frontiers_.end()) {
+                DeriveDominaceFroniters(bg, reverse_graph_[child]);
+            }
+            for (const auto& up : dominance_frontiers_[child]) {
+                auto strict_dominators = dominators_[up];
+                strict_dominators.erase(up);
+                auto dnn = tree_dominators_[child]->pred;
+                if (strict_dominators.find(dnn) == strict_dominators.end()) {
+                    df.insert(up);
+                }
             }
         }
     }
@@ -391,38 +450,131 @@ void SSAWorker::DeriveDominaceFroniters(Graph<Box<ir::Block>>& bg,
     dominance_frontiers_[r->element()] = df;
 }
 
-// 只对标量做
-void PlacePhiFunctions(Graph<Box<ir::Block>>& bg, Box<ir::Func> fun) {
-    //   Todo
-}
-
-/*static list<Box<ir::Operand>> get_def_int_operand(Box<ir::Stmt> stm) {
-    list<Box<ir::Operand>> ret1 = get_def_operand(stm), ret2;
-    for (auto AS_op : ret1) {
-        if ((**AS_op).u.TEMP->type == TempType::INT_TEMP) {
-            ret2.push_back(AS_op);
+void SSAWorker::PlacePhiFunctions(Graph<Box<ir::Block>>& bg,
+                                  Box<ir::Func> fun) {
+    std::unordered_map<Box<Node<Box<ir::Block>>>,
+                       std::unordered_set<Box<ir::LocalVal>>>
+        node_defs;
+    std::unordered_map<Box<Node<Box<ir::Block>>>,
+                       std::unordered_set<Box<ir::LocalVal>>>
+        node_phis;
+    for (const auto& block : fun->blocks()) {
+        auto node = reverse_graph_[block];
+        node_defs[node].clear();
+        for (const auto& inst : *block->instrs()) {
+            auto def_ops =
+                LivenessAnalysis::GetOps(inst, liveness::OpKind::kDef);
+            for (auto def : def_ops) {
+                if (def->kind() == ir::OperandKind::kLocal) {
+                    def_sites_[def->inner_generic<ir::LocalVal>()].insert(node);
+                    node_defs[node].insert(def->inner_generic<ir::LocalVal>());
+                }
+            }
         }
     }
-    return ret2;
-}
 
-static list<AS_operand**> get_use_int_operand(LLVMIR::L_stm* stm) {
-    list<AS_operand**> ret1 = get_use_operand(stm), ret2;
-    for (auto AS_op : ret1) {
-        if ((**AS_op).u.TEMP->type == TempType::INT_TEMP) {
-            ret2.push_back(AS_op);
+    for (auto& [val, sites] : def_sites_) {
+        while (sites.size()) {
+            auto site = *sites.begin();
+            sites.erase(site);
+
+            for (auto y : dominance_frontiers_[site->element()]) {
+                auto node = reverse_graph_[y];
+                if (liveness_.GetInSetOf(node).find(val) ==
+                    liveness_.GetInSetOf(node).end()) {
+                    continue;
+                }
+                if (node_phis[node].find(val) == node_phis[node].end()) {
+                    std::vector<std::pair<Box<Operand>, Box<ir::BlockLabel>>>
+                        phis;
+                    for (const auto& pred : node->predecessors()) {
+                        if (bg.nodes().at(pred) == nullptr) continue;
+                        if (bg.nodes().at(pred)->element() == nullptr) continue;
+                        auto label = bg.nodes().at(pred)->element()->label();
+                        phis.push_back(
+                            std::make_pair(Operand::FromLocal(val), label));
+                    }
+                    auto it_insert = ++y->instrs()->begin();
+                    y->instrs()->insert(
+                        it_insert,
+                        ir::Stmt::CreatePhi(Operand::FromLocal(val), phis));
+                    node_phis[node].insert(val);
+                    if (node_defs[node].find(val) == node_defs[node].end()) {
+                        sites.insert(reverse_graph_[y]);
+                    }
+                }
+            }
         }
     }
-    return ret2;
 }
 
-static void Rename_temp(GRAPH::Graph<LLVMIR::L_block*>& bg,
-                        GRAPH::Node<LLVMIR::L_block*>* n,
-                        unordered_map<Temp_temp*, stack<Temp_temp*>>& Stack) {
-    //   Todo
+void SSAWorker::RenameLocal(
+    Graph<Box<ir::Block>>& bg, Box<Node<Box<ir::Block>>> n,
+    unordered_map<Box<ir::LocalVal>, std::stack<Box<ir::LocalVal>>>& stack) {
+    unordered_map<Box<ir::Stmt>, list<Box<ir::Operand>>> def_operand_map;
+    unordered_map<Box<ir::LocalVal>, int> push_times;
+
+    for (const auto& inst : *n->element()->instrs()) {
+        if (inst->type() != ir::StmtKind::kPhi) {
+            auto use_ops = liveness_.GetOps(inst, liveness::OpKind::kUse);
+            for (auto& op : use_ops) {
+                if (op->inner_generic<ir::LocalVal>() && op->inner_generic<ir::LocalVal>()->type() !=
+                    ir::RegType::kInt) {
+                    continue;
+                }
+                if (stack[op->inner_generic<ir::LocalVal>()].size()) {
+                    auto top = stack[op->inner_generic<ir::LocalVal>()].top();
+                    *op = *Operand::FromLocal(top);
+                }
+            }
+        }
+        auto def_ops = liveness_.GetOps(inst, liveness::OpKind::kDef);
+        for (auto& op : def_ops) {
+            if (op->inner_generic<ir::LocalVal>() && op->inner_generic<ir::LocalVal>()->type() !=
+                ir::RegType::kInt) {
+                continue;
+            }
+            push_times[op->inner_generic<ir::LocalVal>()]++;
+            auto i = ir::LocalVal::CreateInt();
+            stack[op->inner_generic<ir::LocalVal>()].push(i);
+            *op = *Operand::FromLocal(i);
+        }
+    }
+
+    for (const auto& id : n->successors()) {
+        int order = 0;
+        for (auto pred : bg.nodes().at(id)->predecessors()) {
+            if (pred == n->id()) break;
+            order++;
+        }
+        for (auto& inst : *bg.nodes().at(id)->element()->instrs()) {
+            if (inst->type() == ir::StmtKind::kPhi) {
+                auto phi = inst->inner<ir::Phi>()->phis().at(order);
+                inst->inner<ir::Phi>()->phis()[order] = std::make_pair(
+                    ir::Operand::FromLocal(
+                        stack[phi.first->inner_generic<ir::LocalVal>()].top()),
+                    phi.second);
+            } else if (inst->type() == ir::StmtKind::kLabel) {
+                continue;
+            } else {
+                break;
+            }
+        }
+    }
+
+    for (auto son : tree_dominators_[n->element()]->succs) {
+        RenameLocal(bg, reverse_graph_[son], stack);
+    }
+
+    for (auto m : push_times) {
+        for (int i = 0; i < m.second; i++) {
+            stack[m.first].pop();
+        }
+    }
 }
 
-void Rename(GRAPH::Graph<LLVMIR::L_block*>& bg) {
-    //   Todo
+void SSAWorker::Rename(Graph<Box<ir::Block>>& bg) {
+    unordered_map<Box<ir::LocalVal>, std::stack<Box<ir::LocalVal>>> stack;
+    for (auto& [val, sites] : def_sites_) stack[val].push(val);
+    RenameLocal(bg, bg.nodes().at(0), stack);
 }
-*/

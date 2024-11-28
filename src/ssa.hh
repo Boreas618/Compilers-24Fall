@@ -37,6 +37,11 @@ class SSAWorker {
     void DeriveTreeDominators(Graph<Box<ir::Block>>& bg);
     void DeriveDominaceFroniters(Graph<Box<ir::Block>>& bg,
                                  Box<Node<Box<ir::Block>>> r);
+    void PlacePhiFunctions(Graph<Box<ir::Block>>& bg, Box<ir::Func> fun);
+    void Rename(Graph<Box<ir::Block>>& bg);
+    void RenameLocal(
+        Graph<Box<ir::Block>>& bg, Box<Node<Box<ir::Block>>> n,
+        unordered_map<Box<ir::LocalVal>, std::stack<Box<ir::LocalVal>>>& Stack);
 
     void PrintDominators();
     void PrintDominatorTree();
@@ -50,4 +55,6 @@ class SSAWorker {
         dominance_frontiers_;
     unordered_map<Box<ir::Block>, Box<Node<Box<ir::Block>>>> reverse_graph_;
     unordered_map<Box<ir::LocalVal>, Box<ir::Operand>> local_to_op_;
+    unordered_map<Box<ir::LocalVal>, unordered_set<Box<Node<Box<ir::Block>>>>>
+        def_sites_;
 };

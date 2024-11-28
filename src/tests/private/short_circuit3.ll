@@ -1,105 +1,109 @@
+declare i32 @getch( )
+declare i32 @getint( )
+declare void @putch( i32 )
+declare void @putint( i32 )
+declare void @putarray( i32, i32* )
+declare void @_sysy_starttime( i32 )
+declare void @_sysy_stoptime( i32 )
 @a = global i32 0
 @b = global i32 0
 @d = global i32 0
 define i32 @set_a( i32 %r100 ) {
 set_a:
-  %r101 = alloca i32
-  store i32 %r100, i32* %r101
-  %r102 = load i32, i32* %r101
-  store i32 %r102, i32* @a
-  %r103 = load i32, i32* @a
-  ret i32 %r103
+  %r258 = add i32 0, 0
+  %r259 = add i32 %r100, 0
+  store i32 %r259, i32* @a
+  %r260 = load i32, i32* @a
+  ret i32 %r260
 }
 
 define i32 @set_b( i32 %r104 ) {
 set_b:
-  %r105 = alloca i32
-  store i32 %r104, i32* %r105
-  %r106 = load i32, i32* %r105
-  store i32 %r106, i32* @b
-  %r107 = load i32, i32* @b
-  ret i32 %r107
+  %r262 = add i32 0, 0
+  %r263 = add i32 %r104, 0
+  store i32 %r263, i32* @b
+  %r264 = load i32, i32* @b
+  ret i32 %r264
 }
 
 define i32 @set_d( i32 %r108 ) {
 set_d:
-  %r109 = alloca i32
-  store i32 %r108, i32* %r109
-  %r110 = load i32, i32* %r109
-  store i32 %r110, i32* @d
-  %r111 = load i32, i32* @d
-  ret i32 %r111
+  %r266 = add i32 0, 0
+  %r267 = add i32 %r108, 0
+  store i32 %r267, i32* @d
+  %r268 = load i32, i32* @d
+  ret i32 %r268
 }
 
 define i32 @main( ) {
 main:
-  %r249 = alloca i32
-  %r243 = alloca i32
-  %r242 = alloca i32
-  %r237 = alloca i32
-  %r230 = alloca i32
-  %r222 = alloca i32
-  %r217 = alloca i32
-  %r216 = alloca i32
-  %r209 = alloca i32
-  %r203 = alloca i32
-  %r196 = alloca i32
-  %r190 = alloca i32
-  %r184 = alloca i32
-  %r179 = alloca i32
-  %r173 = alloca i32
-  %r168 = alloca i32
-  %r167 = alloca i32
-  %r166 = alloca i32
-  %r165 = alloca i32
-  %r164 = alloca i32
-  %r163 = alloca i32
-  %r157 = alloca i32
-  %r152 = alloca i32
-  %r145 = alloca i32
-  %r140 = alloca i32
-  %r138 = alloca i32
-  %r131 = alloca i32
-  %r126 = alloca i32
-  %r118 = alloca i32
+  %r299 = add i32 0, 0
+  %r300 = add i32 0, 0
+  %r301 = add i32 0, 0
+  %r302 = add i32 0, 0
+  %r303 = add i32 0, 0
+  %r304 = add i32 0, 0
+  %r305 = add i32 0, 0
+  %r306 = add i32 0, 0
+  %r307 = add i32 0, 0
+  %r308 = add i32 0, 0
+  %r309 = add i32 0, 0
+  %r310 = add i32 0, 0
+  %r311 = add i32 0, 0
+  %r312 = add i32 0, 0
+  %r313 = add i32 0, 0
+  %r314 = add i32 0, 0
+  %r315 = add i32 0, 0
+  %r316 = add i32 0, 0
+  %r317 = add i32 0, 0
+  %r318 = add i32 0, 0
+  %r319 = add i32 0, 0
+  %r320 = add i32 0, 0
+  %r321 = add i32 0, 0
+  %r322 = add i32 0, 0
+  %r323 = add i32 0, 0
+  %r324 = add i32 0, 0
+  %r325 = add i32 0, 0
+  %r326 = add i32 0, 0
+  %r327 = add i32 0, 0
   call void @_sysy_starttime(i32 97)
   store i32 2, i32* @a
   store i32 3, i32* @b
-  %r113 = alloca i32
-  %r115 = call i32 @set_a(i32 0)
-  %r114 = icmp ne i32 %r115, 0
-  br i1 %r114, label %bb5, label %bb6
+  %r328 = add i32 0, 0
+  %r329 = call i32 @set_a(i32 0)
+  %r330 = icmp ne i32 %r329, 0
+  br i1 %r330, label %bb5, label %bb6
 
 bb5:
-  store i32 1, i32* %r113
+  %r332 = add i32 1, 0
   br label %bb7
 
 bb6:
-  store i32 0, i32* %r113
+  %r331 = add i32 0, 0
   br label %bb7
 
 bb7:
-  %r117 = load i32, i32* %r113
-  %r116 = icmp ne i32 %r117, 0
-  br i1 %r116, label %bb4, label %bb2
+  %r333 = phi i32 [ %r332, %bb5 ], [ %r331, %bb6 ]
+  %r334 = icmp ne i32 %r333, 0
+  br i1 %r334, label %bb4, label %bb2
 
 bb4:
-  %r120 = call i32 @set_b(i32 1)
-  %r119 = icmp ne i32 %r120, 0
-  br i1 %r119, label %bb8, label %bb9
+  %r459 = call i32 @set_b(i32 1)
+  %r460 = icmp ne i32 %r459, 0
+  br i1 %r460, label %bb8, label %bb9
 
 bb8:
-  store i32 1, i32* %r118
+  %r462 = add i32 1, 0
   br label %bb10
 
 bb9:
-  store i32 0, i32* %r118
+  %r461 = add i32 0, 0
   br label %bb10
 
 bb10:
-  %r122 = load i32, i32* %r118
-  %r121 = icmp ne i32 %r122, 0
-  br i1 %r121, label %bb1, label %bb2
+  %r463 = phi i32 [ %r462, %bb8 ], [ %r461, %bb9 ]
+  %r464 = icmp ne i32 %r463, 0
+  br i1 %r464, label %bb1, label %bb2
 
 bb1:
   br label %bb3
@@ -108,48 +112,48 @@ bb2:
   br label %bb3
 
 bb3:
-  %r123 = load i32, i32* @a
-  call void @putint(i32 %r123)
+  %r335 = load i32, i32* @a
+  call void @putint(i32 %r335)
   call void @putch(i32 32)
-  %r124 = load i32, i32* @b
-  call void @putint(i32 %r124)
+  %r336 = load i32, i32* @b
+  call void @putint(i32 %r336)
   call void @putch(i32 32)
   store i32 2, i32* @a
   store i32 3, i32* @b
-  %r128 = call i32 @set_a(i32 0)
-  %r127 = icmp ne i32 %r128, 0
-  br i1 %r127, label %bb15, label %bb16
+  %r337 = call i32 @set_a(i32 0)
+  %r338 = icmp ne i32 %r337, 0
+  br i1 %r338, label %bb15, label %bb16
 
 bb15:
-  store i32 1, i32* %r126
+  %r458 = add i32 1, 0
   br label %bb17
 
 bb16:
-  store i32 0, i32* %r126
+  %r339 = add i32 0, 0
   br label %bb17
 
 bb17:
-  %r130 = load i32, i32* %r126
-  %r129 = icmp ne i32 %r130, 0
-  br i1 %r129, label %bb14, label %bb12
+  %r340 = phi i32 [ %r458, %bb15 ], [ %r339, %bb16 ]
+  %r341 = icmp ne i32 %r340, 0
+  br i1 %r341, label %bb14, label %bb12
 
 bb14:
-  %r133 = call i32 @set_b(i32 1)
-  %r132 = icmp ne i32 %r133, 0
-  br i1 %r132, label %bb18, label %bb19
+  %r342 = call i32 @set_b(i32 1)
+  %r343 = icmp ne i32 %r342, 0
+  br i1 %r343, label %bb18, label %bb19
 
 bb18:
-  store i32 1, i32* %r131
+  %r344 = add i32 1, 0
   br label %bb20
 
 bb19:
-  store i32 0, i32* %r131
+  %r345 = add i32 0, 0
   br label %bb20
 
 bb20:
-  %r135 = load i32, i32* %r131
-  %r134 = icmp ne i32 %r135, 0
-  br i1 %r134, label %bb11, label %bb12
+  %r346 = phi i32 [ %r344, %bb18 ], [ %r345, %bb19 ]
+  %r347 = icmp ne i32 %r346, 0
+  br i1 %r347, label %bb11, label %bb12
 
 bb11:
   br label %bb13
@@ -158,48 +162,47 @@ bb12:
   br label %bb13
 
 bb13:
-  %r136 = load i32, i32* @a
-  call void @putint(i32 %r136)
+  %r348 = load i32, i32* @a
+  call void @putint(i32 %r348)
   call void @putch(i32 32)
-  %r137 = load i32, i32* @b
-  call void @putint(i32 %r137)
+  %r349 = load i32, i32* @b
+  call void @putint(i32 %r349)
   call void @putch(i32 10)
-  store i32 1, i32* %r138
+  %r350 = add i32 1, 0
   store i32 2, i32* @d
-  %r142 = load i32, i32* %r138
-  %r141 = icmp sge i32 %r142, 1
-  br i1 %r141, label %bb25, label %bb26
+  %r351 = icmp sge i32 %r350, 1
+  br i1 %r351, label %bb25, label %bb26
 
 bb25:
-  store i32 1, i32* %r140
+  %r456 = add i32 1, 0
   br label %bb27
 
 bb26:
-  store i32 0, i32* %r140
+  %r457 = add i32 0, 0
   br label %bb27
 
 bb27:
-  %r144 = load i32, i32* %r140
-  %r143 = icmp ne i32 %r144, 0
-  br i1 %r143, label %bb24, label %bb22
+  %r352 = phi i32 [ %r456, %bb25 ], [ %r457, %bb26 ]
+  %r353 = icmp ne i32 %r352, 0
+  br i1 %r353, label %bb24, label %bb22
 
 bb24:
-  %r147 = call i32 @set_d(i32 3)
-  %r146 = icmp ne i32 %r147, 0
-  br i1 %r146, label %bb28, label %bb29
+  %r354 = call i32 @set_d(i32 3)
+  %r355 = icmp ne i32 %r354, 0
+  br i1 %r355, label %bb28, label %bb29
 
 bb28:
-  store i32 1, i32* %r145
+  %r356 = add i32 1, 0
   br label %bb30
 
 bb29:
-  store i32 0, i32* %r145
+  %r357 = add i32 0, 0
   br label %bb30
 
 bb30:
-  %r149 = load i32, i32* %r145
-  %r148 = icmp ne i32 %r149, 0
-  br i1 %r148, label %bb21, label %bb22
+  %r358 = phi i32 [ %r356, %bb28 ], [ %r357, %bb29 ]
+  %r359 = icmp ne i32 %r358, 0
+  br i1 %r359, label %bb21, label %bb22
 
 bb21:
   br label %bb23
@@ -208,43 +211,42 @@ bb22:
   br label %bb23
 
 bb23:
-  %r150 = load i32, i32* @d
-  call void @putint(i32 %r150)
+  %r360 = load i32, i32* @d
+  call void @putint(i32 %r360)
   call void @putch(i32 32)
-  %r154 = load i32, i32* %r138
-  %r153 = icmp sle i32 %r154, 1
-  br i1 %r153, label %bb35, label %bb36
+  %r361 = icmp sle i32 %r350, 1
+  br i1 %r361, label %bb35, label %bb36
 
 bb35:
-  store i32 1, i32* %r152
+  %r454 = add i32 1, 0
   br label %bb37
 
 bb36:
-  store i32 0, i32* %r152
+  %r455 = add i32 0, 0
   br label %bb37
 
 bb37:
-  %r156 = load i32, i32* %r152
-  %r155 = icmp ne i32 %r156, 0
-  br i1 %r155, label %bb31, label %bb34
+  %r362 = phi i32 [ %r454, %bb35 ], [ %r455, %bb36 ]
+  %r363 = icmp ne i32 %r362, 0
+  br i1 %r363, label %bb31, label %bb34
 
 bb34:
-  %r159 = call i32 @set_d(i32 4)
-  %r158 = icmp ne i32 %r159, 0
-  br i1 %r158, label %bb38, label %bb39
+  %r448 = call i32 @set_d(i32 4)
+  %r449 = icmp ne i32 %r448, 0
+  br i1 %r449, label %bb38, label %bb39
 
 bb38:
-  store i32 1, i32* %r157
+  %r453 = add i32 1, 0
   br label %bb40
 
 bb39:
-  store i32 0, i32* %r157
+  %r452 = add i32 0, 0
   br label %bb40
 
 bb40:
-  %r161 = load i32, i32* %r157
-  %r160 = icmp ne i32 %r161, 0
-  br i1 %r160, label %bb31, label %bb32
+  %r450 = phi i32 [ %r453, %bb38 ], [ %r452, %bb39 ]
+  %r451 = icmp ne i32 %r450, 0
+  br i1 %r451, label %bb31, label %bb32
 
 bb31:
   br label %bb33
@@ -253,92 +255,88 @@ bb32:
   br label %bb33
 
 bb33:
-  %r162 = load i32, i32* @d
-  call void @putint(i32 %r162)
+  %r364 = load i32, i32* @d
+  call void @putint(i32 %r364)
   call void @putch(i32 10)
   call void @putch(i32 10)
-  store i32 0, i32* %r163
-  store i32 1, i32* %r164
-  store i32 2, i32* %r165
-  store i32 3, i32* %r166
-  store i32 4, i32* %r167
+  %r365 = add i32 0, 0
+  %r366 = add i32 1, 0
+  %r367 = add i32 2, 0
+  %r368 = add i32 3, 0
+  %r369 = add i32 4, 0
   br label %bb41
 
 bb41:
-  %r170 = load i32, i32* %r163
-  %r169 = icmp ne i32 %r170, 0
-  br i1 %r169, label %bb45, label %bb46
+  %r370 = icmp ne i32 %r365, 0
+  br i1 %r370, label %bb45, label %bb46
 
 bb45:
-  store i32 1, i32* %r168
+  %r447 = add i32 1, 0
   br label %bb47
 
 bb46:
-  store i32 0, i32* %r168
+  %r371 = add i32 0, 0
   br label %bb47
 
 bb47:
-  %r172 = load i32, i32* %r168
-  %r171 = icmp ne i32 %r172, 0
-  br i1 %r171, label %bb44, label %bb43
+  %r372 = phi i32 [ %r447, %bb45 ], [ %r371, %bb46 ]
+  %r373 = icmp ne i32 %r372, 0
+  br i1 %r373, label %bb44, label %bb43
 
 bb44:
-  %r175 = load i32, i32* %r164
-  %r174 = icmp ne i32 %r175, 0
-  br i1 %r174, label %bb48, label %bb49
+  %r374 = icmp ne i32 %r366, 0
+  br i1 %r374, label %bb48, label %bb49
 
 bb48:
-  store i32 1, i32* %r173
+  %r376 = add i32 1, 0
   br label %bb50
 
 bb49:
-  store i32 0, i32* %r173
+  %r375 = add i32 0, 0
   br label %bb50
 
 bb50:
-  %r177 = load i32, i32* %r173
-  %r176 = icmp ne i32 %r177, 0
-  br i1 %r176, label %bb42, label %bb43
+  %r377 = phi i32 [ %r376, %bb48 ], [ %r375, %bb49 ]
+  %r378 = icmp ne i32 %r377, 0
+  br i1 %r378, label %bb42, label %bb43
 
 bb42:
   call void @putch(i32 32)
   br label %bb41
 
 bb43:
-  %r181 = load i32, i32* %r163
-  %r180 = icmp ne i32 %r181, 0
-  br i1 %r180, label %bb55, label %bb56
+  %r379 = icmp ne i32 %r365, 0
+  br i1 %r379, label %bb55, label %bb56
 
 bb55:
-  store i32 1, i32* %r179
+  %r445 = add i32 1, 0
   br label %bb57
 
 bb56:
-  store i32 0, i32* %r179
+  %r446 = add i32 0, 0
   br label %bb57
 
 bb57:
-  %r183 = load i32, i32* %r179
-  %r182 = icmp ne i32 %r183, 0
-  br i1 %r182, label %bb51, label %bb54
+  %r380 = phi i32 [ %r445, %bb55 ], [ %r446, %bb56 ]
+  %r381 = icmp ne i32 %r380, 0
+  br i1 %r381, label %bb51, label %bb54
 
 bb54:
-  %r186 = load i32, i32* %r164
-  %r185 = icmp ne i32 %r186, 0
-  br i1 %r185, label %bb58, label %bb59
+  %r382 = icmp ne i32 %r366, 0
+  br i1 %r382, label %bb58, label %bb59
 
 bb58:
-  store i32 1, i32* %r184
+  %r384 = add i32 1, 0
   br label %bb60
 
 bb59:
-  store i32 0, i32* %r184
+  %r383 = add i32 0, 0
   br label %bb60
 
 bb60:
-  %r188 = load i32, i32* %r184
-  %r187 = icmp ne i32 %r188, 0
-  br i1 %r187, label %bb51, label %bb52
+  %r385 = phi i32 [ %r384, %bb58 ], [ %r383, %bb59 ]
+  %r386 = icmp ne i32 %r385, 0
+  br i1 %r386, label %bb51, label %bb52
 
 bb51:
   call void @putch(i32 67)
@@ -348,42 +346,38 @@ bb52:
   br label %bb53
 
 bb53:
-  %r192 = load i32, i32* %r163
-  %r193 = load i32, i32* %r164
-  %r191 = icmp sge i32 %r192, %r193
-  br i1 %r191, label %bb65, label %bb66
+  %r387 = icmp sge i32 %r365, %r366
+  br i1 %r387, label %bb65, label %bb66
 
 bb65:
-  store i32 1, i32* %r190
+  %r443 = add i32 1, 0
   br label %bb67
 
 bb66:
-  store i32 0, i32* %r190
+  %r444 = add i32 0, 0
   br label %bb67
 
 bb67:
-  %r195 = load i32, i32* %r190
-  %r194 = icmp ne i32 %r195, 0
-  br i1 %r194, label %bb61, label %bb64
+  %r388 = phi i32 [ %r443, %bb65 ], [ %r444, %bb66 ]
+  %r389 = icmp ne i32 %r388, 0
+  br i1 %r389, label %bb61, label %bb64
 
 bb64:
-  %r198 = load i32, i32* %r164
-  %r199 = load i32, i32* %r163
-  %r197 = icmp sle i32 %r198, %r199
-  br i1 %r197, label %bb68, label %bb69
+  %r390 = icmp sle i32 %r366, %r365
+  br i1 %r390, label %bb68, label %bb69
 
 bb68:
-  store i32 1, i32* %r196
+  %r392 = add i32 1, 0
   br label %bb70
 
 bb69:
-  store i32 0, i32* %r196
+  %r391 = add i32 0, 0
   br label %bb70
 
 bb70:
-  %r201 = load i32, i32* %r196
-  %r200 = icmp ne i32 %r201, 0
-  br i1 %r200, label %bb61, label %bb62
+  %r393 = phi i32 [ %r392, %bb68 ], [ %r391, %bb69 ]
+  %r394 = icmp ne i32 %r393, 0
+  br i1 %r394, label %bb61, label %bb62
 
 bb61:
   call void @putch(i32 72)
@@ -393,42 +387,38 @@ bb62:
   br label %bb63
 
 bb63:
-  %r205 = load i32, i32* %r165
-  %r206 = load i32, i32* %r164
-  %r204 = icmp sge i32 %r205, %r206
-  br i1 %r204, label %bb75, label %bb76
+  %r395 = icmp sge i32 %r367, %r366
+  br i1 %r395, label %bb75, label %bb76
 
 bb75:
-  store i32 1, i32* %r203
+  %r396 = add i32 1, 0
   br label %bb77
 
 bb76:
-  store i32 0, i32* %r203
+  %r442 = add i32 0, 0
   br label %bb77
 
 bb77:
-  %r208 = load i32, i32* %r203
-  %r207 = icmp ne i32 %r208, 0
-  br i1 %r207, label %bb74, label %bb72
+  %r397 = phi i32 [ %r396, %bb75 ], [ %r442, %bb76 ]
+  %r398 = icmp ne i32 %r397, 0
+  br i1 %r398, label %bb74, label %bb72
 
 bb74:
-  %r211 = load i32, i32* %r167
-  %r212 = load i32, i32* %r166
-  %r210 = icmp ne i32 %r211, %r212
-  br i1 %r210, label %bb78, label %bb79
+  %r399 = icmp ne i32 %r369, %r368
+  br i1 %r399, label %bb78, label %bb79
 
 bb78:
-  store i32 1, i32* %r209
+  %r401 = add i32 1, 0
   br label %bb80
 
 bb79:
-  store i32 0, i32* %r209
+  %r400 = add i32 0, 0
   br label %bb80
 
 bb80:
-  %r214 = load i32, i32* %r209
-  %r213 = icmp ne i32 %r214, 0
-  br i1 %r213, label %bb71, label %bb72
+  %r402 = phi i32 [ %r401, %bb78 ], [ %r400, %bb79 ]
+  %r403 = icmp ne i32 %r402, 0
+  br i1 %r403, label %bb71, label %bb72
 
 bb71:
   call void @putch(i32 73)
@@ -438,22 +428,150 @@ bb72:
   br label %bb73
 
 bb73:
-  %r219 = load i32, i32* %r164
-  %r218 = icmp ne i32 %r219, 0
-  br i1 %r218, label %bb90, label %bb89
+  %r404 = icmp ne i32 %r366, 0
+  br i1 %r404, label %bb90, label %bb89
 
 bb89:
-  store i32 1, i32* %r217
+  %r441 = add i32 1, 0
   br label %bb91
 
 bb90:
-  store i32 0, i32* %r217
+  %r440 = add i32 0, 0
   br label %bb91
 
 bb91:
-  %r221 = load i32, i32* %r217
-  %r220 = icmp ne i32 %r221, 0
-  br i1 %r220, label %bb88, label %bb86
+  %r405 = phi i32 [ %r441, %bb89 ], [ %r440, %bb90 ]
+  %r406 = icmp ne i32 %r405, 0
+  br i1 %r406, label %bb88, label %bb86
 
 bb88:
-  %r224 
+  %r408 = icmp slt i32 %r368, %r368
+  br i1 %r408, label %bb92, label %bb93
+
+bb92:
+  %r409 = add i32 1, 0
+  br label %bb94
+
+bb93:
+  %r413 = add i32 0, 0
+  br label %bb94
+
+bb94:
+  %r410 = phi i32 [ %r409, %bb92 ], [ %r413, %bb93 ]
+  %r411 = icmp ne i32 %r410, 0
+  br i1 %r411, label %bb85, label %bb86
+
+bb85:
+  %r412 = add i32 1, 0
+  br label %bb87
+
+bb86:
+  %r407 = add i32 0, 0
+  br label %bb87
+
+bb87:
+  %r414 = phi i32 [ %r412, %bb85 ], [ %r407, %bb86 ]
+  %r415 = icmp ne i32 %r414, 0
+  br i1 %r415, label %bb81, label %bb84
+
+bb84:
+  %r435 = icmp sge i32 %r369, %r369
+  br i1 %r435, label %bb95, label %bb96
+
+bb95:
+  %r438 = add i32 1, 0
+  br label %bb97
+
+bb96:
+  %r439 = add i32 0, 0
+  br label %bb97
+
+bb97:
+  %r436 = phi i32 [ %r438, %bb95 ], [ %r439, %bb96 ]
+  %r437 = icmp ne i32 %r436, 0
+  br i1 %r437, label %bb81, label %bb82
+
+bb81:
+  call void @putch(i32 74)
+  br label %bb83
+
+bb82:
+  br label %bb83
+
+bb83:
+  %r416 = icmp ne i32 %r366, 0
+  br i1 %r416, label %bb103, label %bb102
+
+bb102:
+  %r434 = add i32 1, 0
+  br label %bb104
+
+bb103:
+  %r433 = add i32 0, 0
+  br label %bb104
+
+bb104:
+  %r417 = phi i32 [ %r434, %bb102 ], [ %r433, %bb103 ]
+  %r418 = icmp ne i32 %r417, 0
+  br i1 %r418, label %bb98, label %bb101
+
+bb101:
+  %r419 = icmp slt i32 %r368, %r368
+  br i1 %r419, label %bb109, label %bb110
+
+bb109:
+  %r432 = add i32 1, 0
+  br label %bb111
+
+bb110:
+  %r420 = add i32 0, 0
+  br label %bb111
+
+bb111:
+  %r421 = phi i32 [ %r432, %bb109 ], [ %r420, %bb110 ]
+  %r422 = icmp ne i32 %r421, 0
+  br i1 %r422, label %bb108, label %bb106
+
+bb108:
+  %r424 = icmp sge i32 %r369, %r369
+  br i1 %r424, label %bb112, label %bb113
+
+bb112:
+  %r428 = add i32 1, 0
+  br label %bb114
+
+bb113:
+  %r429 = add i32 0, 0
+  br label %bb114
+
+bb114:
+  %r425 = phi i32 [ %r428, %bb112 ], [ %r429, %bb113 ]
+  %r426 = icmp ne i32 %r425, 0
+  br i1 %r426, label %bb105, label %bb106
+
+bb105:
+  %r427 = add i32 1, 0
+  br label %bb107
+
+bb106:
+  %r423 = add i32 0, 0
+  br label %bb107
+
+bb107:
+  %r430 = phi i32 [ %r427, %bb105 ], [ %r423, %bb106 ]
+  %r431 = icmp ne i32 %r430, 0
+  br i1 %r431, label %bb98, label %bb99
+
+bb98:
+  call void @putch(i32 75)
+  br label %bb100
+
+bb99:
+  br label %bb100
+
+bb100:
+  call void @putch(i32 10)
+  call void @_sysy_stoptime(i32 117)
+  ret i32 0
+}
+

@@ -201,7 +201,8 @@ struct Operand {
 
     template <typename T>
     std::shared_ptr<T> inner_generic() {
-        if (std::shared_ptr<T>* ptr = std::get_if<std::shared_ptr<T>>(&inner_)) {
+        if (std::shared_ptr<T>* ptr =
+                std::get_if<std::shared_ptr<T>>(&inner_)) {
             return *ptr;
         }
         return nullptr;
@@ -481,10 +482,11 @@ class Phi {
    public:
     std::shared_ptr<Operand> dst() { return dst_; }
     std::vector<
-        std::pair<std::shared_ptr<Operand>, std::shared_ptr<BlockLabel>>>
+        std::pair<std::shared_ptr<Operand>, std::shared_ptr<BlockLabel>>>&
     phis() {
         return phis_;
     }
+
     Phi(std::shared_ptr<Operand> dst,
         const std::vector<std::pair<std::shared_ptr<Operand>,
                                     std::shared_ptr<BlockLabel>>>& phis)

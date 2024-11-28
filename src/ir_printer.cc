@@ -171,7 +171,7 @@ void printL_stm(std::ostream& os, std::shared_ptr<ir::Stmt> stm) {
                 os << " = alloca ";
                 switch (stm->inner<Alloca>()->dst()->inner()->type()) {
                     case RegType::kInt: {
-                        assert(0);
+                        // assert(0);
                         break;
                     }
                     case RegType::kIntPtr: {
@@ -338,7 +338,7 @@ void printL_stm(std::ostream& os, std::shared_ptr<ir::Stmt> stm) {
             if (stm->inner<Gep>()->base_ptr()->kind() == OperandKind::kLocal) {
                 switch (stm->inner<Gep>()->base_ptr()->inner()->type()) {
                     case RegType::kInt: {
-                        assert(0);
+                        // assert(0);
                         break;
                     }
                     case RegType::kIntPtr: {

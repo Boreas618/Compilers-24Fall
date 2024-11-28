@@ -36,4 +36,20 @@ std::unordered_set<T> set_union(const std::unordered_set<T>& set1,
     result.insert(set2.begin(), set2.end());
     return result;
 }
+
+template <typename T>
+bool set_equal(const std::unordered_set<T>& set1,
+               const std::unordered_set<T>& set2) {
+    if (set1.size() != set2.size()) {
+        return false;
+    }
+
+    for (const auto& element : set1) {
+        if (set2.find(element) == set2.end()) {
+            return false;
+        }
+    }
+
+    return true;
+}
 };  // namespace common

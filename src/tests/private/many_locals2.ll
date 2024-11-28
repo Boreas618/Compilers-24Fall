@@ -1,156 +1,156 @@
+declare i32 @getch( )
+declare i32 @getint( )
+declare void @putch( i32 )
+declare void @putint( i32 )
+declare void @putarray( i32, i32* )
+declare void @_sysy_starttime( i32 )
+declare void @_sysy_stoptime( i32 )
 @n = global i32 0
 define i32 @main( ) {
 main:
-  %r225 = alloca i32
-  %r194 = alloca i32
+  %r263 = add i32 0, 0
+  %r264 = add i32 0, 0
   call void @_sysy_starttime(i32 4)
-  %r100 = alloca i32
-  %r101 = alloca i32
-  %r102 = alloca i32
-  %r103 = alloca i32
-  %r104 = alloca i32
-  %r105 = alloca i32
-  %r106 = alloca i32
-  %r107 = alloca i32
-  %r108 = alloca i32
-  %r109 = alloca i32
-  %r110 = alloca i32
-  %r111 = alloca i32
-  %r112 = alloca i32
-  %r113 = alloca i32
-  %r114 = alloca i32
-  %r115 = alloca i32
-  %r116 = alloca i32
-  %r117 = alloca i32
-  %r118 = alloca i32
-  %r119 = alloca i32
-  %r120 = alloca i32
-  %r121 = alloca i32
-  %r122 = alloca i32
-  %r123 = alloca i32
-  %r124 = alloca i32
-  %r125 = alloca i32
-  %r126 = alloca i32
-  %r127 = alloca i32
-  %r128 = alloca i32
-  %r129 = alloca i32
-  %r130 = alloca i32
-  %r131 = call i32 @getint()
-  store i32 %r131, i32* %r130
+  %r265 = add i32 0, 0
+  %r266 = add i32 0, 0
+  %r267 = add i32 0, 0
+  %r268 = add i32 0, 0
+  %r269 = add i32 0, 0
+  %r270 = add i32 0, 0
+  %r271 = add i32 0, 0
+  %r272 = add i32 0, 0
+  %r273 = add i32 0, 0
+  %r274 = add i32 0, 0
+  %r275 = add i32 0, 0
+  %r276 = add i32 0, 0
+  %r277 = add i32 0, 0
+  %r278 = add i32 0, 0
+  %r279 = add i32 0, 0
+  %r280 = add i32 0, 0
+  %r281 = add i32 0, 0
+  %r282 = add i32 0, 0
+  %r283 = add i32 0, 0
+  %r284 = add i32 0, 0
+  %r285 = add i32 0, 0
+  %r286 = add i32 0, 0
+  %r287 = add i32 0, 0
+  %r288 = add i32 0, 0
+  %r289 = add i32 0, 0
+  %r290 = add i32 0, 0
+  %r291 = add i32 0, 0
+  %r292 = add i32 0, 0
+  %r293 = add i32 0, 0
+  %r294 = add i32 0, 0
+  %r295 = add i32 0, 0
+  %r296 = call i32 @getint()
+  %r297 = add i32 %r296, 0
   br label %bb1
 
 bb1:
-  %r133 = load i32, i32* %r130
-  %r132 = icmp eq i32 %r133, 5
-  br i1 %r132, label %bb2, label %bb3
+  %r298 = phi i32 [ %r297, %main ], [ %r301, %bb2 ]
+  %r299 = icmp eq i32 %r298, 5
+  br i1 %r299, label %bb2, label %bb3
 
 bb2:
-  %r134 = load i32, i32* %r130
-  %r135 = add i32 %r134, 1
-  store i32 %r135, i32* %r130
+  %r300 = add i32 %r298, 1
+  %r301 = add i32 %r300, 0
   br label %bb1
 
 bb3:
-  store i32 0, i32* %r100
-  %r136 = load i32, i32* %r100
-  %r137 = add i32 %r136, 1
-  store i32 %r137, i32* %r101
-  %r138 = load i32, i32* %r101
-  %r139 = add i32 %r138, 1
-  store i32 %r139, i32* %r102
-  %r140 = load i32, i32* %r102
-  %r141 = add i32 %r140, 1
-  store i32 %r141, i32* %r103
-  %r142 = load i32, i32* %r103
-  %r143 = add i32 %r142, 1
-  store i32 %r143, i32* %r104
-  %r144 = load i32, i32* %r104
-  %r145 = add i32 %r144, 1
-  store i32 %r145, i32* %r105
-  %r146 = load i32, i32* %r105
-  %r147 = add i32 %r146, 1
-  store i32 %r147, i32* %r106
-  %r148 = load i32, i32* %r106
-  %r149 = add i32 %r148, 1
-  store i32 %r149, i32* %r107
-  %r150 = load i32, i32* %r107
-  %r151 = add i32 %r150, 1
-  store i32 %r151, i32* %r108
-  %r152 = load i32, i32* %r108
-  %r153 = add i32 %r152, 1
-  store i32 %r153, i32* %r109
-  %r154 = load i32, i32* %r109
-  %r155 = add i32 %r154, 1
-  store i32 %r155, i32* %r110
-  %r156 = load i32, i32* %r110
-  %r157 = add i32 %r156, 1
-  store i32 %r157, i32* %r111
-  %r158 = load i32, i32* %r111
-  %r159 = add i32 %r158, 1
-  store i32 %r159, i32* %r112
-  %r160 = load i32, i32* %r112
-  %r161 = add i32 %r160, 1
-  store i32 %r161, i32* %r113
-  %r162 = load i32, i32* %r113
-  %r163 = add i32 %r162, 1
-  store i32 %r163, i32* %r114
-  %r164 = load i32, i32* %r114
-  %r165 = add i32 %r164, 1
-  store i32 %r165, i32* %r115
-  %r166 = load i32, i32* %r115
-  %r167 = add i32 %r166, 1
-  store i32 %r167, i32* %r116
-  %r168 = load i32, i32* %r116
-  %r169 = add i32 %r168, 1
-  store i32 %r169, i32* %r117
-  %r170 = load i32, i32* %r117
-  %r171 = add i32 %r170, 1
-  store i32 %r171, i32* %r118
-  %r172 = load i32, i32* %r118
-  %r173 = add i32 %r172, 1
-  store i32 %r173, i32* %r119
-  %r174 = load i32, i32* %r119
-  %r175 = add i32 %r174, 1
-  store i32 %r175, i32* %r120
-  %r176 = load i32, i32* %r120
-  %r177 = add i32 %r176, 1
-  store i32 %r177, i32* %r121
-  %r178 = load i32, i32* %r121
-  %r179 = add i32 %r178, 1
-  store i32 %r179, i32* %r122
-  %r180 = load i32, i32* %r122
-  %r181 = add i32 %r180, 1
-  store i32 %r181, i32* %r123
-  %r182 = load i32, i32* %r123
-  %r183 = add i32 %r182, 1
-  store i32 %r183, i32* %r124
-  %r184 = load i32, i32* %r124
-  %r185 = add i32 %r184, 1
-  store i32 %r185, i32* %r125
-  %r186 = load i32, i32* %r125
-  %r187 = add i32 %r186, 1
-  store i32 %r187, i32* %r126
-  %r188 = load i32, i32* %r126
-  %r189 = add i32 %r188, 1
-  store i32 %r189, i32* %r127
-  %r190 = load i32, i32* %r127
-  %r191 = add i32 %r190, 1
-  store i32 %r191, i32* %r128
-  %r192 = load i32, i32* %r128
-  %r193 = add i32 %r192, 1
-  store i32 %r193, i32* %r129
-  %r195 = load i32, i32* %r100
-  call void @putint(i32 %r195)
-  %r196 = load i32, i32* %r101
-  call void @putint(i32 %r196)
-  %r197 = load i32, i32* %r102
-  call void @putint(i32 %r197)
-  %r198 = load i32, i32* %r103
-  call void @putint(i32 %r198)
-  %r199 = load i32, i32* %r104
-  call void @putint(i32 %r199)
-  %r200 = load i32, i32* %r105
-  call void @putint(i32 %r200)
-  %r201 = load i32, i32* %r106
-  call void @putint(i32 %r201)
-  %r202 = lo
+  %r302 = add i32 0, 0
+  %r303 = add i32 %r302, 1
+  %r304 = add i32 %r303, 0
+  %r305 = add i32 %r304, 1
+  %r306 = add i32 %r305, 0
+  %r307 = add i32 %r306, 1
+  %r308 = add i32 %r307, 0
+  %r309 = add i32 %r308, 1
+  %r310 = add i32 %r309, 0
+  %r311 = add i32 %r310, 1
+  %r312 = add i32 %r311, 0
+  %r313 = add i32 %r312, 1
+  %r314 = add i32 %r313, 0
+  %r315 = add i32 %r314, 1
+  %r316 = add i32 %r315, 0
+  %r317 = add i32 %r316, 1
+  %r318 = add i32 %r317, 0
+  %r319 = add i32 %r318, 1
+  %r320 = add i32 %r319, 0
+  %r321 = add i32 %r320, 1
+  %r322 = add i32 %r321, 0
+  %r323 = add i32 %r322, 1
+  %r324 = add i32 %r323, 0
+  %r325 = add i32 %r324, 1
+  %r326 = add i32 %r325, 0
+  %r327 = add i32 %r326, 1
+  %r328 = add i32 %r327, 0
+  %r329 = add i32 %r328, 1
+  %r330 = add i32 %r329, 0
+  %r331 = add i32 %r330, 1
+  %r332 = add i32 %r331, 0
+  %r333 = add i32 %r332, 1
+  %r334 = add i32 %r333, 0
+  %r335 = add i32 %r334, 1
+  %r336 = add i32 %r335, 0
+  %r337 = add i32 %r336, 1
+  %r338 = add i32 %r337, 0
+  %r339 = add i32 %r338, 1
+  %r340 = add i32 %r339, 0
+  %r341 = add i32 %r340, 1
+  %r342 = add i32 %r341, 0
+  %r343 = add i32 %r342, 1
+  %r344 = add i32 %r343, 0
+  %r345 = add i32 %r344, 1
+  %r346 = add i32 %r345, 0
+  %r347 = add i32 %r346, 1
+  %r348 = add i32 %r347, 0
+  %r349 = add i32 %r348, 1
+  %r350 = add i32 %r349, 0
+  %r351 = add i32 %r350, 1
+  %r352 = add i32 %r351, 0
+  %r353 = add i32 %r352, 1
+  %r354 = add i32 %r353, 0
+  %r355 = add i32 %r354, 1
+  %r356 = add i32 %r355, 0
+  %r357 = add i32 %r356, 1
+  %r358 = add i32 %r357, 0
+  %r359 = add i32 %r358, 1
+  %r360 = add i32 %r359, 0
+  call void @putint(i32 %r302)
+  call void @putint(i32 %r304)
+  call void @putint(i32 %r306)
+  call void @putint(i32 %r308)
+  call void @putint(i32 %r310)
+  call void @putint(i32 %r312)
+  call void @putint(i32 %r314)
+  call void @putint(i32 %r316)
+  call void @putint(i32 %r318)
+  call void @putint(i32 %r320)
+  call void @putint(i32 %r322)
+  call void @putint(i32 %r324)
+  call void @putint(i32 %r326)
+  call void @putint(i32 %r328)
+  call void @putint(i32 %r330)
+  call void @putint(i32 %r332)
+  call void @putint(i32 %r334)
+  call void @putint(i32 %r336)
+  call void @putint(i32 %r338)
+  call void @putint(i32 %r340)
+  call void @putint(i32 %r342)
+  call void @putint(i32 %r344)
+  call void @putint(i32 %r346)
+  call void @putint(i32 %r348)
+  call void @putint(i32 %r350)
+  call void @putint(i32 %r352)
+  call void @putint(i32 %r354)
+  call void @putint(i32 %r356)
+  call void @putint(i32 %r358)
+  call void @putint(i32 %r360)
+  %r361 = add i32 10, 0
+  call void @putch(i32 %r361)
+  call void @putint(i32 %r298)
+  call void @putch(i32 %r361)
+  call void @_sysy_stoptime(i32 312)
+  ret i32 %r352
+}
+

@@ -78,8 +78,13 @@ int main(int argc, char* argv[]) {
     IRGenerator ir_generator;
     auto prog = ir_generator.Generate(aroot);
     SSAWorker ssa;
-    printL_prog(llvm_stream, prog);
-    
+
+    llvm_stream
+        << "declare i32 @getch( )\ndeclare i32 @getint( )\ndeclare void "
+           "@putch( i32 )\ndeclare void @putint( i32 )\ndeclare void "
+           "@putarray( i32, i32* )\ndeclare void @_sysy_starttime( i32 "
+           ")\ndeclare void @_sysy_stoptime( i32 )\n";
+
     prog = ssa.Launch(prog);
     printL_prog(llvm_stream, prog);
     llvm_stream.close();
