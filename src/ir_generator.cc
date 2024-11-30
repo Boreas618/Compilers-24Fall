@@ -628,14 +628,20 @@ void IRGenerator::HandleLocalVarDefScalar(aA_varDef d) {
 
 void IRGenerator::InitArray(std::shared_ptr<LocalVal> base_ptr, int len,
                             vector<aA_rightVal> vals) {
-    assert(len == vals.size());
-    auto element_ptr = LocalVal::CreateIntPtr(0);
-    for (int i = 0; i < vals.size(); i++) {
+    // assert(len == vals.size());
+    for (int i = 0; i < len; i++) {
+        auto element_ptr = LocalVal::CreateIntPtr(0);
+        Box<ir::Operand> right_ele = nullptr;
+        if (i < vals.size()) {
+            right_ele = PtrDeref(HandleRightVal(vals[i]));
+        } else {
+            right_ele = ir::Operand::FromIConst(0);
+        }
+        assert(right_ele->kind() == OperandKind::kIntConst);
+
         emit_irs_.push_back(ir::Stmt::CreateGep(Operand::FromLocal(element_ptr),
                                                 Operand::FromLocal(base_ptr),
                                                 Operand::FromIConst(i)));
-        auto right_ele = PtrDeref(HandleRightVal(vals[i]));
-        assert(right_ele->kind() == OperandKind::kIntConst);
         emit_irs_.push_back(
             ir::Stmt::CreateStore(right_ele, Operand::FromLocal(element_ptr)));
     }
@@ -660,16 +666,15 @@ void IRGenerator::HandleLocalVarDefArray(aA_varDef d) {
     auto id = *d->u.defArray->id;
     auto len = d->u.defArray->len;
     auto vals = d->u.defArray->vals;
-    auto right_val = PtrDeref(HandleRightVal(d->u.defScalar->val));
 
     std::shared_ptr<ir::LocalVal> local_val = nullptr;
-    if (d->u.defScalar->type->type == A_nativeTypeKind) {
+    std::string type_name;
+
+    if (d->u.defArray->type->type == A_nativeTypeKind) {
         local_val = LocalVal::CreateIntPtr(len);
-        InitArray(local_val, len, vals);
     } else if (d->u.defArray->type->type == A_structTypeKind) {
-        auto type_name = *d->u.defArray->type->u.structType;
+        type_name = *d->u.defArray->type->u.structType;
         local_val = LocalVal::CreateStructPtr(len, type_name);
-        InitStruct(local_val, len, vals, type_name);
     } else {
         assert(0);
     }
@@ -677,6 +682,14 @@ void IRGenerator::HandleLocalVarDefArray(aA_varDef d) {
     assert(local_val != nullptr);
     local_vars_[id] = local_val;
     emit_irs_.push_back(ir::Stmt::CreateAlloca(Operand::FromLocal(local_val)));
+
+    if (d->u.defArray->type->type == A_nativeTypeKind) {
+        InitArray(local_val, len, vals);
+    } else if (d->u.defArray->type->type == A_structTypeKind) {
+        InitStruct(local_val, len, vals, type_name);
+    } else {
+        assert(0);
+    }
 }
 
 void IRGenerator::HandleLocalVarDecl(aA_varDeclStmt v) {

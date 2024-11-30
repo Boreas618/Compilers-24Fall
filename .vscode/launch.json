@@ -10,7 +10,7 @@
             "name": "Debug",
             "program": "src/compiler",
             "args": [
-                "tests/private/long_code.tea",
+                "tests/public/big_int_mul.tea",
             ],
             "cwd": "src"
         }
