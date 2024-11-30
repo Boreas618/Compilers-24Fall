@@ -32,8 +32,8 @@ Box<ir::Prog> SSAWorker::Launch(Box<ir::Prog> prog) {
     for (auto& fun : prog->funcs()) {
         ResetTables();
         CombineAddr(fun);
-        PointerToRegNext(fun);
-        // PointerToReg(fun);
+        // PointerToRegNext(fun);
+        PointerToReg(fun);
 
         auto block_graph = BlockGraph::FromBlocks(fun->blocks());
         auto graph = block_graph->graph();
@@ -65,7 +65,7 @@ Box<ir::Prog> SSAWorker::Launch(Box<ir::Prog> prog) {
     return prog;
 }
 
-static bool IsMemVariable(Box<ir::Stmt> stm) {
+static bool IsAllocatingStackScalar(Box<ir::Stmt> stm) {
     auto alloca_stmt = stm->inner<ir::Alloca>();
     return stm->type() == ir::StmtKind::kAlloca &&
            alloca_stmt->dst()->kind() == ir::OperandKind::kLocal &&
@@ -133,7 +133,7 @@ void SSAWorker::PointerToRegNext(Box<ir::Func> fun) {
         for (const auto& inst : *block->instrs()) {
             switch (inst->type()) {
                 case ir::StmtKind::kAlloca: {
-                    if (IsMemVariable(inst)) {
+                    if (IsAllocatingStackScalar(inst)) {
                         auto dst = inst->inner<ir::Alloca>()->dst();
                         auto new_local = ir::LocalVal::CreateInt();
                         alias_map[dst->inner_generic<ir::LocalVal>()] =
@@ -172,14 +172,15 @@ void SSAWorker::PointerToRegNext(Box<ir::Func> fun) {
                                 alias_map[inst->inner<ir::Store>()
                                               ->src()
                                               ->inner_generic<ir::LocalVal>()];
-                            if (src.get() == nullptr)
+                            if (src.get() == nullptr) {
                                 new_list.push_back(ir::Stmt::CreateMove(
                                     inst->inner<ir::Store>()->src(),
                                     ir::Operand::FromLocal(ptr_operand)));
-                            else
+                            } else {
                                 new_list.push_back(ir::Stmt::CreateMove(
                                     ir::Operand::FromLocal(src),
                                     ir::Operand::FromLocal(ptr_operand)));
+                            }
                             continue;
                         }
                     }
@@ -210,6 +211,8 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
     /**
      * The `alias_map` helps transform scalars on the stack into scalars using
      * registers.
+     *
+     * Scalar on stack is determined by `i32 *` && (len == 0).
      *
      * - For an `alloca` instruction (scalar), the pointer allocated will be
      * mapped to a new local variable in the map.
@@ -327,7 +330,7 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
             std::shared_ptr<ir::Stmt> new_inst = nullptr;
             switch (inst->type()) {
                 case ir::StmtKind::kAlloca: {
-                    if (IsMemVariable(inst)) {
+                    if (IsAllocatingStackScalar(inst)) {
                         auto dst_next =
                             alias_map[inst->inner<ir::Alloca>()
                                           ->dst()
@@ -367,6 +370,7 @@ void SSAWorker::PointerToReg(Box<ir::Func> fun) {
                                       ->inner_generic<ir::LocalVal>()];
                     if (ptr_next == nullptr) {
                         fix_operands(ops);
+                        new_inst = inst;
                         break;
                     }
                     auto src_real =

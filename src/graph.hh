@@ -78,8 +78,12 @@ Box<Node<T>> Graph<T>::AddNode(T value) {
 
 template <typename T>
 void Graph<T>::RemoveNode(Box<Node<T>> node) {
-    //assert(node->out_degree() == 0);
-    //assert(node->in_degree() == 0);
+    for (auto id : node->predecessors()) {
+        nodes_[id]->successors().erase(node->id());
+    }
+    for (auto id : node->successors()) {
+        nodes_[id]->predecessors().erase(node->id());
+    }
     nodes_.erase(node->id());
 }
 
@@ -138,7 +142,8 @@ std::vector<Box<Node<T>>> Graph<T>::TopologicalSort() {
         }
     }
 
-    // The result is in reverse order (postorder), so we reverse it to get topological order
+    // The result is in reverse order (postorder), so we reverse it to get
+    // topological order
     std::reverse(result.begin(), result.end());
 
     return result;

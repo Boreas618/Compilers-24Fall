@@ -7,127 +7,127 @@ declare void @_sysy_starttime( i32 )
 declare void @_sysy_stoptime( i32 )
 define i32 @main( ) {
 main:
-  %r187 = add i32 0, 0
-  %r188 = add i32 0, 0
-  %r189 = add i32 0, 0
-  %r190 = add i32 0, 0
-  %r191 = add i32 0, 0
-  %r192 = add i32 0, 0
-  %r193 = add i32 0, 0
+  %r169 = add i32 0, 0
+  %r170 = add i32 0, 0
+  %r171 = add i32 0, 0
+  %r172 = add i32 0, 0
+  %r173 = add i32 0, 0
+  %r174 = add i32 0, 0
+  %r175 = add i32 0, 0
   call void @_sysy_starttime(i32 3)
-  %r194 = add i32 0, 0
-  %r195 = add i32 0, 0
+  %r176 = add i32 0, 0
+  %r177 = add i32 0, 0
   %r102 = alloca [ 10 x i32 ]
-  %r196 = add i32 0, 0
-  %r197 = add i32 0, 0
+  %r178 = add i32 0, 0
+  %r179 = add i32 0, 0
   br label %bb1
 
 bb1:
-  %r198 = phi i32 [ %r197, %main ], [ %r202, %bb2 ]
-  %r199 = icmp slt i32 %r198, 10
-  br i1 %r199, label %bb2, label %bb3
+  %r180 = phi i32 [ %r179, %main ], [ %r184, %bb2 ]
+  %r181 = icmp slt i32 %r180, 10
+  br i1 %r181, label %bb2, label %bb3
 
 bb2:
-  %r105 = getelementptr [10 x i32 ], [10 x i32 ]* %r102, i32 0, i32 %r198
-  %r200 = add i32 %r198, 1
-  store i32 %r200, i32* %r105
-  %r201 = add i32 %r198, 1
-  %r202 = add i32 %r201, 0
+  %r105 = getelementptr [10 x i32 ], [10 x i32 ]* %r102, i32 0, i32 %r180
+  %r182 = add i32 %r180, 1
+  store i32 %r182, i32* %r105
+  %r183 = add i32 %r180, 1
+  %r184 = add i32 %r183, 0
   br label %bb1
 
 bb3:
-  %r203 = add i32 10, 0
-  %r204 = call i32 @getint()
-  %r205 = add i32 %r204, 0
-  %r206 = sub i32 %r203, 1
-  %r207 = add i32 %r206, 0
-  %r208 = add i32 0, 0
-  %r209 = add i32 %r207, %r208
-  %r210 = sdiv i32 %r209, 2
-  %r211 = add i32 %r210, 0
+  %r185 = add i32 10, 0
+  %r186 = call i32 @getint()
+  %r187 = add i32 %r186, 0
+  %r188 = sub i32 %r185, 1
+  %r189 = add i32 %r188, 0
+  %r190 = add i32 0, 0
+  %r191 = add i32 %r189, %r190
+  %r192 = sdiv i32 %r191, 2
+  %r193 = add i32 %r192, 0
   br label %bb4
 
 bb4:
-  %r212 = phi i32 [ %r207, %bb3 ], [ %r231, %bb16 ]
-  %r213 = phi i32 [ %r208, %bb3 ], [ %r232, %bb16 ]
-  %r214 = phi i32 [ %r211, %bb3 ], [ %r228, %bb16 ]
-  %r125 = getelementptr [10 x i32 ], [10 x i32 ]* %r102, i32 0, i32 %r214
-  %r215 = load i32, i32* %r125
-  %r216 = icmp ne i32 %r215, %r205
-  br i1 %r216, label %bb8, label %bb9
+  %r194 = phi i32 [ %r193, %bb3 ], [ %r207, %bb16 ]
+  %r195 = phi i32 [ %r189, %bb3 ], [ %r210, %bb16 ]
+  %r196 = phi i32 [ %r190, %bb3 ], [ %r211, %bb16 ]
+  %r125 = getelementptr [10 x i32 ], [10 x i32 ]* %r102, i32 0, i32 %r194
+  %r197 = load i32, i32* %r125
+  %r198 = icmp ne i32 %r197, %r187
+  br i1 %r198, label %bb8, label %bb9
 
 bb8:
-  %r218 = add i32 1, 0
+  %r199 = add i32 1, 0
   br label %bb10
 
 bb9:
-  %r217 = add i32 0, 0
+  %r222 = add i32 0, 0
   br label %bb10
 
 bb10:
-  %r219 = phi i32 [ %r218, %bb8 ], [ %r217, %bb9 ]
-  %r220 = icmp ne i32 %r219, 0
-  br i1 %r220, label %bb7, label %bb6
+  %r200 = phi i32 [ %r199, %bb8 ], [ %r222, %bb9 ]
+  %r201 = icmp ne i32 %r200, 0
+  br i1 %r201, label %bb7, label %bb6
 
 bb7:
-  %r221 = icmp slt i32 %r213, %r212
-  br i1 %r221, label %bb11, label %bb12
+  %r202 = icmp slt i32 %r196, %r195
+  br i1 %r202, label %bb11, label %bb12
 
 bb11:
-  %r223 = add i32 1, 0
+  %r217 = add i32 1, 0
   br label %bb13
 
 bb12:
-  %r222 = add i32 0, 0
+  %r216 = add i32 0, 0
   br label %bb13
 
 bb13:
-  %r224 = phi i32 [ %r223, %bb11 ], [ %r222, %bb12 ]
-  %r225 = icmp ne i32 %r224, 0
-  br i1 %r225, label %bb5, label %bb6
+  %r203 = phi i32 [ %r217, %bb11 ], [ %r216, %bb12 ]
+  %r204 = icmp ne i32 %r203, 0
+  br i1 %r204, label %bb5, label %bb6
 
 bb5:
-  %r226 = add i32 %r212, %r213
-  %r227 = sdiv i32 %r226, 2
-  %r228 = add i32 %r227, 0
-  %r144 = getelementptr [10 x i32 ], [10 x i32 ]* %r102, i32 0, i32 %r228
-  %r229 = load i32, i32* %r144
-  %r230 = icmp slt i32 %r205, %r229
-  br i1 %r230, label %bb14, label %bb15
+  %r205 = add i32 %r195, %r196
+  %r206 = sdiv i32 %r205, 2
+  %r207 = add i32 %r206, 0
+  %r144 = getelementptr [10 x i32 ], [10 x i32 ]* %r102, i32 0, i32 %r207
+  %r208 = load i32, i32* %r144
+  %r209 = icmp slt i32 %r187, %r208
+  br i1 %r209, label %bb14, label %bb15
 
 bb14:
-  %r235 = sub i32 %r228, 1
-  %r236 = add i32 %r235, 0
+  %r214 = sub i32 %r207, 1
+  %r215 = add i32 %r214, 0
   br label %bb16
 
 bb15:
-  %r233 = add i32 %r228, 1
-  %r234 = add i32 %r233, 0
+  %r212 = add i32 %r207, 1
+  %r213 = add i32 %r212, 0
   br label %bb16
 
 bb16:
-  %r231 = phi i32 [ %r236, %bb14 ], [ %r212, %bb15 ]
-  %r232 = phi i32 [ %r213, %bb14 ], [ %r234, %bb15 ]
+  %r210 = phi i32 [ %r215, %bb14 ], [ %r195, %bb15 ]
+  %r211 = phi i32 [ %r196, %bb14 ], [ %r213, %bb15 ]
   br label %bb4
 
 bb6:
-  %r154 = getelementptr [10 x i32 ], [10 x i32 ]* %r102, i32 0, i32 %r214
-  %r237 = load i32, i32* %r154
-  %r238 = icmp eq i32 %r205, %r237
-  br i1 %r238, label %bb17, label %bb18
+  %r154 = getelementptr [10 x i32 ], [10 x i32 ]* %r102, i32 0, i32 %r194
+  %r218 = load i32, i32* %r154
+  %r219 = icmp eq i32 %r187, %r218
+  br i1 %r219, label %bb17, label %bb18
 
 bb17:
-  call void @putint(i32 %r205)
+  call void @putint(i32 %r187)
   br label %bb19
 
 bb18:
-  %r240 = add i32 0, 0
-  call void @putint(i32 %r240)
+  %r221 = add i32 0, 0
+  call void @putint(i32 %r221)
   br label %bb19
 
 bb19:
-  %r239 = add i32 10, 0
-  call void @putch(i32 %r239)
+  %r220 = add i32 10, 0
+  call void @putch(i32 %r220)
   call void @_sysy_stoptime(i32 49)
   ret i32 0
 }
