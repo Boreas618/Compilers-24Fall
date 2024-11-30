@@ -105,64 +105,6 @@ void BlockGraph::GenerateSingleSourceGraph(Box<Node<Box<ir::Block>>> root,
     }
 }
 
-void BlockGraph::GenerateSingleSourceGraphNext(Box<Node<Box<ir::Block>>> root,
-                                               Box<ir::Func> func) {
-    std::unordered_set<Box<Node<Box<ir::Block>>>> visited;
-    std::list<Box<Node<Box<ir::Block>>>> worklist;
-    worklist.push_back(root);
-    while (!worklist.empty()) {
-        Box<Node<Box<ir::Block>>> n = worklist.front();
-        worklist.pop_front();
-        if (visited.find(n) != visited.end()) continue;
-        visited.insert(n);
-        for (auto succ : n->successors()) {
-            worklist.push_back(graph_.nodes().at(succ));
-        }
-    }
-
-    std::unordered_set<Box<Node<Box<ir::Block>>>> deleted_nodes;
-    std::unordered_set<Box<ir::Block>> deleted_blocks;
-
-    for (auto it = graph_.nodes().begin(); it != graph_.nodes().end();) {
-        if (visited.find(it->second) == visited.end()) {
-            deleted_nodes.insert(it->second);
-            deleted_blocks.insert(it->second->element());
-            // it = it->second->mygraph->mynodes.erase(it);
-        }
-        // else
-        it++;
-    }
-
-    if (deleted_nodes.size()) {
-        std::list<Box<ir::Block>> new_blocks;
-        for (auto block : func->blocks())
-            if (deleted_blocks.find(block) == deleted_blocks.end())
-                new_blocks.push_back(block);
-        func->blocks() = new_blocks;
-        // Create_bg(fun->blocks);
-        for (auto node : deleted_nodes) {
-            node->successors().clear();
-            node->predecessors().clear();
-            graph_.RemoveNode(node);
-        }
-        // bg.nodecount = bg.mynodes.size();
-
-        // double free or corruption
-        /*
-        for (auto node : graph_.nodes()) {
-            for (auto it = node.second->predecessors().begin();
-                 it != node.second->predecessors().end();) {
-                if (deleted_nodes.find(graph_.nodes().at(*it)) !=
-                    deleted_nodes.end()) {
-                    it =
-                        graph_.nodes().at(node.first)->predecessors().erase(it);
-                } else
-                    it++;
-            }
-        }*/
-    }
-}
-
 void BlockGraph::DepthFirstSearch(Box<Node<Box<ir::Block>>> root) {
     throw std::domain_error("Not implemented.");
 }

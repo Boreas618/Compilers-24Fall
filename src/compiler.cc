@@ -79,6 +79,9 @@ int main(int argc, char* argv[]) {
     auto prog = ir_generator.Generate(aroot);
     SSAWorker ssa;
 
+    /**
+     * An ugly fix here.
+     */
     llvm_stream
         << "declare i32 @getch( )\ndeclare i32 @getint( )\ndeclare void "
            "@putch( i32 )\ndeclare void @putint( i32 )\ndeclare void "
