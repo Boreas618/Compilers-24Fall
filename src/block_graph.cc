@@ -1,4 +1,4 @@
-#include "block_graph.hh"
+#include "block_graph.h"
 
 using utils::NodeColor;
 

@@ -2,9 +2,9 @@
 
 #include <unordered_map>
 
-#include "common.hh"
-#include "graph.hh"
-#include "ir_def.hh"
+#include "common.h"
+#include "graph.h"
+#include "ir_def.h"
 
 using utils::Graph;
 using utils::Node;

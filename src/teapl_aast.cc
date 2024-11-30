@@ -1,6 +1,6 @@
-#include "teapl_aast.hh"
+#include "teapl_aast.h"
 
-#include "teapl_ast.hh"
+#include "teapl_ast.h"
 
 aA_type aA_Type(A_type type) {
     if (!type) return nullptr;

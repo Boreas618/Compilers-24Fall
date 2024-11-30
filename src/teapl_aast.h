@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "teapl_ast.hh"
+#include "teapl_ast.h"
 
 using std::string;
 using std::vector;

@@ -1,14 +1,14 @@
 #include <fstream>
 #include <iostream>
 
-#include "ast_printer.hh"
-#include "ir_generator.hh"
-#include "ir_printer.hh"
-#include "ssa.hh"
-#include "teapl_aast.hh"
-#include "teapl_ast.hh"
-#include "type_checker.hh"
-#include "y.tab.hh"
+#include "ast_printer.h"
+#include "ir_generator.h"
+#include "ir_printer.h"
+#include "ssa.h"
+#include "teapl_aast.h"
+#include "teapl_ast.h"
+#include "type_checker.h"
+#include "y.tab.h"
 
 #define YACC_DEBUG 0
 #define TYPE_CHECK 0

@@ -4,8 +4,8 @@
 #include <memory>
 #include <unordered_map>
 
-#include "teapl_ast.hh"
-#include "teapl_aast.hh"
+#include "teapl_ast.h"
+#include "teapl_aast.h"
 
 struct ExprType;
 

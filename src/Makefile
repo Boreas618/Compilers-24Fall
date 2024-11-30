@@ -18,7 +18,7 @@ $(TESTCASE_DIR)/%.ll: $(TESTCASE_DIR)/%.tea compiler
 compiler: y.tab.o lex.yy.o teapl_ast.o teapl_aast.o ast_printer.o compiler.o ir_generator.o ir_printer.o type_checker.o ssa.o graph.o block_graph.o liveness.o
 	$(CXX) $(CXXFLAGS) -o compiler $^ 
 
-y.tab.cc: parser.yacc teapl_ast.hh 
+y.tab.cc: parser.yacc teapl_ast.h 
 #	yacc --verbose --debug -d $< -o y.tab.cc
 	yacc -o y.tab.cc -d $< -v --debug
 
@@ -35,40 +35,40 @@ y.tab.o: y.tab.cc y.tab.hpp
 lex.yy.o: lex.yy.cc y.tab.hpp
 	$(CXX) $(CXXFLAGS) -c $<
 
-type_checker.o: type_checker.cc type_checker.hh
+type_checker.o: type_checker.cc type_checker.h
 	$(CXX) $(CXXFLAGS) -c $<
 
-teapl_ast.o: teapl_ast.cc teapl_ast.hh
+teapl_ast.o: teapl_ast.cc teapl_ast.h
 	$(CXX) $(CXXFLAGS) -c $<
 
-teapl_aast.o: teapl_aast.cc teapl_aast.hh
+teapl_aast.o: teapl_aast.cc teapl_aast.h
 	$(CXX) $(CXXFLAGS) -c $<
 
-ast_printer.o: ast_printer.cc ast_printer.hh
+ast_printer.o: ast_printer.cc ast_printer.h
 	$(CXX) $(CXXFLAGS) -c $<
 
 compiler.o: compiler.cc teapl_ast.o teapl_aast.o ast_printer.o y.tab.o lex.yy.o ir_generator.o ir_printer.o graph.o block_graph.o ssa.o liveness.o
 	$(CXX) $(CXXFLAGS) -c $<
 
-# IRDef.o: ir_def.hh
+# IRDef.o: ir_def.h
 #	$(CXX) $(CXXFLAGS) -c $<
 
-ir_generator.o: ir_generator.cc ir_generator.hh ir_def.hh
+ir_generator.o: ir_generator.cc ir_generator.h ir_def.h
 	$(CXX) $(CXXFLAGS) -c $<
 
-ir_printer.o: ir_printer.cc ir_printer.hh ir_def.hh
+ir_printer.o: ir_printer.cc ir_printer.h ir_def.h
 	$(CXX) $(CXXFLAGS) -c $<
 
-ssa.o: ssa.cc ssa.hh graph.o
+ssa.o: ssa.cc ssa.h graph.o
 	@$(CXX) $(CXXFLAGS) -c $<
 
-block_graph.o: block_graph.cc block_graph.hh graph.o
+block_graph.o: block_graph.cc block_graph.h graph.o
 	@$(CXX) $(CXXFLAGS) -c $<
 
-liveness.o: liveness.cc liveness.hh graph.o
+liveness.o: liveness.cc liveness.h graph.o
 	@$(CXX) $(CXXFLAGS) -c $<
 
-graph.o: graph.cc graph.hh
+graph.o: graph.cc graph.h
 	@$(CXX) $(CXXFLAGS) -c $<
 
 

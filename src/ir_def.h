@@ -8,7 +8,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "common.hh"
+#include "common.h"
 
 namespace ir {
 enum class RegType { kInt, kIntPtr, kStruct, kStructPtr };

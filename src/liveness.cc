@@ -1,11 +1,11 @@
-#include "liveness.hh"
+#include "liveness.h"
 
 #include <unordered_map>
 #include <unordered_set>
 
-#include "graph.hh"
-#include "ir_def.hh"
-#include "liveness.hh"
+#include "graph.h"
+#include "ir_def.h"
+#include "liveness.h"
 
 using namespace liveness;
 

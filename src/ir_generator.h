@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ir_def.hh"
-#include "teapl_aast.hh"
+#include "ir_def.h"
+#include "teapl_aast.h"
 
 namespace ir {
 

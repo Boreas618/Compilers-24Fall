@@ -1,4 +1,4 @@
-#include "ssa.hh"
+#include "ssa.h"
 
 #include <bitset>
 #include <cassert>
@@ -10,10 +10,10 @@
 #include <unordered_set>
 #include <vector>
 
-#include "block_graph.hh"
-#include "graph.hh"
-#include "ir_printer.hh"
-#include "liveness.hh"
+#include "block_graph.h"
+#include "graph.h"
+#include "ir_printer.h"
+#include "liveness.h"
 
 using liveness::LivenessAnalysis;
 

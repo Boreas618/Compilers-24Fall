@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "ir_def.hh"
+#include "ir_def.h"
 
 void printL_def(std::ostream& os, std::shared_ptr<ir::TopLevelDef> def);
 void printL_stm(std::ostream& os, std::shared_ptr<ir::Stmt> stm);

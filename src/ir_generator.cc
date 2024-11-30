@@ -1,4 +1,4 @@
-#include "ir_generator.hh"
+#include "ir_generator.h"
 
 #include <cassert>
 #include <list>

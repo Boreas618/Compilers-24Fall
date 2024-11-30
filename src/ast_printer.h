@@ -3,7 +3,7 @@
 #include <iostream>
 #include <ostream>
 
-#include "teapl_aast.hh"
+#include "teapl_aast.h"
 
 using std::ostream;
 

@@ -6,10 +6,10 @@
 #include <unordered_set>
 #include <vector>
 
-#include "common.hh"
-#include "graph.hh"
-#include "ir_def.hh"
-#include "liveness.hh"
+#include "common.h"
+#include "graph.h"
+#include "ir_def.h"
+#include "liveness.h"
 
 using std::unordered_map;
 using std::unordered_set;

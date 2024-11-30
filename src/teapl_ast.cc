@@ -1,4 +1,4 @@
-#include "teapl_ast.hh"
+#include "teapl_ast.h"
 
 #include <cstdlib>
 

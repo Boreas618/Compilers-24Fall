@@ -1,4 +1,4 @@
-#include "type_checker.hh"
+#include "type_checker.h"
 
 #include <cassert>
 #include <sstream>

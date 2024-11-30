@@ -4,8 +4,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "graph.hh"
-#include "ir_def.hh"
+#include "graph.h"
+#include "ir_def.h"
 
 using ir::LocalValSet;
 using ir::Operand;

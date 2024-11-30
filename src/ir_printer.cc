@@ -1,4 +1,4 @@
-#include "ir_printer.hh"
+#include "ir_printer.h"
 
 #include <cassert>
 #include <iostream>

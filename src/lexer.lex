@@ -1,8 +1,8 @@
 %{
 #include <stdio.h>
 #include <string.h>
-#include "teapl_ast.hh"
-#include "y.tab.hh"
+#include "teapl_ast.h"
+#include "y.tab.h"
 extern int line, col;
 int c;
 int calc(const char *s, int len);
