@@ -1,5 +1,5 @@
 #!/bin/bash
-func_testcase_dir=$(realpath $(dirname "$0")/./tests/private)
+func_testcase_dir=$(realpath $(dirname "$0")/./tests/public)
 
 test_single() {
 	test_file=$(python -c "import os.path; print(os.path.relpath('$func_testcase_dir/$1.tea', '$func_testcase_dir'))")

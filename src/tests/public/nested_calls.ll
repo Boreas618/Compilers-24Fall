@@ -99,34 +99,34 @@ func6:
   br i1 %r371, label %bb17, label %bb18
 
 bb17:
-  %r380 = add i32 1, 0
+  %r372 = add i32 1, 0
   br label %bb19
 
 bb18:
-  %r372 = add i32 0, 0
+  %r373 = add i32 0, 0
   br label %bb19
 
 bb19:
-  %r373 = phi i32 [ %r380, %bb17 ], [ %r372, %bb18 ]
-  %r374 = icmp ne i32 %r373, 0
-  br i1 %r374, label %bb16, label %bb14
+  %r374 = phi i32 [ %r372, %bb17 ], [ %r373, %bb18 ]
+  %r375 = icmp ne i32 %r374, 0
+  br i1 %r375, label %bb16, label %bb14
 
 bb16:
-  %r375 = icmp ne i32 %r369, 0
-  br i1 %r375, label %bb20, label %bb21
+  %r376 = icmp ne i32 %r369, 0
+  br i1 %r376, label %bb20, label %bb21
 
 bb20:
-  %r379 = add i32 1, 0
+  %r380 = add i32 1, 0
   br label %bb22
 
 bb21:
-  %r376 = add i32 0, 0
+  %r377 = add i32 0, 0
   br label %bb22
 
 bb22:
-  %r377 = phi i32 [ %r379, %bb20 ], [ %r376, %bb21 ]
-  %r378 = icmp ne i32 %r377, 0
-  br i1 %r378, label %bb13, label %bb14
+  %r378 = phi i32 [ %r380, %bb20 ], [ %r377, %bb21 ]
+  %r379 = icmp ne i32 %r378, 0
+  br i1 %r379, label %bb13, label %bb14
 
 bb13:
   ret i32 1

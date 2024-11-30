@@ -79,15 +79,15 @@ reduce:
   br i1 %r515, label %bb7, label %bb8
 
 bb7:
-  %r516 = add i32 %r512, %r514
-  %r517 = call i32 @checkrange(i32 %r516)
-  ret i32 %r517
+  %r538 = add i32 %r512, %r514
+  %r539 = call i32 @checkrange(i32 %r538)
+  ret i32 %r539
 bb8:
   br label %bb9
 
 bb9:
-  %r518 = icmp eq i32 %r510, 1
-  br i1 %r518, label %bb10, label %bb11
+  %r516 = icmp eq i32 %r510, 1
+  br i1 %r516, label %bb10, label %bb11
 
 bb10:
   %r519 = add i32 0, 0
@@ -95,49 +95,49 @@ bb10:
   br label %bb13
 
 bb13:
-  %r521 = phi i32 [ %r520, %bb10 ], [ %r537, %bb18 ]
-  %r522 = phi i32 [ %r519, %bb10 ], [ %r535, %bb18 ]
+  %r521 = phi i32 [ %r519, %bb10 ], [ %r533, %bb18 ]
+  %r522 = phi i32 [ %r520, %bb10 ], [ %r535, %bb18 ]
   %r523 = load i32, i32* @max
-  %r524 = icmp slt i32 %r521, %r523
+  %r524 = icmp slt i32 %r522, %r523
   br i1 %r524, label %bb14, label %bb15
 
 bb14:
-  %r525 = sdiv i32 %r512, %r521
+  %r525 = sdiv i32 %r512, %r522
   %r526 = call i32 @mod(i32 %r525, i32 2)
-  %r527 = sdiv i32 %r514, %r521
+  %r527 = sdiv i32 %r514, %r522
   %r528 = call i32 @mod(i32 %r527, i32 2)
   %r529 = icmp eq i32 %r526, %r528
   br i1 %r529, label %bb16, label %bb17
 
 bb16:
-  %r530 = mul i32 %r522, 2
-  %r531 = add i32 %r530, 0
+  %r536 = mul i32 %r521, 2
+  %r537 = add i32 %r536, 0
   br label %bb18
 
 bb17:
-  %r532 = mul i32 %r522, 2
-  %r533 = add i32 %r532, 1
-  %r534 = add i32 %r533, 0
+  %r530 = mul i32 %r521, 2
+  %r531 = add i32 %r530, 1
+  %r532 = add i32 %r531, 0
   br label %bb18
 
 bb18:
-  %r535 = phi i32 [ %r531, %bb16 ], [ %r534, %bb17 ]
-  %r536 = mul i32 %r521, 2
-  %r537 = add i32 %r536, 0
+  %r533 = phi i32 [ %r537, %bb16 ], [ %r532, %bb17 ]
+  %r534 = mul i32 %r522, 2
+  %r535 = add i32 %r534, 0
   br label %bb13
 
 bb15:
-  ret i32 %r522
+  ret i32 %r521
 bb11:
   br label %bb12
 
 bb12:
-  %r538 = icmp eq i32 %r510, 2
-  br i1 %r538, label %bb19, label %bb20
+  %r517 = icmp eq i32 %r510, 2
+  br i1 %r517, label %bb19, label %bb20
 
 bb19:
-  %r539 = icmp sgt i32 %r512, %r514
-  br i1 %r539, label %bb22, label %bb23
+  %r518 = icmp sgt i32 %r512, %r514
+  br i1 %r518, label %bb22, label %bb23
 
 bb22:
   ret i32 %r512
@@ -147,9 +147,9 @@ bb20:
   br label %bb21
 
 bb21:
-  %r497 = phi i32 [ %r497, %bb24 ], [ %r514, %bb20 ]
-  %r491 = phi i32 [ %r491, %bb24 ], [ %r510, %bb20 ]
   %r494 = phi i32 [ %r494, %bb24 ], [ %r512, %bb20 ]
+  %r491 = phi i32 [ %r491, %bb24 ], [ %r510, %bb20 ]
+  %r497 = phi i32 [ %r497, %bb24 ], [ %r514, %bb20 ]
   %r174 = icmp eq i32 %r491, 3
   br i1 %r174, label %bb25, label %bb26
 
@@ -316,94 +316,94 @@ getvalue:
   br i1 %r588, label %bb69, label %bb70
 
 bb69:
-  %r618 = add i32 1, 0
+  %r619 = add i32 1, 0
   br label %bb71
 
 bb70:
-  %r619 = add i32 0, 0
+  %r589 = add i32 0, 0
   br label %bb71
 
 bb71:
-  %r589 = phi i32 [ %r618, %bb69 ], [ %r619, %bb70 ]
-  %r590 = icmp ne i32 %r589, 0
-  br i1 %r590, label %bb65, label %bb68
+  %r590 = phi i32 [ %r619, %bb69 ], [ %r589, %bb70 ]
+  %r591 = icmp ne i32 %r590, 0
+  br i1 %r591, label %bb65, label %bb68
 
 bb68:
-  %r612 = icmp slt i32 %r584, 0
-  br i1 %r612, label %bb72, label %bb73
+  %r592 = icmp slt i32 %r584, 0
+  br i1 %r592, label %bb72, label %bb73
 
 bb72:
-  %r617 = add i32 1, 0
+  %r596 = add i32 1, 0
   br label %bb74
 
 bb73:
-  %r616 = add i32 0, 0
+  %r597 = add i32 0, 0
   br label %bb74
 
 bb74:
-  %r613 = phi i32 [ %r617, %bb72 ], [ %r616, %bb73 ]
-  %r614 = icmp ne i32 %r613, 0
-  br i1 %r614, label %bb65, label %bb66
+  %r593 = phi i32 [ %r596, %bb72 ], [ %r597, %bb73 ]
+  %r594 = icmp ne i32 %r593, 0
+  br i1 %r594, label %bb65, label %bb66
 
 bb65:
-  %r611 = add i32 1, 0
+  %r618 = add i32 1, 0
   br label %bb67
 
 bb66:
-  %r615 = add i32 0, 0
+  %r595 = add i32 0, 0
   br label %bb67
 
 bb67:
-  %r591 = phi i32 [ %r611, %bb65 ], [ %r615, %bb66 ]
-  %r592 = icmp ne i32 %r591, 0
-  br i1 %r592, label %bb61, label %bb64
+  %r598 = phi i32 [ %r618, %bb65 ], [ %r595, %bb66 ]
+  %r599 = icmp ne i32 %r598, 0
+  br i1 %r599, label %bb61, label %bb64
 
 bb64:
-  %r605 = icmp sge i32 %r582, %r578
-  br i1 %r605, label %bb75, label %bb76
+  %r612 = icmp sge i32 %r582, %r578
+  br i1 %r612, label %bb75, label %bb76
 
 bb75:
-  %r609 = add i32 1, 0
+  %r613 = add i32 1, 0
   br label %bb77
 
 bb76:
-  %r610 = add i32 0, 0
+  %r614 = add i32 0, 0
   br label %bb77
 
 bb77:
-  %r606 = phi i32 [ %r609, %bb75 ], [ %r610, %bb76 ]
-  %r607 = icmp ne i32 %r606, 0
-  br i1 %r607, label %bb61, label %bb62
+  %r615 = phi i32 [ %r613, %bb75 ], [ %r614, %bb76 ]
+  %r616 = icmp ne i32 %r615, 0
+  br i1 %r616, label %bb61, label %bb62
 
 bb61:
-  %r604 = add i32 1, 0
+  %r600 = add i32 1, 0
   br label %bb63
 
 bb62:
-  %r608 = add i32 0, 0
+  %r617 = add i32 0, 0
   br label %bb63
 
 bb63:
-  %r593 = phi i32 [ %r604, %bb61 ], [ %r608, %bb62 ]
-  %r594 = icmp ne i32 %r593, 0
-  br i1 %r594, label %bb57, label %bb60
+  %r601 = phi i32 [ %r600, %bb61 ], [ %r617, %bb62 ]
+  %r602 = icmp ne i32 %r601, 0
+  br i1 %r602, label %bb57, label %bb60
 
 bb60:
-  %r595 = icmp sge i32 %r584, %r580
-  br i1 %r595, label %bb78, label %bb79
+  %r603 = icmp sge i32 %r584, %r580
+  br i1 %r603, label %bb78, label %bb79
 
 bb78:
-  %r602 = add i32 1, 0
+  %r611 = add i32 1, 0
   br label %bb80
 
 bb79:
-  %r603 = add i32 0, 0
+  %r604 = add i32 0, 0
   br label %bb80
 
 bb80:
-  %r596 = phi i32 [ %r602, %bb78 ], [ %r603, %bb79 ]
-  %r597 = icmp ne i32 %r596, 0
-  br i1 %r597, label %bb57, label %bb58
+  %r605 = phi i32 [ %r611, %bb78 ], [ %r604, %bb79 ]
+  %r606 = icmp ne i32 %r605, 0
+  br i1 %r606, label %bb57, label %bb58
 
 bb57:
   ret i32 0
@@ -411,12 +411,12 @@ bb58:
   br label %bb59
 
 bb59:
-  %r598 = mul i32 %r582, %r580
-  %r599 = add i32 %r598, %r584
-  %r600 = add i32 %r599, 0
-  %r283 = getelementptr i32, i32* %r239, i32 %r600
-  %r601 = load i32, i32* %r283
-  ret i32 %r601
+  %r607 = mul i32 %r582, %r580
+  %r608 = add i32 %r607, %r584
+  %r609 = add i32 %r608, 0
+  %r283 = getelementptr i32, i32* %r239, i32 %r609
+  %r610 = load i32, i32* %r283
+  ret i32 %r610
 }
 
 define i32 @convn( i32 %r286, i32* %r288, i32* %r289, i32 %r290, i32 %r292, i32 %r294 ) {
@@ -442,7 +442,7 @@ convn:
   br label %bb81
 
 bb81:
-  %r671 = phi i32 [ %r663, %convn ], [ %r711, %bb104 ]
+  %r671 = phi i32 [ %r663, %convn ], [ %r677, %bb104 ]
   %r672 = icmp eq i32 %r670, %r670
   br i1 %r672, label %bb82, label %bb83
 
@@ -451,45 +451,45 @@ bb82:
   br label %bb84
 
 bb84:
-  %r674 = phi i32 [ %r673, %bb82 ], [ %r688, %bb101 ]
+  %r674 = phi i32 [ %r673, %bb82 ], [ %r711, %bb101 ]
   %r675 = icmp eq i32 %r670, %r670
   br i1 %r675, label %bb85, label %bb86
 
 bb85:
-  %r676 = add i32 0, 0
-  %r677 = sdiv i32 %r661, 2
-  %r678 = sub i32 %r671, %r677
-  %r679 = add i32 %r678, 0
+  %r679 = add i32 0, 0
+  %r680 = sdiv i32 %r661, 2
+  %r681 = sub i32 %r671, %r680
+  %r682 = add i32 %r681, 0
   br label %bb87
 
 bb87:
-  %r680 = phi i32 [ %r679, %bb85 ], [ %r698, %bb98 ]
-  %r681 = phi i32 [ %r676, %bb85 ], [ %r696, %bb98 ]
-  %r682 = icmp eq i32 %r670, %r670
-  br i1 %r682, label %bb88, label %bb89
+  %r683 = phi i32 [ %r682, %bb85 ], [ %r694, %bb98 ]
+  %r684 = phi i32 [ %r679, %bb85 ], [ %r692, %bb98 ]
+  %r685 = icmp eq i32 %r670, %r670
+  br i1 %r685, label %bb88, label %bb89
 
 bb88:
-  %r690 = sdiv i32 %r661, 2
-  %r691 = sub i32 %r674, %r690
-  %r692 = add i32 %r691, 0
+  %r686 = sdiv i32 %r661, 2
+  %r687 = sub i32 %r674, %r686
+  %r688 = add i32 %r687, 0
   br label %bb90
 
 bb90:
-  %r693 = phi i32 [ %r681, %bb88 ], [ %r704, %bb95 ]
-  %r694 = phi i32 [ %r692, %bb88 ], [ %r706, %bb95 ]
-  %r695 = icmp eq i32 %r670, %r670
-  br i1 %r695, label %bb91, label %bb92
+  %r689 = phi i32 [ %r688, %bb88 ], [ %r702, %bb95 ]
+  %r690 = phi i32 [ %r684, %bb88 ], [ %r700, %bb95 ]
+  %r691 = icmp eq i32 %r670, %r670
+  br i1 %r691, label %bb91, label %bb92
 
 bb91:
-  %r702 = call i32 @getvalue(i32* %r288, i32 %r657, i32 %r659, i32 %r680, i32 %r694)
-  %r703 = call i32 @reduce(i32 %r655, i32 %r693, i32 %r702)
-  %r704 = add i32 %r703, 0
-  %r705 = add i32 %r694, 1
-  %r706 = add i32 %r705, 0
-  %r707 = sdiv i32 %r661, 2
-  %r708 = add i32 %r674, %r707
-  %r709 = icmp sge i32 %r706, %r708
-  br i1 %r709, label %bb93, label %bb94
+  %r698 = call i32 @getvalue(i32* %r288, i32 %r657, i32 %r659, i32 %r683, i32 %r689)
+  %r699 = call i32 @reduce(i32 %r655, i32 %r690, i32 %r698)
+  %r700 = add i32 %r699, 0
+  %r701 = add i32 %r689, 1
+  %r702 = add i32 %r701, 0
+  %r703 = sdiv i32 %r661, 2
+  %r704 = add i32 %r674, %r703
+  %r705 = icmp sge i32 %r702, %r704
+  br i1 %r705, label %bb93, label %bb94
 
 bb93:
   br label %bb92
@@ -501,13 +501,13 @@ bb95:
   br label %bb90
 
 bb92:
-  %r696 = phi i32 [ %r693, %bb90 ], [ %r704, %bb93 ]
-  %r697 = add i32 %r680, 1
-  %r698 = add i32 %r697, 0
-  %r699 = sdiv i32 %r661, 2
-  %r700 = add i32 %r671, %r699
-  %r701 = icmp sge i32 %r698, %r700
-  br i1 %r701, label %bb96, label %bb97
+  %r692 = phi i32 [ %r690, %bb90 ], [ %r700, %bb93 ]
+  %r693 = add i32 %r683, 1
+  %r694 = add i32 %r693, 0
+  %r695 = sdiv i32 %r661, 2
+  %r696 = add i32 %r671, %r695
+  %r697 = icmp sge i32 %r694, %r696
+  br i1 %r697, label %bb96, label %bb97
 
 bb96:
   br label %bb89
@@ -519,16 +519,16 @@ bb98:
   br label %bb87
 
 bb89:
-  %r683 = phi i32 [ %r681, %bb87 ], [ %r696, %bb96 ]
-  %r684 = mul i32 %r671, %r659
-  %r685 = add i32 %r684, %r674
-  %r686 = add i32 %r685, 0
-  %r354 = getelementptr i32, i32* %r289, i32 %r686
-  store i32 %r683, i32* %r354
-  %r687 = add i32 %r674, 1
-  %r688 = add i32 %r687, 0
-  %r689 = icmp sge i32 %r688, %r659
-  br i1 %r689, label %bb99, label %bb100
+  %r706 = phi i32 [ %r684, %bb87 ], [ %r692, %bb96 ]
+  %r707 = mul i32 %r671, %r659
+  %r708 = add i32 %r707, %r674
+  %r709 = add i32 %r708, 0
+  %r354 = getelementptr i32, i32* %r289, i32 %r709
+  store i32 %r706, i32* %r354
+  %r710 = add i32 %r674, 1
+  %r711 = add i32 %r710, 0
+  %r712 = icmp sge i32 %r711, %r659
+  br i1 %r712, label %bb99, label %bb100
 
 bb99:
   br label %bb86
@@ -540,10 +540,10 @@ bb101:
   br label %bb84
 
 bb86:
-  %r710 = add i32 %r671, 1
-  %r711 = add i32 %r710, 0
-  %r712 = icmp sge i32 %r711, %r657
-  br i1 %r712, label %bb102, label %bb103
+  %r676 = add i32 %r671, 1
+  %r677 = add i32 %r676, 0
+  %r678 = icmp sge i32 %r677, %r657
+  br i1 %r678, label %bb102, label %bb103
 
 bb102:
   br label %bb83
@@ -624,43 +624,43 @@ bb110:
   br label %bb111
 
 bb111:
-  %r773 = phi i32 [ %r772, %bb110 ], [ %r777, %bb112 ]
+  %r773 = phi i32 [ %r772, %bb110 ], [ %r787, %bb112 ]
   %r774 = icmp slt i32 %r773, %r771
   br i1 %r774, label %bb112, label %bb113
 
 bb112:
   %r405 = getelementptr [10000 x i32 ], [10000 x i32 ]* @kernelid, i32 0, i32 %r773
-  %r775 = call i32 @getint()
-  store i32 %r775, i32* %r405
-  %r776 = add i32 %r773, 1
-  %r777 = add i32 %r776, 0
+  %r785 = call i32 @getint()
+  store i32 %r785, i32* %r405
+  %r786 = add i32 %r773, 1
+  %r787 = add i32 %r786, 0
   br label %bb111
 
 bb113:
-  %r778 = add i32 %r771, 0
+  %r775 = add i32 %r771, 0
   call void @_sysy_starttime(i32 209)
-  %r779 = add i32 0, 0
+  %r776 = add i32 0, 0
   br label %bb114
 
 bb114:
-  %r780 = phi i32 [ %r779, %bb113 ], [ %r786, %bb115 ]
-  %r781 = icmp slt i32 %r780, %r778
-  br i1 %r781, label %bb115, label %bb116
+  %r777 = phi i32 [ %r776, %bb113 ], [ %r784, %bb115 ]
+  %r778 = icmp slt i32 %r777, %r775
+  br i1 %r778, label %bb115, label %bb116
 
 bb115:
-  %r416 = getelementptr [10000 x i32 ], [10000 x i32 ]* @kernelid, i32 0, i32 %r780
-  %r782 = load i32, i32* %r416
-  %r783 = call i32 @convn(i32 %r782, i32* @a, i32* @b, i32 %r756, i32 %r759, i32 %r753)
-  %r784 = mul i32 %r756, %r759
-  call void @memmove(i32* @a, i32* @b, i32 %r784)
-  %r785 = add i32 %r780, 1
-  %r786 = add i32 %r785, 0
+  %r416 = getelementptr [10000 x i32 ], [10000 x i32 ]* @kernelid, i32 0, i32 %r777
+  %r780 = load i32, i32* %r416
+  %r781 = call i32 @convn(i32 %r780, i32* @a, i32* @b, i32 %r756, i32 %r759, i32 %r753)
+  %r782 = mul i32 %r756, %r759
+  call void @memmove(i32* @a, i32* @b, i32 %r782)
+  %r783 = add i32 %r777, 1
+  %r784 = add i32 %r783, 0
   br label %bb114
 
 bb116:
   call void @_sysy_stoptime(i32 312)
-  %r787 = mul i32 %r756, %r759
-  call void @putarray(i32 %r787, i32* @a)
+  %r779 = mul i32 %r756, %r759
+  call void @putarray(i32 %r779, i32* @a)
   ret i32 0
 }
 
