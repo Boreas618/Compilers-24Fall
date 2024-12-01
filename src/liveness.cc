@@ -298,46 +298,6 @@ bool LivenessAnalysis::LivenessIteration(Box<Node<Box<ir::Block>>> r,
     return ret;
 }
 
-bool LivenessAnalysis::LivenessIterationNext(Box<Node<Box<ir::Block>>> r,
-                                             Graph<Box<ir::Block>>& bg) {
-    bool changed = false;
-    for (auto block_node : bg.nodes()) {
-        auto block = block_node.second;
-        auto in = GetInSetOf(block);
-        auto out = GetOutSetOf(block);
-        auto def = GetDefSetOf(block);
-        auto use = GetUseSetOf(block);
-        LocalValSet new_in;
-        LocalValSet new_out;
-        for (auto succ : block->successors()) {
-            auto succ_node = bg.nodes().at(succ);
-            // new_out.insert(FG_In(succ_node).begin(), FG_In(succ_node).end());
-            new_out = *LocalValSetUnion(new_out, GetInSetOf(succ_node));
-        }
-        // new_in = new_out;
-        // for (auto x : def)
-        // {
-        //     new_in.erase(x);
-        // }
-        // for (auto x : use)
-        // {
-        //     new_in.insert(x);
-        // }
-        new_in = *LocalValSetUnion(use, *LocalValSetDiff(new_out, def));
-        if (!LocalValSetEq(new_in, in)) {
-            changed = true;
-            in = new_in;
-            GetInSetOf(block) = in;
-        }
-        if (!LocalValSetEq(new_out, out)) {
-            changed = true;
-            out = new_out;
-            GetOutSetOf(block) = out;
-        }
-    }
-    return changed;
-}
-
 void PrintLocalVals(FILE* out, LocalValSet set) {
     for (auto x : set) {
         printf("%d  ", x->num());
