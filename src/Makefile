@@ -15,7 +15,7 @@ $(TESTCASE_DIR)/%.ll: $(TESTCASE_DIR)/%.tea compiler
 	@./test-functional.sh $*
 	@echo 
 
-compiler: y.tab.o lex.yy.o teapl_ast.o teapl_aast.o ast_printer.o compiler.o ir_generator.o ir_printer.o type_checker.o ssa.o graph.o block_graph.o liveness.o
+compiler: y.tab.o lex.yy.o teapl_ast.o teapl_aast.o ast_printer.o compiler.o ir_generator.o ir_printer.o type_checker.o ssa.o block_graph.o liveness.o
 	$(CXX) $(CXXFLAGS) -o compiler $^ 
 
 y.tab.cc: parser.yacc teapl_ast.h 
@@ -47,7 +47,7 @@ teapl_aast.o: teapl_aast.cc teapl_aast.h
 ast_printer.o: ast_printer.cc ast_printer.h
 	$(CXX) $(CXXFLAGS) -c $<
 
-compiler.o: compiler.cc teapl_ast.o teapl_aast.o ast_printer.o y.tab.o lex.yy.o ir_generator.o ir_printer.o graph.o block_graph.o ssa.o liveness.o
+compiler.o: compiler.cc teapl_ast.o teapl_aast.o ast_printer.o y.tab.o lex.yy.o ir_generator.o ir_printer.o block_graph.o ssa.o liveness.o
 	$(CXX) $(CXXFLAGS) -c $<
 
 # IRDef.o: ir_def.h
@@ -59,16 +59,13 @@ ir_generator.o: ir_generator.cc ir_generator.h ir_def.h
 ir_printer.o: ir_printer.cc ir_printer.h ir_def.h
 	$(CXX) $(CXXFLAGS) -c $<
 
-ssa.o: ssa.cc ssa.h graph.o
+ssa.o: ssa.cc ssa.h graph.h
 	@$(CXX) $(CXXFLAGS) -c $<
 
-block_graph.o: block_graph.cc block_graph.h graph.o
+block_graph.o: block_graph.cc block_graph.h graph.h
 	@$(CXX) $(CXXFLAGS) -c $<
 
-liveness.o: liveness.cc liveness.h graph.o
-	@$(CXX) $(CXXFLAGS) -c $<
-
-graph.o: graph.cc graph.h
+liveness.o: liveness.cc liveness.h graph.h
 	@$(CXX) $(CXXFLAGS) -c $<
 
 

@@ -347,6 +347,6 @@ void LivenessAnalysis::Launch(Box<Node<Box<ir::Block>>> r,
     bool changed = true;
     while (changed) {
         iter_num_++;
-        changed = LivenessIterationNext(r, bg);
+        changed = LivenessIteration(r, bg);
     }
 }
