@@ -215,41 +215,6 @@ void LivenessAnalysis::GetUseDef(Box<Node<Box<ir::Block>>> r,
     }
 }
 
-void LivenessAnalysis::GetUseDefNext(Box<Node<Box<ir::Block>>> r,
-                                     Graph<Box<ir::Block>>& bg,
-                                     std::vector<Box<ir::LocalVal>>& args) {
-    for (auto arg : args) {
-        GetUseSetOf(r).insert(arg);
-    }
-    //    Todo
-    for (auto block_node : bg.nodes()) {
-        LocalValSet def_now;
-        auto block = block_node.second;
-        auto def = GetDefSetOf(block);
-        auto use = GetUseSetOf(block);
-        for (auto stm : *block->element()->instrs()) {
-            auto use_operand = GetOps(stm, OpKind::kUse);
-            for (auto AS_op : use_operand) {
-                if (AS_op->kind() == ir::OperandKind::kLocal &&
-                    def_now.find(AS_op->inner_generic<ir::LocalVal>()) ==
-                        def_now.end()) {
-                    use.insert(AS_op->inner_generic<ir::LocalVal>());
-                }
-            }
-
-            auto def_operand = GetOps(stm, OpKind::kDef);
-            for (auto AS_op : def_operand) {
-                if (AS_op->kind() == ir::OperandKind::kLocal) {
-                    def.insert(AS_op->inner_generic<ir::LocalVal>());
-                    def_now.insert(AS_op->inner_generic<ir::LocalVal>());
-                }
-            }
-        }
-        GetDefSetOf(block) = def;
-        GetUseSetOf(block) = use;
-    }
-}
-
 bool LivenessAnalysis::LivenessIteration(Box<Node<Box<ir::Block>>> r,
                                          Graph<Box<ir::Block>>& bg) {
     bool ret = false;
@@ -342,7 +307,7 @@ void LivenessAnalysis::Launch(Box<Node<Box<ir::Block>>> r,
                               Graph<Box<ir::Block>>& bg,
                               std::vector<Box<ir::LocalVal>>& args) {
     Init();
-    GetUseDefNext(r, bg, args);
+    GetUseDef(r, bg, args);
     iter_num_ = 0;
     bool changed = true;
     while (changed) {

@@ -32,7 +32,6 @@ Box<ir::Prog> SSAWorker::Launch(Box<ir::Prog> prog) {
     for (auto& fun : prog->funcs()) {
         ResetTables();
         CombineAddr(fun);
-        // PointerToRegNext(fun);
         PointerToReg(fun);
 
         auto block_graph = BlockGraph::FromBlocks(fun->blocks());

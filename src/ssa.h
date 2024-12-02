@@ -42,7 +42,6 @@ class SSAWorker {
     void RenameLocal(
         Graph<Box<ir::Block>>& bg, Box<Node<Box<ir::Block>>> n,
         unordered_map<Box<ir::LocalVal>, std::stack<Box<ir::LocalVal>>>& Stack);
-    void PointerToRegNext(Box<ir::Func> fun);
 
     void PrintDominators();
     void PrintDominatorTree();
