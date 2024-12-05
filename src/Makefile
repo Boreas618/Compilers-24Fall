@@ -70,4 +70,4 @@ liveness.o: liveness.cc liveness.h graph.h
 
 
 clean:
-	rm *.o *.output y.tab.cc y.tab.hpp lex.yy.cc compiler tests/*.ast tests/*.ll output/*.ll output/*.out
+	rm *.o *.output y.tab.cc y.tab.h lex.yy.cc compiler tests/*.ast tests/*.ll output/*.ll output/*.out

@@ -1,3 +1,13 @@
 .DS_Store
 *.ll
 src/output/*
+lex.yy.cc
+y.tab.h
+*.o 
+*.output 
+y.tab.cc 
+y.tab.h 
+lex.yy.cc 
+compiler 
+*.ast
+*.out
