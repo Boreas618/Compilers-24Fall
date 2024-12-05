@@ -1,6 +1,0 @@
-*.o
-*.output
-tests/*.ast
-compiler
-lex.yy.cpp
-y.tab.*
